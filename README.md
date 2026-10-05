@@ -2,7 +2,7 @@
 
 Idle giang hồ Đại Việt, bản đồ và kiến trúc mang hơi thời nhà Trần (đình, cổng tam quan, bia đá, tre trúc, sông nước). Repo: [nam-quoc-idle](https://github.com/VNTT812/nam-quoc-idle).
 
-Nền bản đồ sinh bằng `tools/gen_tran_maps.py` (có thể chạy lại để tái tạo toàn bộ `img/z/*.jpg` + vật cản).
+Nền bản đồ giữ họa phong isometric kiểu Võ Lâm (layout + vật cản gốc), phủ texture kiến trúc thời Trần (đình, cổng, ao sen…). Tái tạo: `tools/compose_tran_style_maps.py` (cần `img/z/_tran_tiles/`).
 
 ## Chạy local
 
