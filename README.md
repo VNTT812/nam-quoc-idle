@@ -1,6 +1,8 @@
-# Võ Lâm Idle
+# Nam Quốc Idle
 
-Bản khôi phục từ site đang chạy [volamidle.pages.dev](https://volamidle.pages.dev/) (bản `v=195`). Toàn bộ mã nguồn client, dữ liệu, bản đồ, sprite, hiệu ứng và tiếng được tải lại từ host tĩnh đó.
+Idle giang hồ Đại Việt, bản đồ và kiến trúc mang hơi thời nhà Trần (đình, cổng tam quan, bia đá, tre trúc, sông nước). Repo: [nam-quoc-idle](https://github.com/VNTT812/nam-quoc-idle).
+
+Nền bản đồ giữ họa phong isometric kiểu Võ Lâm (layout + vật cản gốc), phủ texture kiến trúc thời Trần (đình, cổng, ao sen…). Tái tạo: `tools/compose_tran_style_maps.py` (cần `img/z/_tran_tiles/`).
 
 ## Chạy local
 
@@ -36,4 +38,4 @@ Icon `img/p/shaolin.png` không có trên host. File hiện tại là bản sao 
 
 ## Credit sprite
 
-Quái map Hoa Sơn dùng sprite **Spell of Mastery** (NancyGold), giấy phép [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Quái map Yên Tử (id 2) dùng sprite **Spell of Mastery** (NancyGold), giấy phép [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
