@@ -1,6 +1,6 @@
 /* ======================= ADMIN CHEAT (chi tai khoan admin) =======================
    Chi hien khi dang nhap dung ten "admin". Cheat client-side: gold, KNB, cap, diem,
-   hoi mau, bat tu, xoa quai, dich chuyen ban do, nguyen lieu. */
+   hoi mau, bat tu, xoa quai, dich chuyen, nguyen lieu, trieu hoi quai/trum, them do. */
 'use strict';
 
 const isAdmin = () => typeof netUname === 'function' && netUname() === 'admin';
@@ -74,11 +74,111 @@ function adminMats() {
   log('🛠 Admin: +Huyền Tinh, Thủy Tinh, Khoáng, Mật Tịch, Đại Thành, Lệnh Bài');
 }
 
+/** Gần nhân vật (ngoài tầm sát thương cận chiến một chút). */
+function adminNearPos(r0 = 70, r1 = 140) {
+  const a = rnd(0, Math.PI * 2), r = rnd(r0, r1);
+  return inWorld(H.x + Math.cos(a) * r, H.y + Math.sin(a) * r);
+}
+
+/** Danh sách quái cho cheat: map hiện tại + trùm mọi map. */
+function adminMobOptions() {
+  const z = zoneOf(Math.min(S.stage, STAGES)), seen = new Set(), opts = [];
+  const add = (tid, tag) => {
+    tid = +tid; if (!MON[tid] || seen.has(tid)) return;
+    seen.add(tid);
+    opts.push({ tid, label: `${MON[tid].n}${tag || ''} · #${tid}` });
+  };
+  (z.m || []).forEach(t => add(t, ' · map'));
+  if (z.boss) add(z.boss, ' · trùm map');
+  ZONES.forEach(zz => { if (zz.boss) add(zz.boss, ` · trùm ${zz.n}`); });
+  return opts;
+}
+
+function adminSummon(tid, cls, lv, n) {
+  if (!isAdmin() || !S || !S.fac) return toast('Chỉ tài khoản admin');
+  if (R.town) return toast('Ra khỏi thành trước');
+  tid = +tid; cls = cls || 'normal'; n = clamp(Math.floor(+n) || 1, 1, 20);
+  lv = clamp(Math.floor(+lv) || stageLevel(S.stage), 1, levelCap());
+  if (!MON[tid]) return toast('Quái không hợp lệ');
+  if (!['normal', 'elite', 'boss'].includes(cls)) cls = 'normal';
+  const z = zoneOf(Math.min(S.stage, STAGES));
+  let spawned = 0;
+  for (let i = 0; i < n; i++) {
+    const [x, y] = adminNearPos(cls === 'boss' ? 120 : 70, cls === 'boss' ? 200 : 150);
+    const e = makeEnemy(tid, lv + (cls === 'boss' ? 1 : 0), cls, x, y);
+    if (cls === 'boss') e.n = bossName(tid, z.n);
+    e.aggro = true;
+    R.enemies.push(e);
+    spawned++;
+  }
+  toast(`Triệu hồi ${spawned}× ${MON[tid].n} (${cls}, Lv${lv})`);
+  log(`🛠 Admin: triệu hồi <b>${esc(MON[tid].n)}</b> ×${spawned} · ${cls} · Lv${lv}`);
+}
+
+function adminGiveItem(detail, part, tier, nMagic) {
+  if (!isAdmin() || !S || !S.fac) return toast('Chỉ tài khoản admin');
+  detail = +detail; tier = clamp(Math.floor(+tier) || Math.max(1, Math.floor(S.lvl / 12)), 1, 10);
+  nMagic = clamp(Math.floor(+nMagic) || 0, 0, 6);
+  const g = J.items[detail]; if (!g) return toast('Loại đồ không hợp lệ');
+  if (part === '' || part == null || part === 'auto') {
+    const ks = [...new Set(g.list.filter(r => sexReqOk(r.req)).map(r => r.k))];
+    part = ks.length ? pick(ks) : (g.list[0] && g.list[0].k);
+  } else part = +part;
+  part = typeof sexPart === 'function' ? sexPart(detail, part) : part;
+  let it = makeItem(detail, part, tier, nMagic);
+  for (let t = 0; it && !sexOk(it) && t < 8; t++) it = makeItem(detail, part, tier, nMagic);
+  if (!it || !sexOk(it)) return toast('Không tạo được món (sai giới tính / dữ liệu)');
+  if (!addItem(it, false, true, true)) return toast('Túi đầy — không thêm được');
+  adminApply();
+  toast(`+ ${it.n}`);
+  log(`🛠 Admin: thêm <span style="color:${RAR_COL[it.r]}">${esc(it.n)}</span> (cấp đồ ${it.lvl}, ${nMagic} dòng)`);
+  return it;
+}
+
+function adminGiveWeapon() {
+  const [d, p] = wantWeaponDP();
+  return adminGiveItem(d, p, Math.max(1, Math.floor(S.lvl / 12)), 4);
+}
+
+function adminGiveSet(kind) {
+  if (!isAdmin() || !S || !S.fac) return toast('Chỉ tài khoản admin');
+  kind = kind === 'platina' && typeof verPlat === 'function' && verPlat() ? 'platina' : 'gold';
+  const fid = FAC[S.fac] ? FAC[S.fac].id : -1;
+  const reqOf = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
+  let pool = (J.sets[kind] || []).filter(r => sexReqOk(r.req) && setRowOk(r) && reqOf(r, 36) <= S.lvl + 20);
+  const mine = pool.filter(r => reqOf(r, 39) === fid);
+  if (mine.length) pool = mine;
+  if (!pool.length) return toast('Không có bộ phù hợp');
+  const it = makeSetItem(kind, pick(pool), 10);
+  if (!addItem(it, false, true, true)) return toast('Túi đầy');
+  adminApply();
+  toast(`+ ${it.n}`);
+  log(`🛠 Admin: thêm bộ <span style="color:${RAR_COL[it.r]}">${esc(it.n)}</span>`);
+  return it;
+}
+
+function adminGiveHorse() {
+  if (!isAdmin() || !S || !S.fac) return toast('Chỉ tài khoản admin');
+  const it = typeof rareHorse === 'function' ? rareHorse() : (typeof horseRoll === 'function' ? horseRoll(true) : null);
+  if (!it) return toast('Không tạo được ngựa');
+  if (!addItem(it, false, true, true)) return toast('Túi đầy');
+  adminApply();
+  toast(`+ ${it.n}`);
+  log(`🛠 Admin: thêm ngựa <span style="color:${RAR_COL[it.r]}">${esc(it.n)}</span>`);
+  return it;
+}
+
 function adminModal() {
   if (!isAdmin()) return toast('Chỉ tài khoản admin');
   if (!S || !S.fac) return toast('Chọn nhân vật trước');
   const zones = ZONES.map((z, i) => `<option value="${i}">${esc(z.n)} (${z.lo}–${z.hi})</option>`).join('');
   const curZ = zoneIdx(Math.min(S.stage, STAGES));
+  const mobs = adminMobOptions();
+  const mobOpts = mobs.map(o => `<option value="${o.tid}">${esc(o.label)}</option>`).join('');
+  const itemOpts = Object.keys(J.items).map(d => {
+    const g = J.items[d]; return `<option value="${d}">${+d}. ${esc(g.n || ('Loại ' + d))}</option>`;
+  }).join('');
+  const defLv = stageLevel(S.stage);
   modal(`<h3>🛠 Admin Cheat <small class="dim">@${esc(netUname())}</small></h3>
     <p class="desc small dim">Chỉ hiện với tài khoản <b>admin</b>. Thay đổi lưu vào nhân vật đang chơi.</p>
     <div class="card">
@@ -110,6 +210,41 @@ function adminModal() {
       <button class="btn" id="adUnlock">Mở hết bản đồ</button>
       <button class="btn" id="adMats">+ Nguyên liệu</button>
     </div>
+    <div class="card" style="margin-top:.55em">
+      <b>👹 Triệu hồi quái / trùm</b>
+      <div class="row" style="margin-top:.35em;flex-wrap:wrap;gap:.35em">
+        <select id="adMob" style="max-width:16em">${mobOpts}</select>
+        <select id="adCls">
+          <option value="normal">Thường</option>
+          <option value="elite">Tinh anh</option>
+          <option value="boss" selected>Trùm</option>
+        </select>
+        Lv <input type="number" id="adMobLv" value="${defLv}" min="1" max="${MAX_LEVEL}" style="width:4em">
+        Số <input type="number" id="adMobN" value="1" min="1" max="20" style="width:3em">
+        <button class="btn sm" id="adSummon">Triệu hồi</button>
+      </div>
+      <div class="btnrow" style="margin-top:.35em">
+        <button class="btn sm" id="adSumBoss">Trùm map này</button>
+        <button class="btn sm" id="adSumElite">1 tinh anh map</button>
+        <button class="btn sm" id="adSumPack">5 quái map</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.55em">
+      <b>🎁 Thêm vật phẩm</b>
+      <div class="row" style="margin-top:.35em;flex-wrap:wrap;gap:.35em">
+        <select id="adItemD" style="max-width:12em">${itemOpts}</select>
+        Part <input type="number" id="adItemK" placeholder="auto" style="width:4em" title="Để trống = ngẫu nhiên đúng giới tính">
+        Tier <input type="number" id="adItemT" value="${Math.max(1, Math.floor(S.lvl / 12))}" min="1" max="10" style="width:3em">
+        Dòng <input type="number" id="adItemM" value="4" min="0" max="6" style="width:3em">
+        <button class="btn sm" id="adGive">Thêm</button>
+      </div>
+      <div class="btnrow" style="margin-top:.35em">
+        <button class="btn sm" id="adGiveWep">Vũ khí phái</button>
+        <button class="btn sm" id="adGiveGold">Hoàng Kim</button>
+        <button class="btn sm" id="adGivePlat">Bạch Kim</button>
+        <button class="btn sm" id="adGiveHorse">Ngựa</button>
+      </div>
+    </div>
     <div class="row" style="margin-top:.5em">Dịch chuyển
       <select id="adZone">${zones}</select>
       <button class="btn sm" id="adGo">Đi</button>
@@ -132,6 +267,30 @@ function adminModal() {
     $('#adClear').onclick = () => adminClearMobs();
     $('#adUnlock').onclick = () => adminUnlockMaps();
     $('#adMats').onclick = () => adminMats();
+    $('#adSummon').onclick = () => adminSummon($('#adMob').value, $('#adCls').value, $('#adMobLv').value, $('#adMobN').value);
+    $('#adSumBoss').onclick = () => {
+      const z = zoneOf(Math.min(S.stage, STAGES));
+      if (!z.boss) return toast('Map không có trùm');
+      adminSummon(z.boss, 'boss', stageLevel(S.stage), 1);
+    };
+    $('#adSumElite').onclick = () => {
+      const z = zoneOf(Math.min(S.stage, STAGES)), tid = pick(z.m || []);
+      if (!tid) return toast('Map không có quái');
+      adminSummon(tid, 'elite', stageLevel(S.stage), 1);
+    };
+    $('#adSumPack').onclick = () => {
+      const z = zoneOf(Math.min(S.stage, STAGES));
+      if (!(z.m || []).length) return toast('Map không có quái');
+      for (let i = 0; i < 5; i++) adminSummon(pick(z.m), 'normal', stageLevel(S.stage), 1);
+    };
+    $('#adGive').onclick = () => {
+      const k = $('#adItemK').value;
+      adminGiveItem($('#adItemD').value, k === '' ? 'auto' : k, $('#adItemT').value, $('#adItemM').value);
+    };
+    $('#adGiveWep').onclick = () => adminGiveWeapon();
+    $('#adGiveGold').onclick = () => adminGiveSet('gold');
+    $('#adGivePlat').onclick = () => adminGiveSet('platina');
+    $('#adGiveHorse').onclick = () => adminGiveHorse();
     $('#adGo').onclick = () => adminGotoZone($('#adZone').value);
     $('#adSwitch').onclick = () => typeof netSwitchAccount === 'function' && netSwitchAccount($('#adSwitch'));
   });
