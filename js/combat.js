@@ -66,7 +66,8 @@ function makeEnemy(tid, L, cls, x, y) {
   return { id: Math.random(), tid, n: m.n, img: m.img ? img(m.img) : null, sz: m.sz, L, cls, series, res,
     hp: st.hp, max: st.hp, dmg: st.dmg, ar: st.ar, def: st.def, x, y, r: CLS[cls].r,
     spd: (30 + (m.run || 6) * 4) * (cls === 'boss' ? 0.7 : 1), atkCd: rnd(0.5, 1.5), cd: 1.2 + 18 / Math.max(8, m.spd || 18) * 0.5,
-    reach: monReach(tid), ranged: monReach(tid) > 120, born: R.clock || 0, stun: 0, slowT: 0, poison: 0, poisonDmg: 0, hitT: 0, face: 1 };
+    reach: monReach(tid), ranged: monReach(tid) > 120, born: R.clock || 0, stun: 0, slowT: 0, poison: 0, poisonDmg: 0, hitT: 0, face: 1,
+    act: 'st', actT: 0, dir: 0, moving: false };
 }
 /* Mat do quai luyen cong: moi dot DENS_MIN..DENS_MAX con (truoc 3-4), dot trum co them DENS_BOSS dan em.
    Quai thuong danh nhe hon (DENS_DMG) vi dong gap doi. DENS_REW: he so thuong / roi do moi con thuong (test/t2: 1 -> len cap
@@ -286,13 +287,21 @@ function enemyAI(e, dt) {
   if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
   if (e.home && fieldIdle(e, dt)) return;                                // chua giao chien: loanh quanh diem goc (field.js)
   const d = Math.hypot(H.x - e.x, H.y - e.y), reach = e.ranged ? (e.reach || 200) : Math.max(e.r + 24, Math.min(e.reach || 0, 90));
-  e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y);
+  // mat huong: chi doi face trai/phai (khong xoay 8 huong moi frame); giu face khi dang danh / bi danh
+  if (e.act !== 'at' && e.act !== 'hurt') {
+    e.face = H.x >= e.x ? 1 : -1;
+    e.dir = dirOf(H.x - e.x, H.y - e.y);
+  }
   if ((e.seeT = (e.seeT || 0) - dt) <= 0) { e.seeT = 0.25; e.see = d > reach + 4 || obsSee(e.x, e.y, H.x, H.y); }   // tuong chan: khong danh xuyen tuong, phai di vong
   e.moving = d > reach || !e.see;
   if (e.moving) obsChase(e, H.x, H.y, e.spd * sl * dt);
   if (e.home) fieldLeash(e);
   e.atkCd -= dt * sl;
-  if (d <= reach + 4 && e.see && e.atkCd <= 0) { e.atkCd = e.cd * (e.curse && typeof curseMod === 'function' ? 1 + ((curseMod(e) || {}).slow || 0) / 100 : 1); enemyHit(e); e.act = 'at'; e.actT = 0; npcSfx(e.animKey || MON[e.tid].anim, 'at', 0.35); if (e.ranged) fxLine(e, H, { parts: { phys: 1 } }); }
+  if (d <= reach + 4 && e.see && e.atkCd <= 0 && e.act !== 'hurt') {
+    e.atkCd = e.cd * (e.curse && typeof curseMod === 'function' ? 1 + ((curseMod(e) || {}).slow || 0) / 100 : 1);
+    e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y);
+    enemyHit(e); e.act = 'at'; e.actT = 0; npcSfx(e.animKey || MON[e.tid].anim, 'at', 0.35); if (e.ranged) fxLine(e, H, { parts: { phys: 1 } });
+  }
 }
 function tick(dt) {
   obsFrame(); recTick(dt);

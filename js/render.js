@@ -187,18 +187,28 @@ function drawSprite(im, sz, x, y, scale, flip, alpha = 1) {
   return true;
 }
 /* ---------- hoat anh 8 huong (img/a/<npcres>_<hanh dong>.webp) ----------
-   huong 0 = quay mat ve nguoi xem, tang theo chieu kim dong ho: N(am), TN, T, TB, B, DB, D, DN */
+   huong 0 = quay mat ve nguoi xem, tang theo chieu kim dong ho: N(am), TN, T, TB, B, DB, D, DN
+   Sheet 1 huong (d=1 / flip=1): khong xoay 8 huong — chi lat trai/phai theo face (SoM…). */
 const dirOf = (vx, vy) => (((Math.round(Math.atan2(-vx, vy) / (Math.PI / 4)) % 8) + 8) % 8);
 const ONCE = { at: 1, hurt: 1, die: 1 };
 function animLen(key, act) { const m = W.anim && W.anim[key] && W.anim[key][act]; return m ? m.n * m.ms / 1000 : 0; }
-function drawAnim(key, act, dir, t, x, y, sc, alpha = 1) {
+function drawAnim(key, act, dir, t, x, y, sc, alpha = 1, face = 1) {
   const set = W.anim && W.anim[key]; if (!set) return false;
   const m = set[act] || set.st; if (!m) return false;
   const im = img('img/a/' + m.f); if (!im.complete || !im.naturalWidth) return false;
   let fr = Math.floor(t * 1000 / m.ms); fr = ONCE[act] ? Math.min(fr, m.n - 1) : fr % m.n;
   const d = m.d >= 8 ? dir : Math.floor(dir * m.d / 8);
+  const flip = !!(m.flip || m.d === 1) && face < 0;
   CX.globalAlpha = alpha;
-  CX.drawImage(im, fr * m.w, d * m.h, m.w, m.h, x - m.ax * sc, y - m.ay * sc, m.w * sc, m.h * sc);
+  if (flip) {
+    CX.save();
+    CX.translate(x, y);
+    CX.scale(-1, 1);
+    CX.drawImage(im, fr * m.w, d * m.h, m.w, m.h, -m.ax * sc, -m.ay * sc, m.w * sc, m.h * sc);
+    CX.restore();
+  } else {
+    CX.drawImage(im, fr * m.w, d * m.h, m.w, m.h, x - m.ax * sc, y - m.ay * sc, m.w * sc, m.h * sc);
+  }
   CX.globalAlpha = 1;
   return m.h * sc;
 }
@@ -206,6 +216,14 @@ function setAct(o, act) { if (o.act !== act) { o.act = act; o.actT = 0; } }
 function stepAct(o, dt, idle) { // het hoat anh mot lan (danh / trung don) -> ve trang thai nen
   o.actT = (o.actT || 0) + dt;
   if ((o.act === 'at' || o.act === 'hurt') && o.actT >= Math.max(0.25, animLen(o.animKey, o.act))) setAct(o, idle);
+}
+/* Quai: dung / chay / danh / bi danh / chet — khong ghi de khi dang at/hurt/die */
+function enemyAnimTick(e, dt) {
+  e.animKey = MON[e.tid] && MON[e.tid].anim;
+  const idle = e.moving ? 'run' : 'st';
+  stepAct(e, e.stun > 0 ? 0 : e.slowT > 0 ? dt * ELEM_SLOW : dt, idle);
+  if (e.dead || e.act === 'die') { setAct(e, 'die'); return; }
+  if (e.act !== 'at' && e.act !== 'hurt') setAct(e, idle);
 }
 /* ten tren dau (nhan vat, quai, dong hanh): chu mot nen, vien den cho de doc tren moi nen ban do */
 const NAME_COL = { boss: '#ffb070', elite: '#8fc6ff', normal: '#e8dcc8', hero: '#fff3c0', pet: '#9fe36a', gold: '#ffd24a' };
@@ -256,7 +274,7 @@ function draw(dt) {
   for (const e of R.corpses) {
     e.actT += dt; const a = clamp(1.6 - e.actT, 0, 1);
     const sc = 1;   // nhu JX1: moi quai ve dung ti le goc nhu nhan vat (khong phong to trum / thu nho quai thuong)
-    if (!(e.animKey && drawAnim(e.animKey, 'die', e.dir || 0, e.actT, e.x, e.y, sc * MON_SCALE, a))) { c.globalAlpha = a * 0.5; drawSprite(e.img, e.sz, e.x, e.y, sc, e.face < 0); c.globalAlpha = 1; }
+    if (!(e.animKey && drawAnim(e.animKey, 'die', e.dir || 0, e.actT, e.x, e.y, sc * MON_SCALE, a, e.face))) { c.globalAlpha = a * 0.5; drawSprite(e.img, e.sz, e.x, e.y, sc, e.face < 0); c.globalAlpha = 1; }
   }
   R.corpses = R.corpses.filter(e => e.actT < 1.6);
   drawPet(c, dt);                                                           // dong hanh (rewards.js)
@@ -290,9 +308,9 @@ function draw(dt) {
     const sc = 1;   // nhu JX1: moi quai ve dung ti le goc nhu nhan vat (khong phong to trum / thu nho quai thuong)
     c.fillStyle = '#0007'; c.beginPath(); c.ellipse(e.x, e.y, e.r, e.r * 0.38, 0, 0, 7); c.fill();
     c.strokeStyle = SERIES_COL[e.series]; c.lineWidth = e.cls === 'normal' ? 1.2 : 2.4; c.beginPath(); c.ellipse(e.x, e.y, e.r, e.r * 0.38, 0, 0, 7); c.stroke();
-    e.animKey = MON[e.tid].anim; stepAct(e, e.stun > 0 ? 0 : e.slowT > 0 ? dt * ELEM_SLOW : dt, e.moving ? 'run' : 'st');   // choang: dung hinh; cham: hoat anh cham
+    enemyAnimTick(e, dt);
     const eTint = entTint(e.slowT > 0, e.poison > 0);
-    const ah = e.animKey && drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230, () => drawAnim(e.animKey, e.act || 'st', e.dir || 0, e.actT || 0, e.x, e.y, sc * MON_SCALE, e.hitT > 0 ? 0.75 : 1));
+    const ah = e.animKey && drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230, () => drawAnim(e.animKey, e.act || 'st', e.dir || 0, e.actT || 0, e.x, e.y, sc * MON_SCALE, e.hitT > 0 ? 0.75 : 1, e.face));
     if (e.curse) drawEnemyCurses(c, e, sc * MON_SCALE);                 // bua hai (skillsys.js)
     if (e.stFx) drawEnemyState(c, e, ah ? Math.min(ah, 110) : 50, sc * MON_SCALE, dt);   // trang thai do chieu gay ra (skillfx.js)
     if (!ah && !drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230, () => drawSprite(e.img, e.sz, e.x, e.y, sc, e.face < 0, e.hitT > 0 ? 0.6 : 1))) { c.fillStyle = SERIES_COL[e.series]; c.beginPath(); c.arc(e.x, e.y - e.r, e.r, 0, 7); c.fill(); }
