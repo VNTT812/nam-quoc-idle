@@ -1,5 +1,5 @@
 /* Hoa Sơn SoM: mỗi hành động 1 strip riêng (st/run/at/hurt/die), 1 hướng + lật trái/phải.
-   Không fallback sang anim khác, không xoay 8 hướng. */
+   Spawn: chọn ngẫu nhiên 1 màu trong MON[tid].somColors (không ghi đè mỗi frame). */
 'use strict';
 
 const SOM_FACE_DEADZONE = 18;   // px — tránh flip liên tục khi đứng sát trục X
@@ -8,6 +8,22 @@ const SOM_MOVE_HOLD = 0.18;     // giây — giữ run thêm chút khi vừa d�
 function isSomMon(tid) {
   const m = MON[tid];
   return !!(m && (m.faceOnly || (m.anim && String(m.anim).indexOf('som_') === 0)));
+}
+
+/** Gán màu ngẫu nhiên 1 lần khi spawn (animKey + portrait). */
+function somApplyRandomColor(e) {
+  const m = MON[e.tid];
+  if (!m || !m.somColors || !m.somColors.length) {
+    e.animKey = m && m.anim;
+    return e;
+  }
+  const c = m.somColors[Math.floor(Math.random() * m.somColors.length)];
+  e.animKey = c.key;
+  e.somColor = c.color;
+  if (c.img) {
+    e.img = (typeof img === 'function') ? img(c.img) : e.img;
+  }
+  return e;
 }
 
 /** Chỉ đổi mặt khi lệch đủ xa — hết xoay trái/phải liên tục. */
@@ -19,7 +35,10 @@ function somUpdateFace(e, tx) {
 
 /** State máy anim quái SoM: đúng 1 act tại 1 thời điểm. */
 function somEnemyAnimTick(e, dt) {
-  e.animKey = MON[e.tid].anim;
+  if (!e.animKey) {
+    const m = MON[e.tid];
+    e.animKey = m && m.anim;
+  }
   if (e.dead || e.act === 'die') {
     if (e.act !== 'die') { e.act = 'die'; e.actT = 0; }
     else e.actT = (e.actT || 0) + dt;
@@ -63,3 +82,14 @@ function somDrawAnim(key, act, t, x, y, sc, alpha, face) {
   CX.globalAlpha = 1;
   return m.h * sc;
 }
+
+/* Hook makeEnemy: SoM spawn → random màu */
+(function somHookSpawn() {
+  if (typeof makeEnemy !== 'function') return;
+  const _make = makeEnemy;
+  makeEnemy = function (tid, L, cls, x, y) {
+    const e = _make(tid, L, cls, x, y);
+    if (e && isSomMon(tid)) somApplyRandomColor(e);
+    return e;
+  };
+})();
