@@ -1,7 +1,7 @@
 // Ma nguon (js/css/html): mang truoc, cache du phong (luon lay ban moi, choi offline khi mat mang).
 // Hinh / am thanh / font (nang, it doi): lay ngay tu cache, dong thoi tai lai ngam de cap nhat (stale-while-revalidate).
 // Cache hinh giu qua cac ban cap nhat -> khong phai tai lai ~200 MB ban do / sprite moi lan doi phien ban.
-const C = 'jxidle-v212', IMG = 'jxidle-img-212';
+const C = 'jxidle-v213', IMG = 'jxidle-img-213';
 const ASSET = /\.(png|jpe?g|webp|gif|mp3|ogg|wav|m4a|woff2?|ttf)$/i;
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C && k !== IMG).map(k => caches.delete(k)))).then(() => self.clients.claim())));

@@ -1,5 +1,5 @@
-/* Yên Tử (zone id 2, xưa Hoa Sơn): quái Spell of Mastery (NancyGold, CC-BY 4.0).
-   Chạy sau world.js + zones2.js — chỉ đổi roster map id 2, không đụng map khác.
+/* Hoa Sơn: quái Spell of Mastery (NancyGold, CC-BY 4.0).
+   Chạy sau world.js + zones2.js — chỉ đổi roster map Hoa Sơn (id 2), không đụng map khác.
    Mỗi loại có nhiều màu (colors[]); spawn random màu trong som_anim.js. */
 'use strict';
 (function () {
