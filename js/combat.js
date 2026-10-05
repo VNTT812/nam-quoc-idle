@@ -287,10 +287,10 @@ function enemyAI(e, dt) {
   if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
   if (e.home && fieldIdle(e, dt)) return;                                // chua giao chien: loanh quanh diem goc (field.js)
   const d = Math.hypot(H.x - e.x, H.y - e.y), reach = e.ranged ? (e.reach || 200) : Math.max(e.r + 24, Math.min(e.reach || 0, 90));
-  // mat huong: chi doi face trai/phai (khong xoay 8 huong moi frame); giu face khi dang danh / bi danh
+  // mat huong: SoM chỉ lật trái/phải + deadzone (hết xoay); quái thường giữ logic cũ
   if (e.act !== 'at' && e.act !== 'hurt') {
-    e.face = H.x >= e.x ? 1 : -1;
-    e.dir = dirOf(H.x - e.x, H.y - e.y);
+    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, H.x);
+    else { e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y); }
   }
   if ((e.seeT = (e.seeT || 0) - dt) <= 0) { e.seeT = 0.25; e.see = d > reach + 4 || obsSee(e.x, e.y, H.x, H.y); }   // tuong chan: khong danh xuyen tuong, phai di vong
   e.moving = d > reach || !e.see;
@@ -299,7 +299,8 @@ function enemyAI(e, dt) {
   e.atkCd -= dt * sl;
   if (d <= reach + 4 && e.see && e.atkCd <= 0 && e.act !== 'hurt') {
     e.atkCd = e.cd * (e.curse && typeof curseMod === 'function' ? 1 + ((curseMod(e) || {}).slow || 0) / 100 : 1);
-    e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y);
+    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, H.x);
+    else { e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y); }
     enemyHit(e); e.act = 'at'; e.actT = 0; npcSfx(e.animKey || MON[e.tid].anim, 'at', 0.35); if (e.ranged) fxLine(e, H, { parts: { phys: 1 } });
   }
 }

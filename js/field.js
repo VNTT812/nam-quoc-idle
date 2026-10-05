@@ -84,7 +84,11 @@ function fieldIdle(e, dt) {
   }
   if ((e.wT -= dt) <= 0) { e.wT = rnd(2, 5); e.wx = p.x + rnd(-FLD_WANDER, FLD_WANDER); e.wy = p.y + rnd(-FLD_WANDER, FLD_WANDER) * 0.6; }
   const wd = e.wx != null ? Math.hypot(e.wx - e.x, e.wy - e.y) : 0;
-  e.moving = wd > 4; if (e.moving) { obsMove(e, e.x + (e.wx - e.x) / wd * Math.min(wd, e.spd * 0.4 * dt), e.y + (e.wy - e.y) / wd * Math.min(wd, e.spd * 0.4 * dt)); e.face = e.wx >= e.x ? 1 : -1; e.dir = dirOf(e.wx - e.x, e.wy - e.y); }
+  e.moving = wd > 4; if (e.moving) {
+    obsMove(e, e.x + (e.wx - e.x) / wd * Math.min(wd, e.spd * 0.4 * dt), e.y + (e.wy - e.y) / wd * Math.min(wd, e.spd * 0.4 * dt));
+    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, e.wx);
+    else { e.face = e.wx >= e.x ? 1 : -1; e.dir = dirOf(e.wx - e.x, e.wy - e.y); }
+  }
   return true;
 }
 /* bi keo xa diem goc: bo duoi, quay ve, hoi day mau (nhu JX1) */

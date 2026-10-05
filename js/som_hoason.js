@@ -18,7 +18,8 @@
       spd: 18,
       run: r.run,
       rmax: r.rmax,
-      anim: r.key
+      anim: r.key,
+      faceOnly: 1
     };
   }
   const z = JW.zones && JW.zones.find(x => x.id === 2);
