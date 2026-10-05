@@ -375,7 +375,7 @@ function renderInv() {
 /* ---------- the: khac ---------- */
 function renderMore() {
   const cloud = typeof netOn === 'function' && netOn() && !NET.offline;
-  $('#t-more').innerHTML = `${cloud ? `<h3>Lưu game</h3><div class="card"><p class="dim small">Nhân vật tự lưu lên máy chủ khi đã đăng nhập (mỗi 2 phút và khi thoát game). Đăng nhập cùng tài khoản ở máy / điện thoại khác là chơi tiếp.</p><div class="btnrow"><button class="btn" id="bCloud">🌐 Tài khoản · Lưu đám mây</button></div></div>
+  $('#t-more').innerHTML = `${cloud ? `<h3>Lưu game</h3><div class="card"><p class="dim small">Nhân vật tự lưu lên máy chủ khi đã đăng nhập (mỗi 2 phút và khi thoát game). Đăng nhập cùng tài khoản ở máy / điện thoại khác là chơi tiếp.${NET.user ? ` Đang vào: <b>${esc(netUname())}</b>.` : ''}</p><div class="btnrow"><button class="btn" id="bCloud">🌐 Tài khoản · Lưu đám mây</button>${NET.user ? '<button class="btn" id="bAccSwitch">Đổi tài khoản</button>' : ''}</div></div>
     ` : `<h3>Lưu game</h3><div class="card"><p class="dim small">Nhân vật lưu trong trình duyệt của từng thiết bị (3 slot). Để chơi trên thiết bị khác: bấm <b>Tải file lưu</b>, chuyển file <code>.jxsave</code> sang thiết bị kia (Zalo, Drive, cáp…), rồi mở game ở đó và bấm <b>Nạp từ file</b>. File có chữ ký, sửa tay sẽ bị từ chối. Nên tải file định kỳ để sao lưu.</p>
     <div class="btnrow"><button class="btn" id="bDl">Tải file lưu (.jxsave)</button><button class="btn" id="bFile">Nạp từ file</button></div>
     <p class="dim small">Hoặc dùng mã văn bản:</p><div class="btnrow"><button class="btn" id="bExp">Xuất mã</button><button class="btn" id="bImp">Nhập mã</button></div><textarea id="saveTxt" rows="4" placeholder="Mã lưu game"></textarea></div>`}
@@ -407,6 +407,7 @@ function renderMore() {
     <div class="btnrow"><button class="btn" id="bSwitch">Đổi nhân vật / slot</button><button class="btn red" id="bReset">Xóa nhân vật</button></div>`;
   const onc = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
   onc('#bCloud', () => netModal('acc'));
+  onc('#bAccSwitch', () => netSwitchAccount($('#bAccSwitch')));
   onc('#bDl', () => { if (downloadSaveFile()) toast('Đã tải file lưu: ' + saveFileName()); });
   onc('#bFile', () => pickSaveFile(null));
   onc('#bExp', () => { $('#saveTxt').value = exportSave(); toast('Đã xuất mã'); });

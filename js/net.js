@@ -256,6 +256,19 @@ async function netModal(tab, msg) {
 }
 const busy = async (btn, fn, after) => { if (btn) btn.disabled = true; try { const m = await fn(); after ? after(m) : null; } catch (e) { toast(e.message || String(e)); if (btn) btn.disabled = false; } };
 
+/* Dang xuat + mo man dang nhap de doi sang tai khoan khac (tu dong luu dam may truoc). */
+async function netSwitchAccount(btn) {
+  if (!netOn() || NET.offline) return toast('Bản offline không có tài khoản máy chủ');
+  if (!NET.user) { closeModal(true); return netGate(); }
+  return busy(btn, async () => {
+    if (S && S.fac) await netUpload().catch(() => {});
+    try { await netClient(); } catch (e) { /* van thu dang xuat local */ }
+    NET.loggingOut = true;
+    try { if (NET.sb) await NET.sb.auth.signOut(); } catch (e) { /* bo qua */ }
+    NET.loggingOut = false; NET.user = null; NET.mailN = 0; netDot();
+  }, () => { closeModal(true); toast('Đã đăng xuất — đăng nhập tài khoản khác'); netGate(); });
+}
+
 async function netAccBody(el) {
   if (!NET.user) {
     el.innerHTML = `<div class="card"><b>Đăng nhập / Đăng ký</b><p class="dim small">Một tài khoản dùng cho cả 3 nhân vật: lưu đám mây, bảng xếp hạng, gửi thư, Chợ. Không cần email.</p>
@@ -268,7 +281,8 @@ async function netAccBody(el) {
     return;
   }
   const list = await netCloudList(), ago = t => t ? new Date(t).toLocaleString('vi-VN') : '—';
-  el.innerHTML = `<div class="card"><b>Tài khoản ${esc(netUname())}</b> <button class="btn sm" id="naOut">Đăng xuất</button>
+  el.innerHTML = `<div class="card"><b>Tài khoản ${esc(netUname())}</b>
+      <div class="btnrow" style="margin:.4em 0"><button class="btn sm" id="naSwitch">Đổi tài khoản</button><button class="btn sm red" id="naOut">Đăng xuất</button></div>
       ${S.fac ? `<p class="small">Nhân vật đang chơi: <b>${esc(hasRealName() ? S.name : '(chưa đặt tên)')}</b> · ${esc(facName(S.fac))} cấp ${S.lvl} · slot ${SLOT + 1}</p>
       <div class="btnrow"><button class="btn sm" id="naSync">Cập nhật lên bảng xếp hạng</button>${hasRealName() ? '' : '<button class="btn sm on" id="naName">✏ Đặt tên</button>'}</div>` : ''}</div>
     <div class="card"><b>☁ Lưu đám mây</b> <small class="dim">mỗi slot 1 bản, chơi tiếp trên máy khác</small>
@@ -277,8 +291,10 @@ async function netAccBody(el) {
       <table class="dktbl small"><tr><th>Slot</th><th>Nhân vật</th><th>Lưu lúc</th><th></th></tr>
       ${[0, 1, 2].map(i => { const s = list.find(x => x.slot === i); return `<tr><td>${i + 1}</td><td>${s ? `${esc(s.name || '')} · ${esc(facName(s.fac))} ${s.lvl}` : '<span class="dim">trống</span>'}</td><td>${s ? ago(s.updated) : ''}</td><td>${s ? `<button class="btn sm" data-cl="${i}">Tải về</button>` : ''}</td></tr>`; }).join('')}</table>
       <p class="dim small">Tải về: thay nhân vật slot đó trên máy này bằng bản đám mây (bản cũ giữ 1 bản sao lưu). Bình thường game tự đồng bộ, không cần bấm.</p></div>`;
-  $('#naOut').onclick = () => busy($('#naOut'), async () => { if (S && S.fac) await netUpload().catch(() => {}); NET.loggingOut = true; await NET.sb.auth.signOut(); NET.loggingOut = false; NET.user = null; NET.mailN = 0; netDot(); }, () => netGate());
   const on = (id, fn) => { const b = $(id); if (b) b.onclick = fn; };
+  on('#naSwitch', () => netSwitchAccount($('#naSwitch')));
+  on('#naOut', () => netSwitchAccount($('#naOut')));
+
   on('#naSync', () => busy($('#naSync'), () => netSyncChar(), () => toast('Đã cập nhật')));
   on('#naName', () => nameModal(() => netModal('acc')));
   on('#naUp', () => busy($('#naUp'), () => netUpload(), () => { toast('Đã lưu lên đám mây'); netModal('acc'); }));

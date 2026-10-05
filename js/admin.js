@@ -113,7 +113,8 @@ function adminModal() {
     <div class="row" style="margin-top:.5em">Dịch chuyển
       <select id="adZone">${zones}</select>
       <button class="btn sm" id="adGo">Đi</button>
-    </div>`, () => {
+    </div>
+    <div class="btnrow" style="margin-top:.6em"><button class="btn" id="adSwitch">Đổi tài khoản</button></div>`, () => {
     const $g = $('#adGold'), $k = $('#adKnb'), $l = $('#adLv');
     $('#adZone').value = String(curZ);
     $('#adGoldSet').onclick = () => { S.gold = Math.max(0, Math.floor(+$g.value) || 0); adminApply(); toast('Ngân lượng: ' + fmt(S.gold)); };
@@ -132,6 +133,7 @@ function adminModal() {
     $('#adUnlock').onclick = () => adminUnlockMaps();
     $('#adMats').onclick = () => adminMats();
     $('#adGo').onclick = () => adminGotoZone($('#adZone').value);
+    $('#adSwitch').onclick = () => typeof netSwitchAccount === 'function' && netSwitchAccount($('#adSwitch'));
   });
 }
 
@@ -139,8 +141,9 @@ function adminInjectMore() {
   if (!isAdmin() || !S || !S.fac) return;
   if (typeof u20MoreMode !== 'undefined' && u20MoreMode === 'tt' && typeof u2any === 'function' && u2any()) return;
   const t = $('#t-more'); if (!t || t.querySelector('#bAdmin')) return;
-  t.insertAdjacentHTML('afterbegin', `<h3>🛠 Admin</h3><div class="card"><p class="dim small">Cheat chỉ dành cho tài khoản <b>admin</b> (đang đăng nhập: ${esc(netUname())}).</p><div class="btnrow"><button class="btn" id="bAdmin">Mở bảng cheat</button></div></div>`);
+  t.insertAdjacentHTML('afterbegin', `<h3>🛠 Admin</h3><div class="card"><p class="dim small">Cheat chỉ dành cho tài khoản <b>admin</b> (đang đăng nhập: ${esc(netUname())}).</p><div class="btnrow"><button class="btn" id="bAdmin">Mở bảng cheat</button><button class="btn" id="bAdminSwitch">Đổi tài khoản</button></div></div>`);
   $('#bAdmin').onclick = () => adminModal();
+  $('#bAdminSwitch').onclick = () => typeof netSwitchAccount === 'function' && netSwitchAccount($('#bAdminSwitch'));
 }
 
 /* ---------- hook UI + combat ---------- */
