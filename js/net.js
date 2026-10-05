@@ -3,7 +3,7 @@
    May chu: NET_SETUP.sql. Moi mon trong Thu chi nhan duoc 1 lan (may chu kiem tra); mua o Cho: 1 nguoi mua, tien 95% ve Thu nguoi ban. */
 'use strict';
 const NET = { sb: null, user: null, tab: 'acc', mkt: 'buy', rank: 'lvl', rfac: '', mailN: 0, lastChar: 0, lastUp: 0, sel: null, q: '', offline: false };
-const NET_DOMAIN = '@volamidle.game', NET_TAX = 0.05;
+const NET_DOMAIN = '@volamidle.com', NET_TAX = 0.05;   // v198: supabase moi chan TLD .game (email_address_invalid)
 /* v182: moi ban (web, launcher tren may) deu phai dang nhap, chi luu dam may. NET_LOCAL chi cho bo thu tu dong (?offline_test=1). */
 const NET_LOCAL = /[?&]offline_test=1\b/.test(location.search);
 const netOn = () => { const c = window.CHAT_CFG || {}; return !!(c.url && c.key) && !NET_LOCAL && !NET.offline; };
@@ -376,10 +376,22 @@ async function netMktBody(el) {
 }
 
 /* ---------- khoi dong + dong bo dinh ky ---------- */
+async function netProbe() {
+  const c = window.CHAT_CFG || {}; if (!c.url || !c.key) throw new Error('Chưa cấu hình máy chủ (js/chatcfg.js)');
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const t = setTimeout(() => { try { ctrl && ctrl.abort(); } catch (e) { /* bo qua */ } }, 8000);
+  try {
+    const r = await fetch(c.url.replace(/\/$/, '') + '/auth/v1/health', { method: 'GET', headers: { apikey: c.key }, signal: ctrl ? ctrl.signal : undefined });
+    if (!r.ok && r.status >= 500) throw new Error('Máy chủ đăng nhập đang lỗi (HTTP ' + r.status + ')');
+  } catch (e) {
+    if (e && (e.name === 'AbortError' || /abort/i.test(String(e.message || e)))) throw new Error('Máy chủ đăng nhập không phản hồi (timeout)');
+    throw new Error(netErr(e));
+  } finally { clearTimeout(t); }
+}
 async function netInit() {
   if (!netOn()) return;
   const h = $('#giftBtn'); if (h && !$('#netBtn')) { const b = document.createElement('button'); b.id = 'netBtn'; b.title = 'Giang hồ online: tài khoản, xếp hạng, thư, chợ'; b.textContent = '🌐'; h.parentNode.insertBefore(b, h); b.onclick = () => { if (typeof uiSfx === 'function') uiSfx('click'); netModal(); }; }
-  try { await netClient(); } catch (e) { netGate('Không kết nối được máy chủ: ' + (e.message || e)); return; }
+  try { await netProbe(); await netClient(); } catch (e) { netGate('Không kết nối được máy chủ: ' + (e.message || e)); return; }
   if (!NET.user) { netGate(); return; }
   netSyncAll().then(ch => { if (ch && (!S || !S.fac)) location.reload(); }).catch(() => {});
   netMailCount();
