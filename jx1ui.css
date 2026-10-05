@@ -1,0 +1,51 @@
+/* ======== Giao dien JX1 (anh cat tu client JX1: Spr\Ui3) ======== */
+:root{--panel:#141413;--panel2:#1b1b19;--line:#33332e;--line2:#4d5a4f;--gold:#f0d890;--gold2:#7b6d48;--jade:#7fb8a4;--text:#e8e2cc}
+#app{background:#0b0b0a}
+/* thanh tren: nhu thanh trang thai JX1 */
+#top{background:linear-gradient(#25241f,#121210);border-bottom:2px solid #4a463a;box-shadow:inset 0 -1px 0 #000}
+.lvbox{border-radius:0;border:2px solid #6b6145;box-shadow:inset 0 0 0 1px #000}
+.lvbox #lv{border-radius:0;border:1px solid #6b6145;background:#000}
+.bar{border-radius:0;border:1px solid #000;box-shadow:0 0 0 1px #3d4a3f;background:#050505;height:11px}
+.bar.hp i{background:url(ui/jx1/bar_hp.png) 0 0/100% 100%} .bar.mp i{background:url(ui/jx1/bar_mp.png) 0 0/100% 100%}
+.bar.xp i{background:url(ui/jx1/bar_xp.png) 0 0/100% 100%}
+#hud .bar{border-image:none}
+/* khung bang: tieu de ngoc + hoa van bac */
+#panel{background:#121211;border-top:0;position:relative}
+#panel::before{content:"";display:block;height:26px;background:url(ui/jx1/ornb.png) center top/auto 100% no-repeat,linear-gradient(#2a221a,#0d0c0a);border-bottom:1px solid #000}
+.tab{padding:0 8px 16px}
+.tab::before{display:block;position:sticky;top:0;z-index:2;height:34px;line-height:34px;margin:0 -8px 8px;text-align:center;font-size:15px;font-weight:700;letter-spacing:3px;color:#0f1a14;text-shadow:0 0 3px #bfe8d4,0 0 1px #bfe8d4;
+  background:url(ui/jx1/tl.png) left center/auto 100% no-repeat,url(ui/jx1/tr.png) right center/auto 100% no-repeat,url(ui/jx1/tm.png) center/auto 100% repeat-x}
+#t-log::before{content:"GIANG HỒ"} #t-char::before{content:"NHÂN VẬT"} #t-skill::before{content:"VÕ CÔNG"} #t-inv::before{content:"HÀNH TRANG"} #t-more::before{content:"HỆ THỐNG"}
+h3{color:var(--gold);border-bottom:1px solid #3a3a33;padding-bottom:3px}
+.card,.skl{border-radius:0;background:#1a1a18;border:1px solid #000;box-shadow:inset 0 0 0 1px #3a3a33}
+/* nut ngoc xanh nhu "Moi vao doi" */
+.btn,.chip,.dtabs button{border-radius:0!important;background:linear-gradient(#24463d,#13261f)!important;border:1px solid #6f9c8b!important;color:#f3ecd2!important;box-shadow:inset 0 0 0 1px #000;text-shadow:0 1px 1px #000}
+.btn.on,.chip.on,.dtabs button.on{background:linear-gradient(#5a4a22,#2a2110)!important;border-color:#e6c67a!important;color:#ffe9a8!important}
+.btn.red{background:linear-gradient(#5a1d16,#2a0c09)!important;border-color:#b55a48!important}
+/* o do / o trang bi: luoi den nhu Ruong / Hanh trang JX1 */
+.it,.slot{border-radius:0;background:#0a0a0a;border:1px solid #2e2e2a;box-shadow:inset 0 0 0 1px #000}
+.slot{border-style:solid;color:#5f6a5f}
+.invgrid{gap:2px;background:#000;padding:2px;border:1px solid #3a3a33}
+.eqgrid{background:url(ui/jx1/pbg.png) center/cover;padding:6px;border:1px solid #3a3a33}
+/* thanh nut duoi: bieu tuong goc JX1 */
+#tabs{background:linear-gradient(#2a2822,#0f0e0c)!important;border-top:2px solid #4a463a}
+#tabs button{color:#b9b29a;padding:28px 2px 5px}
+#tabs button::before{width:26px;height:26px;margin-left:-13px;top:2px;background-size:auto 100%!important;image-rendering:pixelated}
+#tabs button.on{color:#ffe9a8;box-shadow:none;background:radial-gradient(ellipse at 50% 30%,#4a3d1c88,transparent 70%)}
+#tabs button[data-t=log]::before{background-image:url(ui/jx1/nav_log.png)} #tabs button[data-t=char]::before{background-image:url(ui/jx1/nav_char.png)}
+#tabs button[data-t=skill]::before{background-image:url(ui/jx1/nav_skill.png)} #tabs button[data-t=inv]::before{background-image:url(ui/jx1/nav_inv.png)}
+#tabs button[data-t=more]::before{background-image:url(ui/jx1/nav_more.png)}
+#tabs button::before{background-position:0 0!important} #tabs button.on::before{background-position:50% 0!important}
+/* hop thoai */
+.mbox{border-radius:0;border:0!important;border-image:none!important;background:#141413;box-shadow:0 0 0 1px #000,0 0 0 3px #4a463a,0 0 24px #000;padding-top:30px}
+.mbox::before{content:"";position:absolute;left:0;right:0;top:-14px;height:24px;background:url(ui/jx1/ornt.png) center/auto 100% no-repeat}
+/* 7 the: Giang ho · Nhan vat · Vo cong · Hanh trang · Lo ren · Nhiem vu · Khac */
+#tabs{grid-template-columns:repeat(7,1fr)!important}
+#tabs button{font-size:10.5px;letter-spacing:-.2px;padding:28px 0 5px;white-space:nowrap}
+#tabs button[data-t=forge]::before{background-image:url(ui/jx1/nav_forge.png)} #tabs button[data-t=quest]::before{background-image:url(ui/jx1/nav_quest.png)}
+#t-forge::before{content:"LÒ RÈN"} #t-quest::before{content:"NHIỆM VỤ"}
+.fcard{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start}
+.fcard .fic{width:44px;height:44px;display:grid;place-items:center;background:#0a0a0a;border:1px solid #2e2e2a}
+.fcard .fic img{height:30px;image-rendering:pixelated}
+.it .fenh{left:auto;right:2px;top:0;color:#ffe9a8}
+.modec .modesw{display:flex;gap:6px;margin-bottom:6px}.modec .modesw .btn{flex:1}

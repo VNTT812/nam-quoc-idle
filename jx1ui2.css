@@ -1,0 +1,143 @@
+/* ======== Giao dien JX1 v2: nut / the / tieu de / thanh trang thai cat tu client (Spr\Ui3\道具, 技能, 主界面) ========
+   - The (dtabs): thanh hoa van nhu "Vo cong chieu thuc / Ky nang song" cua bang Vo cong JX1.
+   - Thanh trang thai duoi san dau: khung "新血条面板" voi thanh Sinh luc / Noi luc kieu JX1. */
+:root{--jxtxt:#0d1714;--jxglow:#9fe6d2}
+/* (nut bam: giu kieu jx1ui.css) */
+/* ---- the trong bang (nhu bang Vo cong JX1) ---- */
+.dtabs{gap:0!important;border:1px solid #000;box-shadow:0 0 0 1px #5a5850;background:#000}
+.dtabs button{flex:1;border:0!important;border-radius:0!important;padding:5px 6px!important;margin:0;background:url(ui/jx1/flor.png) center/auto 100% repeat-x!important;
+  color:#e8f6e6!important;font-weight:700;font-size:12px;text-shadow:0 0 2px #000,0 0 2px #000,0 1px 1px #000!important;border-right:1px solid #1d1d1a!important;filter:brightness(.78)}
+.dtabs button:last-child{border-right:0!important}
+.dtabs button.on{filter:none;color:#fff8d8!important;text-shadow:0 0 3px #0b3a30,0 0 2px #000,0 0 1px #000!important;box-shadow:inset 0 -2px 0 #e6c67a}
+/* ---- tieu de muc (h3) trong bang: thanh hoa van nho ---- */
+.tab h3,.mbox h3{background:url(ui/jx1/flor.png) center/auto 100% repeat-x;margin:12px -2px 8px;padding:4px 10px;border:1px solid #000;box-shadow:0 0 0 1px #5a5850;
+  color:var(--jxtxt)!important;font-weight:700;text-shadow:0 0 2px var(--jxglow),0 0 2px var(--jxglow);border-bottom:1px solid #000}
+.tab h3 small,.mbox h3 small{color:#1a2622;text-shadow:0 0 2px #cfe9df;font-weight:400}
+.mbox h3:first-child{margin-top:0}
+/* ---- o thong tin (card) nhu o "Ngan luong" cua bang Do vat ---- */
+.card,.skl{background:#0b0b0a!important;border:1px solid #000!important;box-shadow:inset 0 0 0 1px #43413b,0 0 0 1px #24231f!important}
+/* ---- thanh trang thai tren cung kieu JX1 (新血条面板): Cap | Sinh luc | Noi luc | Kinh nghiem | Luc chien ---- */
+#hud{position:absolute;top:0!important;left:0!important;right:0!important;bottom:auto!important;transform:none!important;width:auto!important;z-index:5;
+  display:grid!important;grid-template-columns:auto 1fr 1fr 1fr auto!important;gap:0 3px!important;align-items:center;padding:2px 4px!important;
+  background:linear-gradient(#123224,#0a1d15)!important;border-bottom:1px solid #000;box-shadow:0 1px 0 #2f5a48,inset 0 1px 0 #2f5a48!important;pointer-events:none}
+#hud .jxs{display:flex;align-items:center;gap:3px;font-size:11px;color:#e8dcb0;text-shadow:0 0 2px #000;white-space:nowrap}
+#hud .jxs b{min-width:24px;padding:0 4px;height:15px;line-height:15px;text-align:center;background:#1d4a38;border:1px solid #000;box-shadow:inset 0 0 0 1px #3f7a62;color:#fff3c0;font-size:10.5px}
+#hud .bar{height:15px!important;border:1px solid #000!important;box-shadow:inset 0 0 0 1px #3f6a58!important;border-radius:0!important;background:linear-gradient(#202020,#3a3a3a 45%,#151515)!important;padding:0!important}
+#hud .bar i{inset:2px!important;width:0}
+#hud .bar.hp i{background:url(ui/jx1/sbar_hp.png) 0 0/100% 100%!important} #hud .bar.mp i{background:url(ui/jx1/sbar_mp.png) 0 0/100% 100%!important}
+#hud .bar.xp i{background:url(ui/jx1/sbar_xp.png) 0 0/100% 100%!important}
+#hud .bar span{font-size:9.5px;line-height:15px;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 0 1px #000}
+#mainSk{display:none}
+#ctrlBtn{top:26px!important}
+#skBuffs{top:54px!important}
+
+/* ---- khung hop thoai: hoa van bac tren + duoi nhu bang Do vat ---- */
+.mbox::before{background:url(ui/jx1/ornt2.png) center bottom/auto 100% no-repeat!important;top:-22px!important;height:30px!important}
+.mbox{box-shadow:0 0 0 1px #000,0 0 0 2px #797369,0 0 0 4px #252320,0 0 0 5px #000,0 0 24px #000!important;background:#252320!important}
+.mbox::after{content:"";position:sticky;display:block;bottom:-14px;height:20px;margin:10px -14px -14px;background:url(ui/jx1/ornb2.png) center top/auto 100% no-repeat;pointer-events:none}
+/* ---- o do: o den vien xam nhu luoi Do vat JX1 ---- */
+.it{background:#020202!important;border:1px solid #3c3a35!important;box-shadow:inset 0 0 0 1px #000,0 0 0 1px #000!important}
+.invgrid{background:#252320!important;border:1px solid #000!important;box-shadow:0 0 0 1px #797369}
+.dktbl{width:100%;border-collapse:collapse;margin:6px 0}.dktbl td,.dktbl th{border:1px solid #3c3a35;padding:3px 6px;text-align:left}.dktbl th{color:#e8dcb0}
+/* ---- Chat the gioi (goc duoi trai san dau, nhu khung chat JX1) ---- */
+#chatBox{position:absolute;left:6px;bottom:8px;width:min(58%,340px);z-index:6;display:flex;flex-direction:column;align-items:flex-start;pointer-events:none;font-size:11.5px}
+#chatHead,#chatIn{display:none}
+#chatLines{width:100%;max-height:86px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 22px);mask-image:linear-gradient(transparent,#000 22px);display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:4px}
+#chatLines .cl{color:#f2ecd0;text-shadow:0 0 2px #000,0 0 2px #000,0 1px 1px #000;line-height:1.35;word-break:break-word}
+#chatLines .cl i{font-style:normal;color:#9a9480} #chatLines .cl b{color:#ffd76a;font-weight:400} #chatLines .cl small{color:#8fc9b0}
+#chatLines .cl.me b{color:#7fe0ff} #chatLines .cl.sys{color:#a9a39a;font-style:italic}
+#chatBtn{pointer-events:auto;position:relative;width:34px;height:30px;border:1px solid #000;box-shadow:inset 0 0 0 1px #3f7a62;background:linear-gradient(#1d4a38,#0a1d15);color:#fff;font-size:15px;cursor:pointer}
+#chatBtn b{position:absolute;top:-6px;right:-8px;min-width:16px;padding:0 3px;background:#c0392b;color:#fff;border-radius:8px;font-size:10px;line-height:16px;font-weight:400}
+#chatBtn b:empty{display:none}
+#chatBox.quiet #chatLines{display:none}
+#chatBox.open{width:min(92%,420px);top:30px;bottom:8px;background:rgba(8,14,11,.92);border:1px solid #000;box-shadow:0 0 0 1px #5a5850,0 0 12px #000;pointer-events:auto;padding:0}
+#chatBox.open #chatHead{display:flex;align-items:center;gap:4px;width:100%;padding:3px 6px;background:url(ui/jx1/flor.png) center/auto 100% repeat-x;border-bottom:1px solid #000;color:#0d1714;text-shadow:0 0 2px #9fe6d2}
+#chatBox.open #chatHead small{color:#1a2622;flex:1} #chatX{background:none;border:0;font-size:14px;cursor:pointer;color:#0d1714}
+#chatBox.open #chatLines{-webkit-mask-image:none;mask-image:none;flex:1;max-height:none;overflow-y:auto;justify-content:flex-start;padding:4px 6px;margin:0}
+#chatBox.open #chatIn{display:flex;gap:4px;width:100%;padding:4px;border-top:1px solid #2b2a26}
+#chatTxt{flex:1;min-width:0;background:#020202;border:1px solid #3c3a35;color:#f2ecd0;padding:4px 6px;font:inherit}
+#chatBox.open #chatBtn{display:none}
+@media (orientation:landscape){#chatBox{bottom:52px}}
+/* ---- Nut Luyen cong / Nhiem vu goc duoi trai san dau (canh nut chat) ---- */
+#modeSw{position:absolute;left:46px;bottom:8px;z-index:5;display:flex;border:1px solid #000;box-shadow:0 0 0 1px #5a5850}
+#modeSw button{height:30px;padding:0 9px;border:0;background:linear-gradient(#26332d,#121a16);color:#cfc6a4;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+#modeSw{flex-direction:column}#modeSw b{color:#fff3c0;font-weight:600}
+#mswMenu{position:absolute;left:-1px;bottom:31px;display:flex;flex-direction:column;border:1px solid #000;box-shadow:0 0 0 1px #5a5850;background:#121a16}
+#mswMenu.hidden{display:none}#mswMenu button{text-align:left;min-width:132px}#mswMenu button+button{border-top:1px solid #000}
+#modeSw button.on{background:linear-gradient(#6b5320,#3a2c0e);color:#fff3c0;box-shadow:inset 0 -2px 0 #e6c67a}
+@media (orientation:landscape){#modeSw{bottom:52px}}
+/* ---- Giang ho online ---- */
+#netBtn{position:relative;flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--gold2);background:radial-gradient(#1c2f3a,#06101a);font-size:16px;line-height:30px;padding:0}
+#netBtn.on::after{content:attr(data-n);position:absolute;top:-4px;right:-5px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#e0402a;color:#fff;font-size:10px;line-height:15px;box-shadow:0 0 0 2px #0f1613}
+.nmrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #2b2a26}.nmrow>span{flex:1;min-width:0;font-size:12px}
+.nmrow .it{flex:none}.nmg{font-size:22px;width:40px;text-align:center}
+.pfgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.pfs{display:flex;flex-direction:column;align-items:center;gap:2px}.pfs small{font-size:10px}
+.dktbl a{color:#ffd76a;text-decoration:none}
+#chatBox.open #chatLines .cl b[data-pn]{cursor:pointer;text-decoration:underline dotted}
+.nmrow .it{width:46px;height:46px;flex:none}
+.pfs{width:100%}.pfs .it{width:100%;max-width:62px}
+.ngate h3{text-align:center}.ngate .card .row input{flex:1}
+body.nochat #modeSw{left:6px}
+/* ---- Thanh o vat pham / o vo cong duoi san dau (kieu JX1) ---- */
+#pad{left:50%!important;right:auto!important;bottom:4px!important;transform:translateX(-50%);width:auto!important;flex-wrap:nowrap!important;gap:0!important;align-items:center;
+  padding:3px 4px;background:linear-gradient(#24231f,#0d0d0c);border:1px solid #000;box-shadow:0 0 0 1px #6b6656,inset 0 1px 0 #45423a,0 2px 8px #000;pointer-events:auto!important}
+#pad .hb{display:flex;gap:2px;align-items:center}
+#pad .hb+.hb{margin-left:5px;padding-left:5px;border-left:1px solid #000;box-shadow:-1px 0 0 #45423a}
+#pad .pbtn{width:34px;height:34px;margin:0!important;border-radius:0!important;border:1px solid #4a473e!important;background:#030303!important;box-shadow:inset 0 0 0 1px #000!important;overflow:hidden}
+#pad .pbtn i{inset:2px;background:center/contain no-repeat}
+#pad .pbtn.sk i{background-size:cover}
+#pad .pbtn b{left:2px;right:auto;bottom:0;font:700 9px/1 var(--font);color:#e8dcb0;text-shadow:0 0 2px #000,0 0 2px #000;z-index:2}
+#pad .pbtn em{position:absolute;right:2px;bottom:1px;font:9px/1 var(--font);font-style:normal;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000;z-index:2}
+#pad .pbtn .cd{z-index:1}
+#pad .pbtn.tp i{background-image:url(img/ep/ldp.png)}
+#pad .pbtn.empty{opacity:1;border-style:solid!important} #pad .pbtn.empty i{opacity:0}
+#pad .pbtn.cur{border-color:#e6c67a!important;box-shadow:inset 0 0 0 1px #000,0 0 6px #e6c67a!important}
+#pad .pbtn.mn{width:42px;height:42px;border-color:#7b6d48!important;box-shadow:inset 0 0 0 1px #000,0 0 0 1px #000,0 0 6px #e6c67a55!important;cursor:pointer}
+#pad .pbtn.mn i{background-size:cover}
+#pad .sk .sklv{z-index:2}
+#pad .pbtn:hover{border-color:#9a8a5a!important}
+#chatBox,#modeSw{bottom:52px!important}
+@media (max-width:440px){#pad .pbtn{width:30px;height:30px}#pad .pbtn.mn{width:38px;height:38px}}
+/* ---- Auto: o tick ---- */
+#ctrlBtn,#rotBtn{display:flex;align-items:center;gap:5px}
+#ctrlBtn .ck,#rotBtn .ck{display:inline-block;width:12px;height:12px;border:1px solid #9a8a5a;background:#050505;box-shadow:inset 0 0 0 1px #000;position:relative}
+#ctrlBtn.on .ck::after,#rotBtn.on .ck::after{content:"";position:absolute;left:3px;top:0;width:4px;height:8px;border:solid #7fe07a;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#ctrlBtn:not(.on),#rotBtn:not(.on){color:#a9a39a!important;background:linear-gradient(#26262a,#121214)!important;border-color:#55524a!important}
+#pad .pbtn .pk{position:absolute;right:0;top:0;width:13px;height:12px;font:9px/12px sans-serif;text-decoration:none;color:#e8dcb0;background:#000a;z-index:3;text-align:center;cursor:pointer}
+/* ---- Bo loc: che do thong minh ---- */
+.lootf.smart .lc{display:none!important}
+.lmode{margin-bottom:6px}
+.it u.up{position:absolute;left:2px;top:1px;color:#7fe07a;font:700 11px/1 sans-serif;text-decoration:none;text-shadow:0 0 2px #000,0 0 2px #000}
+.it u.up.pot{color:#ffd24a}
+/* ---- vien o do theo do hiem (JX1): xanh / hiem / tim / Hoang Kim / Bach Kim ---- */
+.it.r1{border-color:#4a86e8!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 8px #2a5ab0!important}
+.it.r2{border-color:#ff9a3c!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 8px #a85a10!important}
+.it.r3{border-color:#c77bff!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 10px #7a3ab0!important}
+.it.r4{border-color:#ffcc00!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 10px #b08000,0 0 5px #ffcc0099!important}
+.it.r5{border-color:#9fe8ff!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 10px #4a9ab8,0 0 5px #9fe8ff99!important}
+.warnc{border-color:#a33!important;background:#2a1010cc}
+
+/* Xoay chiêu: cạnh nút Auto (góc trên phải, ngoài vùng đánh), không che nhân vật / quái */
+#topCtl{position:absolute;right:8px;top:26px;z-index:4;display:flex;gap:6px;align-items:center}
+#topCtl .chip{position:static!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important}
+
+/* Bang chon chieu o F1-F4 (kieu JX1) */
+#skPick{position:absolute;z-index:30;display:grid;grid-template-columns:repeat(6,36px);gap:3px;padding:6px;background:linear-gradient(#1c1d19,#0b0c0a);border:1px solid #6b5a2e;box-shadow:0 0 0 1px #000,0 6px 14px #000c}
+#skPick .nm{grid-column:1/-1;font-size:11px;color:#e8dcc0;padding:0 2px 4px;border-bottom:1px solid #2e2b22;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#skPick .nm small{color:#a99f86}
+#skPick .spk{width:36px;height:36px;padding:0;border:1px solid #3d3a30;background:#000 center/cover no-repeat;position:relative;cursor:pointer;box-shadow:inset 0 0 0 1px #000}
+#skPick .spk:hover{border-color:#c9a85a}
+#skPick .spk.on{border-color:#ffd24a;box-shadow:0 0 0 1px #ffd24a,0 0 8px #ffd24a88}
+#skPick .spk u{position:absolute;right:1px;bottom:0;font:10px "IBM Plex Mono",monospace;color:#fff;text-decoration:none;text-shadow:0 0 2px #000,0 0 2px #000}
+#skPick .spk i{position:absolute;left:1px;top:0;font:9px "IBM Plex Mono",monospace;font-style:normal;color:#ffd24a;text-shadow:0 0 2px #000,0 0 2px #000}
+
+#pad .sk.nowp i{filter:grayscale(1) brightness(.55)}
+
+#ktcBtn{position:static;flex:none;margin:0 6px 0 0;padding:3px 9px;font-size:12px;white-space:nowrap;width:auto;height:auto;border-radius:3px;background:linear-gradient(#3a3020,#201a10);border:1px solid #8a6d35;color:#ffd98a;cursor:pointer}
+.gold .knbi{width:16px;height:16px;margin-left:8px;image-rendering:pixelated}
+#knbTop{color:#ffd24a}
+@media (max-width:520px){#ktcBtn{font-size:11px;padding:2px 5px}}
+#chatAtt:empty{display:none}#chatAtt{display:flex;align-items:center;gap:2px;max-width:45%;white-space:nowrap;overflow:hidden;font-size:11px;pointer-events:auto}
+#chatAtt button{border:0;background:none;color:#f88;cursor:pointer;padding:0 3px}
+#chatLines a.chit{cursor:pointer;text-decoration:underline dotted;pointer-events:auto}
+#chatLines .cl.pend{opacity:.6}
