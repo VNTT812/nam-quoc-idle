@@ -2,11 +2,11 @@
    Tai khoan (ten dang nhap + mat khau), Luu dam may, Bang xep hang, Xem trang bi nguoi khac, Thu (gui qua), Cho (bay ban).
    May chu: NET_SETUP.sql. Moi mon trong Thu chi nhan duoc 1 lan (may chu kiem tra); mua o Cho: 1 nguoi mua, tien 95% ve Thu nguoi ban. */
 'use strict';
-const NET = { sb: null, user: null, tab: 'acc', mkt: 'buy', rank: 'lvl', rfac: '', mailN: 0, lastChar: 0, lastUp: 0, sel: null, q: '' };
+const NET = { sb: null, user: null, tab: 'acc', mkt: 'buy', rank: 'lvl', rfac: '', mailN: 0, lastChar: 0, lastUp: 0, sel: null, q: '', offline: false };
 const NET_DOMAIN = '@volamidle.game', NET_TAX = 0.05;
 /* v182: moi ban (web, launcher tren may) deu phai dang nhap, chi luu dam may. NET_LOCAL chi cho bo thu tu dong (?offline_test=1). */
 const NET_LOCAL = /[?&]offline_test=1\b/.test(location.search);
-const netOn = () => { const c = window.CHAT_CFG || {}; return !!(c.url && c.key) && !NET_LOCAL; };
+const netOn = () => { const c = window.CHAT_CFG || {}; return !!(c.url && c.key) && !NET_LOCAL && !NET.offline; };
 const netUname = () => NET.user && NET.user.email ? NET.user.email.replace(NET_DOMAIN, '') : '';
 const netErr = e => { const m = (e && (e.message || e.error_description)) || String(e || 'Lỗi mạng');
   if (/chars_name|duplicate key/i.test(m)) return 'Tên nhân vật đã có người dùng — hãy đổi tên (thẻ Nhân vật ✏)';
@@ -14,7 +14,13 @@ const netErr = e => { const m = (e && (e.message || e.error_description)) || Str
   if (/already registered|already exists/i.test(m)) return 'Tên đăng nhập đã có người dùng';
   if (/Email not confirmed/i.test(m)) return 'Supabase đang bật "Confirm email" — hãy tắt (xem HUONG_DAN_WEB.txt)';
   if (/relation .* does not exist|Could not find the (table|function)/i.test(m)) return 'Máy chủ chưa chạy NET_SETUP.sql';
+  if (/Failed to fetch|NetworkError|Load failed|timed out|522|503|fetch/i.test(m)) return 'Máy chủ đăng nhập đang tắt hoặc mất mạng — thử lại sau, hoặc chơi offline';
   return m; };
+const netGoOffline = () => {
+  NET.offline = true; NET.user = null; NET.sb = null;
+  try { const u = new URL(location.href); u.searchParams.set('offline_test', '1'); location.replace(u.toString()); }
+  catch (e) { location.replace((location.pathname || '/') + '?offline_test=1'); }
+};
 async function netClient() {
   if (NET.sb) return NET.sb;
   if (!netOn()) throw new Error('Chưa cấu hình máy chủ (js/chatcfg.js)');
@@ -137,17 +143,20 @@ async function netCloudLoad(slot) { await netUseCloud(slot); }
 
 /* ---------- man dang nhap luc vao game ---------- */
 function netGate(err) {
-  const off = err ? `<p class="reqbad">${esc(err)}</p><div class="btnrow"><button class="btn sm" id="ngRetry">Thử kết nối lại</button></div>` : '';
+  const off = err ? `<p class="reqbad">${esc(err)}</p>` : '';
   modal(`<div class="ngate"><h3>⚔ Võ Lâm Idle</h3><p class="desc">Đăng nhập để chơi: nhân vật lưu trên máy chủ, chơi tiếp ở mọi máy / điện thoại. Chưa có tài khoản thì bấm <b>Đăng ký</b>.</p>
     <div class="card"><div class="row">Tên đăng nhập <input id="ngU" maxlength="16" autocomplete="username" placeholder="chữ không dấu, số, _" autocapitalize="off"></div>
       <div class="row">Mật khẩu <input id="ngP" type="password" maxlength="64" autocomplete="current-password" placeholder="ít nhất 6 ký tự"></div>
       <div class="btnrow"><button class="btn" id="ngIn">Đăng nhập</button><button class="btn" id="ngUp">Đăng ký</button></div>
-      <p class="dim small">Một tài khoản dùng cho 3 nhân vật. Nhớ mật khẩu — chưa có cách lấy lại.</p></div>${off}</div>`, () => {
-    const go = k => busy($(k === 'up' ? '#ngUp' : '#ngIn'), async () => { await netAuth(k, $('#ngU').value, $('#ngP').value); return netAfterLogin(); });
+      <p class="dim small">Một tài khoản dùng cho 3 nhân vật. Nhớ mật khẩu — chưa có cách lấy lại.</p></div>
+    ${off}
+    <div class="btnrow"><button class="btn sm" id="ngRetry">Thử kết nối lại</button><button class="btn sm" id="ngOff">Chơi offline</button></div>
+    <p class="dim small">Offline: lưu trên máy này, không đăng nhập / xếp hạng / chợ / thư.</p></div>`, () => {
+    const go = k => busy($(k === 'up' ? '#ngUp' : '#ngIn'), async () => { await netAuth(k, $('#ngU').value, $('#ngP').value); return netAfterLogin(); }, () => {});
     $('#ngIn').onclick = () => go('in'); $('#ngUp').onclick = () => go('up');
     $('#ngP').onkeydown = e => { if (e.key === 'Enter') go('in'); };
     const rt = $('#ngRetry'); if (rt) rt.onclick = () => location.reload();
-    const of = $('#ngOff'); if (of) of.onclick = () => { NET.offline = true; closeModal(true); if (!S.fac && typeof slotMenu === 'function') { const u = [...Array(SLOT_N).keys()].some(i => slotInfo(i)); u ? slotMenu() : pickFaction(); } };
+    const of = $('#ngOff'); if (of) of.onclick = () => netGoOffline();
   }, true);
 }
 async function netAfterLogin() {
