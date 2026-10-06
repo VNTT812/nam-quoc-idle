@@ -23,7 +23,7 @@ const av = (A, n, i = 0) => (A[n] ? A[n][i] : 0);
    Dong an thu k (dong 2, 4, 6) cua mot mon mo khi so "tuong sinh" >= k: +1 neu he nhan vat sinh he mon do,
    +1 cho moi mon o 2 o lien ket (ms_ActivedEquip) co he sinh he mon do. Ngua luon mo du. */
 const ACCRUE = { 0: 2, 2: 1, 1: 3, 3: 4, 4: 0 }; // Kim sinh Thuy, Thuy sinh Moc, Moc sinh Hoa, Hoa sinh Tho, Tho sinh Kim
-const accrues = (a, b) => a >= 0 && b >= 0 && ACCRUE[a] === b;
+const accrues = (a, b) => a >= 0 && b >= 0 && ACCRUE[mechSeries(a)] === mechSeries(b);
 const ACTIVATED_BY = { helm: ['armor', 'amulet'], armor: ['ring2', 'belt'], belt: ['pendant', 'cuff'], weapon: ['amulet', 'armor'],
   boot: ['weapon', 'helm'], cuff: ['boot', 'ring1'], amulet: ['belt', 'ring2'], ring1: ['weapon', 'helm'], ring2: ['cuff', 'pendant'],
   pendant: ['boot', 'ring1'] };
@@ -39,8 +39,9 @@ function hiddenActive(it, eq = S.eq) {
   for (const k of ACTIVATED_BY[slot] || []) if (eq[k] && accrues(eq[k].s, it.s)) n++;
   return n;
 }
-function heroStart() { const f = FAC[S.fac]; return J.start[f.series * 2 + (S.sex || 0)] || J.start[0]; }
+function heroStart() { const f = FAC[S.fac]; const s = mechSeries(f ? f.series : 0); return J.start[s * 2 + (S.sex || 0)] || J.start[0]; }
 function heroSeries() { return FAC[S.fac] ? FAC[S.fac].series : 0; }
+const facIdMatch = need => { const f = FAC[S.fac]; if (!f || need < 0) return need < 0; return f.id === need || f.srcId === need; };
 function weaponCode(eq) {
   const w = eq.weapon; if (!w) return 9;               // 9 = tay khong (Quyen/Chuong phap)
   // ma loai vu khi cua mon vu khi phai (tham so 3 cua addphysicsdamage_p): 0 kiem, 1 dao, 2 con, 3 thuong, 4 chuy,
@@ -65,7 +66,7 @@ const reqPass = it => it === IGNORE_REQ || reqOk(it);
 const VIO_MUL = 1.8;
 function calc(eq) {
   eq = eq || S.eq;
-  const A = {}, lv = S.lvl, ser = heroSeries(), add = J.levelAdd[ser], st = heroStart();
+  const A = {}, lv = S.lvl, ser = heroSeries(), add = J.levelAdd[mechSeries(ser)] || J.levelAdd[ser], st = heroStart();
   const skAdd = {};                                        // allskill_v co tham so 3 = id ky nang: +cap cho rieng ky nang do
   const addItemAttr = (m, k = 1) => {
     const name = attrReal(attrName(m.a)), p = m.p.map((v, i) => v === -1 ? 0 : i < 2 && k !== 1 ? v * k : v);
@@ -328,8 +329,8 @@ function reqOk(it) {
     if (id === 33 && heroAttr('dex') < v) return false;
     if (id === 34 && heroAttr('vit') < v) return false;
     if (id === 35 && heroAttr('eng') < v) return false;
-    if (id === 37 && v >= 0 && FAC[S.fac] && heroSeries() !== v) return false;
-    if (id === 39 && v >= 0 && FAC[S.fac] && FAC[S.fac].id !== v) return false;   // requiremenpai: do bo cua mon phai
+    if (id === 37 && v >= 0 && FAC[S.fac] && !seriesMatch(heroSeries(), v)) return false;
+    if (id === 39 && v >= 0 && FAC[S.fac] && !facIdMatch(v)) return false;   // requiremenpai: do bo cua mon phai (+ phái Test kế thừa id gốc)
   }
   return true;
 }
@@ -419,8 +420,8 @@ function reqProblems(it) {
     if (id === 36 && eqLevel() < v) out.push(`Cấp ${v} (hiện ${eqLevel()}, thiếu ${v - eqLevel()})`);
     else if (REQ_VI[id] && heroAttr(ATTR_REQ[id]) < v) { const cur = heroAttr(ATTR_REQ[id]); out.push(`${REQ_VI[id]} ${v} (hiện ${cur}, thiếu ${v - cur})`); }
     else if (id === 38 && v >= 0 && (S.sex || 0) !== v) out.push(`Chỉ dành cho ${v ? 'nữ' : 'nam'} (nhân vật của bạn là ${S.sex ? 'nữ' : 'nam'})`);
-    else if (id === 37 && v >= 0 && FAC[S.fac] && heroSeries() !== v) out.push(`Chỉ hệ ${SERIES[v]} (bạn hệ ${SERIES[heroSeries()]})`);
-    else if (id === 39 && v >= 0 && FAC[S.fac] && FAC[S.fac].id !== v) out.push(`Chỉ môn phái ${(J.factions[v] || {}).n || v}`);
+    else if (id === 37 && v >= 0 && FAC[S.fac] && !seriesMatch(heroSeries(), v)) out.push(`Chỉ hệ ${SERIES[v]} (bạn hệ ${SERIES[heroSeries()]})`);
+    else if (id === 39 && v >= 0 && FAC[S.fac] && !facIdMatch(v)) out.push(`Chỉ môn phái ${(J.factions[v] || FAC[S.fac] || {}).n || v}`);
   }
   return out;
 }

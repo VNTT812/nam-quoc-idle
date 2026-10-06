@@ -348,7 +348,7 @@ async function netRankBody(el) {
     q = col === 'lvl' ? q.order('reborn', { ascending: false }).order('lvl', { ascending: false }).order('power', { ascending: false }) : q.order(col, { ascending: false }); return q.limit(50); });
   const rows = r.data || [], val = x => col === 'lvl' ? `${x.reborn ? `<small class="cp">CS${x.reborn}</small> ` : ''}${x.lvl}` : fmt(x[col] || 0);
   el.innerHTML = `<div class="row"><select id="nrCol">${RANKS.map(([k, n]) => `<option value="${k}" ${k === col ? 'selected' : ''}>${n}</option>`).join('')}</select>
-      <select id="nrFac"><option value="">Mọi phái</option>${FACTIONS.filter(f => !f.novice).map(f => `<option value="${f.key}" ${f.key === NET.rfac ? 'selected' : ''}>${esc(f.n)}</option>`).join('')}</select></div>
+      <select id="nrFac"><option value="">Mọi phái</option>${FACTIONS.filter(f => !f.novice && (typeof facVisible !== 'function' || facVisible(f))).map(f => `<option value="${f.key}" ${f.key === NET.rfac ? 'selected' : ''}>${esc(f.n)}</option>`).join('')}</select></div>
     <table class="dktbl small"><tr><th>#</th><th>Nhân vật</th><th>Phái</th><th>${RANKS.find(x => x[0] === col)[1]}</th></tr>
     ${rows.map((x, i) => `<tr${S && x.name === S.name ? ' style="background:#2a2410"' : ''}><td>${i + 1}</td><td><a href="#" data-pn="${esc(x.name)}" style="color:${typeof campCol === 'function' ? campCol(x.fac) : '#ffd76a'}">${esc(x.name)}</a></td><td>${esc(facName(x.fac))}</td><td>${val(x)}</td></tr>`).join('') || '<tr><td colspan="4" class="dim">Chưa có ai</td></tr>'}</table>
     <p class="dim small">Bấm tên để xem trang bị. Nhân vật của bạn tự cập nhật khi đã đăng nhập.</p>`;

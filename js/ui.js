@@ -259,7 +259,7 @@ function basicCard() {
 function renderSkill() {
   const f = FAC[S.fac];
   if (f.novice) {
-    const list = FACTIONS.filter(x => x.series === f.series);
+    const list = FACTIONS.filter(x => x.series === f.series && (typeof facVisible !== 'function' || facVisible(x)));
     $('#t-skill').innerHTML = `<h3>Vô Môn Phái <small>${S.skPts} điểm kỹ năng</small></h3><div class="card"><p class="desc">Chưa có võ công. Đạt <b>cấp ${NOVICE_LV}</b> để gia nhập môn phái hệ <b style="color:${SERIES_COL[f.series]}">${SERIES[f.series]}</b>: ${list.map(x => facAllowed(x, S.sex) ? esc(x.n) : `<s>${esc(x.n)}</s>`).join(', ')}. Điểm kỹ năng nhận được trước đó được giữ lại.</p><div class="btnrow"><button class="btn" id="bJoin" ${S.lvl >= NOVICE_LV ? '' : 'disabled'}>Gia nhập môn phái${S.lvl >= NOVICE_LV ? '' : ` (cấp ${S.lvl}/${NOVICE_LV})`}</button></div></div>`;
     $('#bJoin').onclick = joinModal; return;
   }
@@ -301,7 +301,7 @@ function renderInv() {
   const lv = Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${f.minLvl === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('');
   const mg = Array.from({ length: 7 }, (_, i) => `<option value="${i}" ${(f.minMag || 0) === i ? 'selected' : ''}>${i}</option>`).join('');
   const grp = LOOT_ATTR_GROUPS.map(([n], i) => `<label class="chip2"><input type="checkbox" data-g="${i}" ${f.groups.includes(i) ? 'checked' : ''}>${n}</label>`).join('');
-  const ser = SERIES.map((n, i) => `<label class="chip2" style="color:${SERIES_COL[i]}"><input type="checkbox" data-s="${i}" ${f.series.includes(i) ? 'checked' : ''}>${n}</label>`).join('');
+  const ser = (typeof visibleSeries === 'function' ? visibleSeries() : SERIES.map((_, i) => i)).map(i => `<label class="chip2" style="color:${SERIES_COL[i]}"><input type="checkbox" data-s="${i}" ${f.series.includes(i) ? 'checked' : ''}>${SERIES[i]}</label>`).join('');
   const slt = LOOT_SLOT_GROUPS.map(([k, n]) => `<label class="chip2"><input type="checkbox" data-sl="${k}" ${f.slots.includes(k) ? 'checked' : ''}>${n}</label>`).join('');
   const onGround = R.ground.length, match = R.ground.filter(d => lootMatch(d.it)).length;
   const invBad = S.inv.filter(i => !lootMatch(i) && !sellProtected(i)), locked = S.inv.filter(i => i.lock).length;
@@ -491,7 +491,8 @@ function slotMenu(confirmDel) {
     if (!o || !f) return `<div class="slotrow empty"><span><b>Slot ${i + 1}</b><small>Trống</small></span><button class="btn" data-play="${i}">Tạo nhân vật</button></div>`;
     const ago = o.last ? new Date(o.last).toLocaleString('vi-VN') : '';
     if (confirmDel === i) return `<div class="slotrow del"><span><b>Xóa slot ${i + 1}?</b><small>${esc(f.n)} cấp ${o.lvl} sẽ mất vĩnh viễn</small></span><button class="btn red" data-del-yes="${i}">Xóa</button><button class="btn" data-del-no="1">Hủy</button></div>`;
-    return `<div class="slotrow"><img src="${esc((heroGfx(o.fac, o.sex) || {}).img || '')}" alt=""><span><b style="color:${SERIES_COL[f.series]}">${esc(o.name && o.name !== f.n ? o.name + ' · ' : '')}${esc(f.n)}</b><small>Cấp ${o.lvl} · ải ${o.stage}${ago ? ' · ' + esc(ago) : ''}</small></span><button class="btn" data-play="${i}">Chơi</button><button class="btn red" data-del="${i}">Xóa</button></div>`;
+    const locked = typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(o.fac);
+    return `<div class="slotrow${locked ? ' lock' : ''}"><img src="${esc((heroGfx(o.fac, o.sex) || {}).img || '')}" alt=""><span><b style="color:${SERIES_COL[f.series]}">${esc(o.name && o.name !== f.n ? o.name + ' · ' : '')}${esc(f.n)}</b><small>Cấp ${o.lvl} · ải ${o.stage}${ago ? ' · ' + esc(ago) : ''}${locked ? ' · chỉ admin' : ''}</small></span>${locked ? '<button class="btn" disabled>Khóa</button>' : '<button class="btn" data-play="' + i + '">Chơi</button>'}<button class="btn red" data-del="${i}">Xóa</button></div>`;
   }).join('');
   modal(`<h3>Chọn nhân vật</h3><p class="desc">Mỗi slot là một nhân vật riêng, lưu độc lập.</p><div class="slotlist">${rows}</div>${typeof netOn === 'function' && netOn() ? '' : '<div class="btnrow"><button class="btn" id="slotImp">Nạp từ file lưu (.jxsave)</button></div>'}`, () => {
     const sc = $('#slotCloud'); if (sc) sc.onclick = () => netModal('acc');
@@ -506,15 +507,17 @@ function slotMenu(confirmDel) {
 const SERIES_DESC = ['Cương mãnh, ngoại công mạnh', 'Độc dược, ám khí', 'Mềm dẻo, nội công băng', 'Hỏa công, lực đánh lớn', 'Lôi, kiếm khí, bền bỉ'];
 let NEWC = { name: '', sex: 0, s: 0 };
 function pickFaction() {
-  const facs = s => FACTIONS.filter(f => f.series === s);
+  const facs = s => FACTIONS.filter(f => f.series === s && (typeof facVisible !== 'function' || facVisible(f)));
   const facTxt = (s, sex) => facs(s).map(f => facAllowed(f, sex) ? esc(f.n) : `<s>${esc(f.n)}</s>`).join(' · ');
-  const st = J.start[NEWC.s * 2 + NEWC.sex] || {};
-  const ok = facs(NEWC.s).some(f => facAllowed(f, NEWC.sex));
+  const serIdx = typeof visibleSeries === 'function' ? visibleSeries() : [0, 1, 2, 3, 4];
+  if (!serIdx.includes(NEWC.s)) NEWC.s = 0;
+  const st = J.start[mechSeries(NEWC.s) * 2 + NEWC.sex] || {};
+  const ok = facs(NEWC.s).some(f => facAllowed(f, NEWC.sex)) || (NEWC.s === 5 && typeof canSeeThoTest === 'function' && canSeeThoTest());
   modal(`<h3>Tạo nhân vật</h3><p class="desc">Như Võ Lâm Truyền Kỳ: chọn tên, giới tính và hệ ngũ hành. Đến <b>cấp ${NOVICE_LV}</b> mới gia nhập môn phái cùng hệ.</p>
     <div class="card lootf newc"><div class="row">Tên <input id="ncName" maxlength="14" placeholder="Tên nhân vật" value="${esc(NEWC.name)}"></div>
       <div class="row">Giới tính <span class="seg">${['Nam', 'Nữ'].map((n, i) => `<button class="btn sm${NEWC.sex === i ? ' on' : ''}" data-sx="${i}">${n}</button>`).join('')}</span></div>
       <div class="dim small">Hệ ngũ hành (Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim):</div>
-      <div class="serpick">${[0, 1, 2, 3, 4].map(i => `<button data-se="${i}" class="${NEWC.s === i ? 'on' : ''}" style="--c:${SERIES_COL[i]}"><b>${SERIES[i]}</b><small>${SERIES_DESC[i]}</small><small>Phái: ${facTxt(i, NEWC.sex)}</small></button>`).join('')}</div>
+      <div class="serpick">${serIdx.map(i => `<button data-se="${i}" class="${NEWC.s === i ? 'on' : ''}" style="--c:${SERIES_COL[i]}"><b>${SERIES[i]}</b><small>${SERIES_DESC[i] || ''}</small><small>Phái: ${facTxt(i, NEWC.sex) || (i === 5 ? 'Võ Đang (Test) · Côn Lôn (Test)' : '—')}</small></button>`).join('')}</div>
       <div class="stats"><span>Sức mạnh</span><span>${st.str ?? '-'}</span><span>Thân pháp</span><span>${st.dex ?? '-'}</span><span>Sinh khí</span><span>${st.vit ?? '-'}</span><span>Nội công</span><span>${st.eng ?? '-'}</span></div>
       ${ok ? '' : `<p class="reqbad">Hệ ${SERIES[NEWC.s]} không có môn phái nhận ${NEWC.sex ? 'nữ' : 'nam'}.</p>`}
       <div class="btnrow"><button class="btn" id="ncGo" ${ok ? '' : 'disabled'}>Vào giang hồ</button></div></div>`, () => {
@@ -537,7 +540,7 @@ function createCharacter(name, sex, series) {
 /* Cap 10: chon phai cung he (theo gioi tinh) */
 function joinModal() {
   if (!isNovice()) return;
-  const s = heroSeries(), list = FACTIONS.filter(f => f.series === s);
+  const s = heroSeries(), list = FACTIONS.filter(f => f.series === s && (typeof facVisible !== 'function' || facVisible(f)));
   if (S.lvl < NOVICE_LV) { modal(`<h3>Gia nhập môn phái</h3><p class="desc">Cần đạt cấp ${NOVICE_LV} (hiện cấp ${S.lvl}). Các phái hệ ${SERIES[s]}: ${list.map(f => esc(f.n)).join(', ')}.</p>`); return; }
   const cards = list.map(f => { const ok = facAllowed(f, S.sex), sk = f.starter && SK[f.starter];
     return `<button data-j="${f.key}" ${ok ? '' : 'disabled'} style="--c:${SERIES_COL[f.series]}"><img src="${(W.hero[f.key] || {}).img || ''}" alt=""><b>${esc(f.n)}</b><small>${ok ? `Chiêu nhập môn: ${sk ? esc(sk.n) : '—'} · ${weaponTypeName(f)}` : `Chỉ nhận ${FAC_SEX[f.key] ? 'nữ' : 'nam'}`}</small></button>`; }).join('');

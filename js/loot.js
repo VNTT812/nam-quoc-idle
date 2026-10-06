@@ -243,7 +243,7 @@ function epWant(it) {
 let UG_KEY = '', UG = {}, UG_BASE = 1;
 function soonWearable(it) {
   if (!sexOk(it)) return false;
-  for (const [id, v] of it.req || []) { if (id === 36 && v > eqLevel() + 10) return false; if ((id === 37 || id === 39) && v >= 0 && FAC[S.fac] && (id === 37 ? heroSeries() !== v : FAC[S.fac].id !== v)) return false; }
+  for (const [id, v] of it.req || []) { if (id === 36 && v > eqLevel() + 10) return false; if ((id === 37 || id === 39) && v >= 0 && FAC[S.fac] && (id === 37 ? !seriesMatch(heroSeries(), v) : !facIdMatch(v))) return false; }
   const f = FAC[S.fac]; if (DETAIL_SLOT[it.d] === 'weapon' && f && !weaponFits(it)) return false;
   return true;
 }
@@ -280,7 +280,7 @@ function lootMatch(it) {
   if (f.slots.length && !f.slots.includes(DETAIL_SLOT[it.d])) return false;
   if (f.wear) {
     if (!sexOk(it)) return false;
-    for (const [id, v] of it.req || []) { if (id === 36 && v > eqLevel() + 5) return false; if ((id === 37 || id === 39) && v >= 0 && FAC[S.fac] && (id === 37 ? heroSeries() !== v : FAC[S.fac].id !== v)) return false; }
+    for (const [id, v] of it.req || []) { if (id === 36 && v > eqLevel() + 5) return false; if ((id === 37 || id === 39) && v >= 0 && FAC[S.fac] && (id === 37 ? !seriesMatch(heroSeries(), v) : !facIdMatch(v))) return false; }
   }
   if (f.accrue && it.s >= 0 && it.d !== 10 && FAC[S.fac] && !accrues(heroSeries(), it.s)) return false;
   if (f.facW && DETAIL_SLOT[it.d] === 'weapon' && FAC[S.fac] && !weaponFits(it)) return false;

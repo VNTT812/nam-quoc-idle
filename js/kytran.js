@@ -62,7 +62,7 @@ function ktcModal() {
 function doiPhaiModal() {
   if (!S.fac || isNovice()) { toast('Vô Môn Phái: gia nhập môn phái ở cấp ' + NOVICE_LV); return; }
   const have = matHave('misc', 'ldp');
-  const cards = FACTIONS.filter(f => !f.novice).map(f => { const ok = facAllowed(f, S.sex) && f.key !== S.fac, sk = f.starter && SK[f.starter];
+  const cards = FACTIONS.filter(f => !f.novice && (typeof facVisible !== 'function' || facVisible(f))).map(f => { const ok = facAllowed(f, S.sex) && f.key !== S.fac, sk = f.starter && SK[f.starter];
     return `<button data-dp="${f.key}" ${ok && have ? '' : 'disabled'} style="--c:${SERIES_COL[f.series]}"><img src="${(W.hero[f.key] || {}).img || ''}" alt=""><b>${esc(f.n)}</b><small>${f.key === S.fac ? 'Môn phái hiện tại' : !facAllowed(f, S.sex) ? 'Không nhận giới tính này' : `Hệ ${SERIES[f.series]} · ${weaponTypeName(f)}${sk ? ' · ' + esc(sk.n) : ''}`}</small></button>`; }).join('');
   modal(`<h3>Đổi môn phái <small>${have} Lệnh Bài Đổi Phái</small></h3>
     <p class="desc">Dùng 1 Lệnh Bài Đổi Phái: chuyển sang phái mới (đổi cả hệ ngũ hành nếu khác hệ). <b>Giữ</b> cấp, tiềm năng, trang bị, cấp võ công 90 đã luyện; <b>hoàn lại toàn bộ điểm kỹ năng</b> để học võ công phái mới; nhận chiêu nhập môn + vũ khí phái mới.</p>

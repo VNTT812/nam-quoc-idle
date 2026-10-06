@@ -10,11 +10,14 @@ const fmt = n => { n = Math.round(n); const a = Math.abs(n); return a < 1e4 ? ''
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function wpick(list, w) { let t = 0; for (const x of list) t += w(x); let r = Math.random() * t; for (const x of list) { r -= w(x); if (r <= 0) return x; } return list[list.length - 1]; }
 
-/* ---------- ngu hanh: 0 Kim, 1 Moc, 2 Thuy, 3 Hoa, 4 Tho ---------- */
+/* ---------- ngu hanh: 0 Kim, 1 Moc, 2 Thuy, 3 Hoa, 4 Tho; 5 = Tho (Test) admin — giong Tho ---------- */
 const SERIES = J.series;
 const SERIES_COL = ['#f3d35b', '#6fd46a', '#5fb8ff', '#ff6a3a', '#c8965a'];
 const KHAC = { 0: 1, 1: 4, 4: 2, 2: 3, 3: 0 }; // Kim khac Moc, Moc khac Tho, Tho khac Thuy, Thuy khac Hoa, Hoa khac Kim
-const counters = (a, t) => a >= 0 && t >= 0 && KHAC[a] === t;
+/* He Test (5) dung co che giong Tho (4) — khong xung dot data Tho that */
+const mechSeries = s => (s === 5 ? 4 : s);
+const seriesMatch = (hero, need) => need < 0 || hero === need || mechSeries(hero) === need;
+const counters = (a, t) => a >= 0 && t >= 0 && KHAC[mechSeries(a)] === mechSeries(t);
 /* nguyen to sat thuong: vat ly, doc, bang, hoa, loi (thu tu rmax trong world.js) */
 const ELEM = ['phys', 'poison', 'cold', 'fire', 'light'];
 const ELEM_VI = { phys: 'Vật lý', poison: 'Độc', cold: 'Băng', fire: 'Hỏa', light: 'Lôi' };
@@ -132,7 +135,7 @@ const ZONE_STAGES = 10, WAVES = 4;
 /* ---------- he quai co dinh (kieu JX1) ----------
    Npcs.txt: moi loai quai co 1 nguyen to khang toi da 90 (he cua no) va 1 nguyen to 60 (diem yeu). Thu tu rmax = ELEM = thu tu he
    (vat ly-Kim, doc-Moc, bang-Thuy, hoa-Hoa, loi-Tho). Khang deu nhau (vd Nhen 75/75/...): he theo ma quai. */
-const SERIES_ELEM = ['phys', 'poison', 'cold', 'fire', 'light'];
+const SERIES_ELEM = ['phys', 'poison', 'cold', 'fire', 'light', 'light']; /* index 5 = Tho Test → lôi như Thổ */
 function monSeries(tid) {
   const m = MON[tid]; if (!m) return 0; if (m._s !== undefined) return m._s;
   const r = m.rmax || [], mx = Math.max(...r), top = r.map((v, i) => (v === mx ? i : -1)).filter(i => i >= 0);

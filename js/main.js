@@ -132,6 +132,9 @@ function init() {
   document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);
   resizeArena(); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera(); restoreGround();
   bootLoadShow('Đang khởi động…', 0.08);
+  if (S.fac && typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(S.fac)) {
+    bootLoadHide(); toast('Hệ Thổ★ / phái Test chỉ tài khoản admin'); slotMenu(); return;
+  }
   if (pk.menu) { bootLoadHide(); slotMenu(); }
   else if (!S.fac) { bootLoadHide(); pickFaction(); }
   else {
