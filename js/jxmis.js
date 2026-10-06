@@ -148,7 +148,8 @@ function jmCast(mid, form, n, g, a, b, tgt) {
 /* thay skillFx cua render.js: chieu co du lieu dan -> he thong JX1; khong thi ve tia nhu cu */
 function skillFx(a, b, atk) {
   const f = (atk.id && JFX.f && JFX.f[atk.id]) || {}, mid = f.c || JFX.s[atk.id], m = atk.id && JFX.m[mid];
-  castFx(atk);
+  castFx(atk, a);
+  if (typeof mpNotifySkill === 'function') mpNotifySkill(a, b, atk);
   if (!m || R.quiet) { fxLine(a, b, atk); return; }
   const g = JFX.g && JFX.g[atk.id], form = g ? g[0] : (f.form === undefined ? 1 : f.form);
   const n = clamp(atk.nMis > 1 ? Math.max(atk.nMis, 1) : (g && g[6]) || f.num || 1, 1, 16);

@@ -45,16 +45,18 @@ function fxLine(a, b, atk) {
 const JFX = window.JFX || { m: {}, s: {}, c: {}, f: {} }, FX_SCALE = 1.4, FX_MAX = 60;
 const dir16 = (vx, vy) => (((Math.round(Math.atan2(-vx, vy) / (Math.PI / 8)) % 16) + 16) % 16);
 /* hieu ung tai cho nguoi ra chieu (PreCastSpr cua skills.txt) */
-function castFx(atk) {
+function castFx(atk, at) {
   const f = atk && atk.id && JFX.f && JFX.f[atk.id], c = f && f.pre && JFX.c && JFX.c[f.pre];
   if (!c || R.quiet || R.fx.length > FX_MAX) return;
-  R.fx.push({ k: 'boom', s: c, x: H.x, y: H.y - 6, t: 0, life: animDur(c), dir: 0 });
+  const x = at ? at.x : H.x, y = at ? at.y : H.y;
+  R.fx.push({ k: 'boom', s: c, x, y: y - 6, t: 0, life: animDur(c), dir: 0 });
 }
 /* kieu phong dan cua chieu (MisslesForm / ChildSkillNum trong skills.txt, KSkill::CastMissles):
    0 tuong, 1 hang, 2 quat, 3 vong, 4 ngau nhien, 5 vung, 6 tai muc tieu, 7 tai nguoi ra chieu, >= 8 can chien */
 function skillFx(a, b, atk) {
   const f = (atk.id && JFX.f && JFX.f[atk.id]) || {}, m = atk.id && JFX.m[f.c || JFX.s[atk.id]];
-  castFx(atk);
+  castFx(atk, a);
+  if (typeof mpNotifySkill === 'function') mpNotifySkill(a, b, atk);
   if (f.sub && !R.quiet && String(f.sub.c) !== String(f.c)) subFx(a, b, f.sub);
   if (!m || R.quiet) { fxLine(a, b, atk); return; }
   if (R.fx.length > FX_MAX) return;
