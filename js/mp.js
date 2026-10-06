@@ -226,6 +226,7 @@ function mpUpsertPeer(row) {
   if (row.life != null) p.life = Math.max(0, Math.min(1, +row.life));
   if (row.title != null) p.title = String(row.title).slice(0, 24);
   if (row.titleCol != null) p.titleCol = row.titleCol;
+  if (row.titleId != null) p.titleId = String(row.titleId).slice(0, 24);
   if (row.jx && typeof row.jx === 'object') {
     p.jx = { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 };
     p._jo = null; p._joCache = '';
@@ -309,6 +310,7 @@ function mpPosPayload(full) {
     o.jx = jx;
     o.title = tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '';
     o.titleCol = tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '';
+    o.titleId = tw ? tw[0] : '';
   }
   return o;
 }
@@ -527,8 +529,11 @@ function othDraw(c, p) {
     h = 40;
   }
   const col = typeof campCol === 'function' ? campCol(p.fac) : (NAME_COL && NAME_COL.hero) || '#fff3c0';
-  const sub = p.title ? `«${p.title}»` : '';
-  label(px, py - (h ? Math.min(h, 90) * 0.9 : 52) - 4, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b', sub, p.titleCol || '');
+  const top = py - (h ? Math.min(h, 90) * 0.9 : 52) - 4;
+  const fxId = p.titleId && typeof titleFxOf === 'function' ? titleFxOf(p.titleId) : (p.title === 'Thiên Hạ Đệ Nhất' ? 'thienha' : null);
+  let sub = p.title ? `«${p.title}»` : '';
+  if (fxId && typeof drawTitleFx === 'function' && drawTitleFx(c, px, top - 10, fxId)) sub = '';
+  label(px, top, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b', sub, p.titleCol || '');
 }
 
 /* ---------- moc field / combat ---------- */

@@ -347,8 +347,14 @@ function draw(dt) {
       drawHeroStates(c, 'over', drawn ? Math.min(drawn, 90) : 60);
       drawLookFx(c, dt);
       const ny = H.y - (drawn ? Math.min(drawn, 90) * 0.9 : 52) - 6, tw = typeof titleWorn === 'function' && titleWorn();
-      label(H.x, ny, `${S.name || (FAC[S.fac] && FAC[S.fac].n) || ''} · Lv${S.lvl}`, typeof campCol === 'function' ? campCol(S.fac) : NAME_COL.hero, 12, R.life / Math.max(1, R.P.life), '#4fd04f',
-        tw ? `«${titleName(tw)}»` : '', tw ? TIER[tw[3]].c : '');   // danh hieu deo: dong tren ten (JX1)
+      const fxId = tw && typeof titleFxOf === 'function' ? titleFxOf(tw) : null;
+      let nameY = ny;
+      if (fxId && typeof drawTitleFx === 'function') {
+        const used = drawTitleFx(c, H.x, ny - 10, fxId);
+        if (used) nameY = ny; // banner nam tren; ten + mau giu o ny
+      }
+      label(H.x, nameY, `${S.name || (FAC[S.fac] && FAC[S.fac].n) || ''} · Lv${S.lvl}`, typeof campCol === 'function' ? campCol(S.fac) : NAME_COL.hero, 12, R.life / Math.max(1, R.P.life), '#4fd04f',
+        fxId ? '' : (tw ? `«${titleName(tw)}»` : ''), tw ? TIER[tw[3]].c : '');   // banner: khong ve chu «»; con lai chu nhu cu
       if (!drawn && !(hw && drawSprite(img(hw.img), hw.sz, H.x, H.y, 0.9, H.face < 0, R.deadT > 0 ? 0.35 : 1))) { c.fillStyle = SERIES_COL[heroSeries()]; c.beginPath(); c.arc(H.x, H.y - 20, 14, 0, 7); c.fill(); }
       if (R.stunT > 0) drawStun(H.x, H.y - (drawn ? Math.min(drawn, 90) * 0.85 : 52), HERO_SCALE);
       if (R.hurtT > 0) { c.fillStyle = '#f004'; c.beginPath(); c.arc(H.x, H.y - 24, 20, 0, 7); c.fill(); }

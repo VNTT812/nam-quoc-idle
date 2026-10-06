@@ -51,9 +51,34 @@ const TITLES = [
   ['setfull', 'Hoàng Kim Gia Thân', 'Giang hồ', 4, () => typeof enoughToActive === 'function' && enoughToActive(S.eq), 'Mặc đủ 1 bộ Hoàng Kim', ['allres_p', 5]],
   ['vio6', 'Huyền Tinh Thần Tượng', 'Giang hồ', 3, () => Object.values(S.eq || {}).some(it => it && it.vio && (it.mag || []).length >= 6), 'Mặc 1 món Tím đủ 6 dòng', ['allres_p', 4]],
   ['rich', 'Phú Giáp Nhất Phương', 'Giang hồ', 3, () => S.gold >= 10000000, 'Có 10 triệu lượng', ['lucky_v', 12]],
+  // Banner trang tri tren dau (thu nghiem): mo khoa ngay de thu
+  ['thienha', 'Thiên Hạ Đệ Nhất', 'Giang hồ', 5, () => true, 'Danh hiệu trang trí trên đầu (thử)', ['allres_p', 10]],
 ];
 const TITLE_BY = Object.fromEntries(TITLES.map(t => [t[0], t]));
 const titleName = t => typeof t[1] === 'function' ? t[1]() : t[1];
+/* Banner sprite tren dau (JX1-style). id -> anh + kich thuoc ve */
+const TITLE_FX = {
+  thienha: { src: 'img/title/thienha.png', w: 152, h: 38 }
+};
+const titleFxOf = t => {
+  const id = !t ? null : (typeof t === 'string' ? t : t[0]);
+  return id && TITLE_FX[id] ? id : null;
+};
+/* Ve banner; tra ve chieu cao da dung (de chen ten). 0 = khong ve (fallback chu) */
+function drawTitleFx(c, x, yTop, id) {
+  const fx = id && TITLE_FX[id]; if (!fx || !c) return 0;
+  const im = typeof img === 'function' ? img(fx.src) : null;
+  if (!im || !im.complete || !im.naturalWidth) return 0;
+  const t = (typeof R !== 'undefined' && R.clock) || 0;
+  const bob = Math.sin(t * 3.1) * 1.6;
+  const pulse = 0.97 + 0.04 * Math.sin(t * 4.2);
+  const w = fx.w * pulse, h = fx.h * pulse;
+  c.save();
+  c.globalAlpha = 0.96;
+  c.drawImage(im, x - w / 2, yTop - h + bob, w, h);
+  c.restore();
+  return h + 2;
+}
 const TT = () => { const r = RW(); r.titles = r.titles || {}; for (const id in r.ach || {}) if (TITLE_BY[id]) r.titles[id] = 1; return r.titles; };   // thanh tuu cu cung ten -> mo khoa luon
 function titleCheck(quiet) {
   if (!S || !S.fac) return 0;
@@ -70,7 +95,8 @@ function titleModal() {
   modal(`<h3>🎖 Danh hiệu <small>${got}/${TITLES.length}</small></h3>
     <p class="desc">Phe: <b style="color:${camp.c}">${camp.n}</b> (màu tên nhân vật). Đeo 1 danh hiệu: hiện phía trên tên và cộng 1 chỉ số. ${worn ? `Đang đeo: <b style="color:${TIER[worn[3]].c}">«${esc(titleName(worn))}»</b>` : 'Chưa đeo danh hiệu.'}</p>
     ${cats.map(c => `<h3>${c}</h3>` + TITLES.filter(x => x[2] === c).map(x => { const ok = !!t[x[0]], on = worn === x;
-      return `<div class="qrow${ok ? '' : ' lock'}"><span><b style="color:${ok ? TIER[x[3]].c : '#777'}">«${esc(titleName(x))}»</b> <small class="dim">${TIER[x[3]].n}</small><small>${esc(x[5])} · ${esc(attrText(x[6][0], [x[6][1], 0, 0]))}</small></span><small></small>
+      const fx = TITLE_FX[x[0]] ? ` <small class="cp">banner</small>` : '';
+      return `<div class="qrow${ok ? '' : ' lock'}"><span><b style="color:${ok ? TIER[x[3]].c : '#777'}">«${esc(titleName(x))}»</b>${fx} <small class="dim">${TIER[x[3]].n}</small><small>${esc(x[5])} · ${esc(attrText(x[6][0], [x[6][1], 0, 0]))}</small></span><small></small>
         <button class="btn sm${on ? ' on' : ''}" data-tt="${x[0]}" ${ok ? '' : 'disabled'}>${on ? 'Tháo' : ok ? 'Đeo' : 'Chưa đạt'}</button></div>`; }).join('')).join('')}`, () => {
     document.querySelectorAll('#mBody [data-tt]').forEach(b => b.onclick = () => { const r = RW(); r.title = r.title === b.dataset.tt ? '' : b.dataset.tt; R.dirty = true; save(); refresh(); titleModal(); });
   });
