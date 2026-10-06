@@ -185,6 +185,8 @@ function mpUpsertPeer(row) {
   const tx = row.x != null ? +row.x : (prev ? prev.tx : 0);
   const ty = row.y != null ? +row.y : (prev ? prev.ty : 0);
   const was = !!prev;
+  const jx = row.jx && typeof row.jx === 'object' ? { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 } : (prev && prev.jx) || null;
+  const jxKey = jx ? JSON.stringify(jx) + '|' + (row.sex != null ? row.sex | 0 : (prev ? prev.sex | 0 : 0)) : '';
   MP.peers[k] = {
     cid: k,
     name: String(row.name || (prev && prev.name) || 'Võ lâm').slice(0, 16),
@@ -196,11 +198,40 @@ function mpUpsertPeer(row) {
     act: row.act || (prev && prev.act) || 'st',
     actT: prev ? prev.actT || 0 : 0,
     life: Math.max(0, Math.min(1, row.life != null ? +row.life : (prev ? prev.life : 1))),
-    x: prev ? prev.x : tx, y: prev ? prev.y : ty,
+    title: row.title != null ? String(row.title).slice(0, 24) : (prev && prev.title) || '',
+    titleCol: row.titleCol || (prev && prev.titleCol) || '',
+    jx, x: prev ? prev.x : tx, y: prev ? prev.y : ty,
     tx, ty, seen: Date.now(),
-    _px: prev ? prev._px : tx, _py: prev ? prev._py : ty
+    _px: prev ? prev._px : tx, _py: prev ? prev._py : ty,
+    _jo: prev && prev._jxKey === jxKey ? prev._jo : null,
+    _jxKey: jxKey
   };
   if (!was && typeof toast === 'function') toast('Đồng đội: ' + MP.peers[k].name + ' vào map');
+}
+
+/* Ghep bo JX1 tu hang trang bi dong bo (khong can item day du) */
+function mpJxFromPeer(p) {
+  if (!p || !p.jx || typeof JXL === 'undefined' || !JXL || !JX_PART_IDX) return null;
+  if (p._jo && p._jxKey && p._jo.key && p._jo.key.indexOf(p._jxKey.split('|')[0]) >= 0) return p._jo;
+  const sx = p.sex ? 'f' : 'm';
+  const rows = { helm: p.jx.h | 0, armor: p.jx.a | 0, weapon: p.jx.w | 0, horse: p.jx.o | 0 };
+  if (rows.weapon < 0) rows.weapon = 0;
+  const wn = (JXL.wnames[sx] || [])[rows.weapon] || '空手';
+  const ascTab = JXL.assoc[sx] || {}, asc = ascTab[wn] || ascTab['空手'];
+  const ride = rows.horse >= 0 && asc && asc[1] ? 1 : 0;
+  const Jo = { sx, rows, asc: asc ? asc[ride] || asc[0] || {} : {}, ride, key: JSON.stringify([sx, rows, ride]) };
+  p._jo = Jo; p._jxKey = JSON.stringify(p.jx) + '|' + (p.sex | 0);
+  try {
+    for (const jact of Object.values(Jo.asc)) {
+      if (!jact) continue;
+      for (const part in JX_PART_IDX) {
+        const row = Jo.rows[JX_GROUP[part]]; if (row < 0) continue;
+        const nm = (((JXL.tabs[Jo.sx] || {})[part] || {})[row] || {})[jact];
+        if (nm && JXL.sheets[jxSheetKey(Jo.sx, nm)]) img('img/jx/' + jxSheetKey(Jo.sx, nm) + '.webp');
+      }
+    }
+  } catch (e) { /* bo qua */ }
+  return Jo;
 }
 
 function mpPresenceSync() {
@@ -222,11 +253,20 @@ function mpOnPos(p) {
   mpElect();
 }
 
+function mpJxPack() {
+  if (typeof jxOn !== 'function' || !jxOn() || !R || !R.jx || !R.jx.rows) return null;
+  const r = R.jx.rows;
+  return { h: r.helm | 0, a: r.armor | 0, w: r.weapon | 0, o: r.horse | 0 };
+}
 function mpPosPayload() {
+  const tw = typeof titleWorn === 'function' && titleWorn();
   return {
     cid: mpCid(), name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
     x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
-    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? R.life / R.P.life : 1
+    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? R.life / R.P.life : 1,
+    jx: mpJxPack(),
+    title: tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '',
+    titleCol: tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : ''
   };
 }
 function mpTrackNow() {
@@ -346,24 +386,30 @@ function othDraw(c, p) {
     return;
   }
   c.fillStyle = '#0006'; c.beginPath(); c.ellipse(p.x, p.y, 14, 5, 0, 0, 7); c.fill();
-  // vong sang de de nhin dong doi
   c.strokeStyle = typeof campCol === 'function' ? campCol(p.fac) : '#8fe0b8'; c.lineWidth = 2; c.globalAlpha = 0.85;
   c.beginPath(); c.ellipse(p.x, p.y, 18, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1;
   const hw = typeof heroGfx === 'function' ? heroGfx(p.fac, p.sex) : null;
   const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (Math.hypot(p.tx - p._px, p.ty - p._py) > 2 ? 'run' : 'st');
+  const sc = typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1;
   let h = 0;
-  if (hw && hw.anim && typeof drawHeroAnim === 'function') {
-    h = drawHeroAnim(hw.anim, act, p.dir || 0, p.actT || 0, p.x, p.y, typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1) || 0;
-  } else if (hw && typeof drawSprite === 'function') {
+  // QUAN TRONG: khong goi drawHeroAnim — ham do dung R.jx/R.look cua MINH -> ve do minh len nguoi khac (loi trang phuc + bong ma)
+  const Jo = mpJxFromPeer(p);
+  if (Jo && typeof drawJxHero === 'function') {
+    h = drawJxHero(act, p.dir || 0, p.actT || 0, p.x, p.y, sc, 1, hw && hw.anim, Jo) || 0;
+  }
+  if (!h && hw && hw.anim && typeof drawAnim === 'function') {
+    h = drawAnim(hw.anim, act, p.dir || 0, p.actT || 0, p.x, p.y, sc) || 0;
+  } else if (!h && hw && typeof drawSprite === 'function') {
     drawSprite(img(hw.img), hw.sz, p.x, p.y, 0.85, p.face < 0, 0.92);
     h = 52;
-  } else {
+  } else if (!h) {
     c.fillStyle = typeof campCol === 'function' ? campCol(p.fac) : '#c8e6c0';
     c.beginPath(); c.arc(p.x, p.y - 18, 12, 0, 7); c.fill();
     h = 40;
   }
   const col = typeof campCol === 'function' ? campCol(p.fac) : (NAME_COL && NAME_COL.hero) || '#fff3c0';
-  label(p.x, p.y - (h ? Math.min(h, 90) * 0.9 : 52) - 4, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b');
+  const sub = p.title ? `«${p.title}»` : '';
+  label(p.x, p.y - (h ? Math.min(h, 90) * 0.9 : 52) - 4, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b', sub, p.titleCol || '');
   p._px = p.tx; p._py = p.ty;
 }
 
