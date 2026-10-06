@@ -11,6 +11,8 @@ const MP = {
 /* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
 const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_MAX_SPD = 300;
+/* Auth peer: dead-reckon + blend — buffer/extrap dai hon de het khựng khi tunnel jitter */
+const MP_AUTH_DELAY = 0.12, MP_AUTH_EXTRAP = 0.35, MP_AUTH_BLEND = 14;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -416,11 +418,15 @@ function mpLocalVel() {
       vx = v[0] * sp; vy = v[1] * sp;
     }
   }
-  // click chuot / auto farm: inputVec = 0 nhung van chay — dung lich su toa do rieng (khong dung H.px, render ghi de)
+  // auto farm / obsSteer: inputVec = 0 — lay van toc thuc, EMA bot nhieu
   if (Math.hypot(vx, vy) < 8 && MP._lx != null) {
     const ddt = Math.max(0.016, Math.min(0.12, (now - (MP._lxT || now)) / 1000));
     const dx = H.x - MP._lx, dy = H.y - MP._ly;
-    if (Math.hypot(dx, dy) > 0.35) { vx = dx / ddt; vy = dy / ddt; }
+    if (Math.hypot(dx, dy) > 0.35) {
+      const ivx = dx / ddt, ivy = dy / ddt;
+      vx = (MP._lvx || 0) * 0.4 + ivx * 0.6;
+      vy = (MP._lvy || 0) * 0.4 + ivy * 0.6;
+    }
   }
   MP._lx = H.x; MP._ly = H.y; MP._lxT = now;
   const spd = Math.hypot(vx, vy);
@@ -639,7 +645,20 @@ function mpInit() {
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
-/* Noi suy: buffer ~90ms de luon nam GIUA 2 mau hist — extrap ngan, het rubber-band/tele. */
+function mpAuthOn() {
+  return typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
+}
+/* Auth: dead-reckon tu snap moi nhat + extrap dai — het khựng khi jitter/burst. */
+function mpAuthGoal(p, now) {
+  if (p.tx == null) return { x: p.x || 0, y: p.y || 0 };
+  const recv = p._recvAt || now;
+  const age = (now - recv) / 1000 - MP_AUTH_DELAY;
+  const t = Math.max(0, Math.min(MP_AUTH_EXTRAP, age));
+  const vx = p.vx || 0, vy = p.vy || 0;
+  if (Math.hypot(vx, vy) < 8) return { x: p.tx, y: p.ty };
+  return { x: p.tx + vx * t, y: p.ty + vy * t };
+}
+/* Noi suy Supabase: buffer ~90ms — Hermite (chi dung khi khong auth). */
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
@@ -656,7 +675,6 @@ function mpInterpAt(p, now) {
   if (t >= last.t) {
     const vx = last.vx != null ? last.vx : (p.vx || 0), vy = last.vy != null ? last.vy : (p.vy || 0);
     if (Math.hypot(vx, vy) < 10) return { x: last.x, y: last.y };
-    // extrap ngan — qua lau se dung o last (tranh bay xa roi bi keo ve = dich chuyen)
     const u = Math.min(MP_EXTRAP, Math.max(0, (t - last.t) / 1000));
     return { x: last.x + vx * u, y: last.y + vy * u };
   }
@@ -665,7 +683,6 @@ function mpInterpAt(p, now) {
       const a = h[i - 1], b = h[i];
       let u = (t - a.t) / Math.max(1, b.t - a.t);
       u = Math.max(0, Math.min(1, u));
-      // Catmull-ish nhe: lerp + hermite yeu — muot hon, it overshoot hon Hermite day du
       const dtSec = Math.max(0.03, (b.t - a.t) / 1000);
       const m0x = (a.vx != null ? a.vx : (b.x - a.x) / dtSec) * dtSec * 0.55;
       const m0y = (a.vy != null ? a.vy : (b.y - a.y) / dtSec) * dtSec * 0.55;
@@ -678,22 +695,29 @@ function mpInterpAt(p, now) {
   }
   return { x: last.x, y: last.y };
 }
-/* Goi moi frame ve — bat goal voi van toc gioi han (KHONG hard-tele tru khi lech cuc lon). */
+/* Goi moi frame ve — auth: blend muot; supabase: soft catch-up. */
 function othSmoothRender(dt) {
   const now = Date.now();
   dt = Math.max(0.001, Math.min(0.05, dt));
+  const auth = mpAuthOn();
   for (const id of Object.keys(MP.peers)) {
     const p = MP.peers[id];
     if (now - (p.seen || 0) > MP_PEER_TTL) { delete MP.peers[id]; continue; }
-    const goal = mpInterpAt(p, now);
+    const goal = auth ? mpAuthGoal(p, now) : mpInterpAt(p, now);
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
     const spd = Math.hypot(p.vx || 0, p.vy || 0);
     if (dist > MP_HARD) {
-      // chi tele khi desync that (doi map / lag cuc do)
       p.rx = goal.x; p.ry = goal.y;
+    } else if (auth) {
+      // Exponential blend — KHONG cap toc do (cap = thô/khựng khi goal nhay)
+      if (dist > 0.04) {
+        const rate = dist > 120 ? MP_AUTH_BLEND + 8 : dist > 48 ? MP_AUTH_BLEND + 3 : MP_AUTH_BLEND;
+        const a = 1 - Math.exp(-dt * rate);
+        p.rx += (goal.x - p.rx) * a;
+        p.ry += (goal.y - p.ry) * a;
+      }
     } else if (dist > 0.05) {
-      // bat kip mem: toi da ~1.25x toc do peer + floor, khong nhay cuc
       const cap = Math.max(160, spd * 1.25 + 40) * dt;
       if (dist <= cap) { p.rx = goal.x; p.ry = goal.y; }
       else {
@@ -701,10 +725,8 @@ function othSmoothRender(dt) {
         p.rx += (goal.x - p.rx) * k;
         p.ry += (goal.y - p.ry) * k;
       }
-      // spring nhe khi gan — het rung micro (auth: manh hon vi 1 nguon sach)
       if (dist < 36) {
-        const k = (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') ? 22 : 18;
-        const a = 1 - Math.exp(-dt * k);
+        const a = 1 - Math.exp(-dt * 18);
         p.rx += (goal.x - p.rx) * a;
         p.ry += (goal.y - p.ry) * a;
       }

@@ -60,28 +60,14 @@ function mpaApplySnap(msg) {
   if (MPA._lastTick != null && tick <= MPA._lastTick) return;
   MPA.tick = tick;
   MPA.lastSnap = now;
-  const tickMs = msg.tickHz ? (1000 / msg.tickHz) : (MPA._tickMs || 33.33);
-  MPA._tickMs = tickMs;
-  // Neo mau theo thoi diem NHAN (tunnel burst khong tao timeline ao trong tuong lai).
-  // Neu mat goi: giãn toi da ~tickMs*dTick; neu den som: kep <= now.
-  let sampleT = now;
-  if (MPA._lastTick != null && MPA._lastSampleT != null) {
-    const dTick = Math.max(1, tick - MPA._lastTick);
-    const ideal = MPA._lastSampleT + dTick * tickMs;
-    // bunched burst: van cach toi thieu ~8ms/tick de Hermite khong xep chong
-    const minT = MPA._lastSampleT + dTick * 8;
-    sampleT = Math.min(now, Math.max(ideal, minT));
-    // neu bi kep qua nhieu (lag spike), keo ve now-80 de buffer con choi duoc
-    if (now - sampleT > 280) sampleT = now - 100;
-  }
+  MPA._tickMs = msg.tickHz ? (1000 / msg.tickHz) : (MPA._tickMs || 33.33);
   MPA._lastTick = tick;
-  MPA._lastSampleT = sampleT;
   if (typeof MP === 'undefined') return;
-  // Lan snap dau sau reconnect: xoa hist Supabase cu (tranh 2 nguon / tele)
+  // Lan snap dau sau reconnect: xoa hist Supabase cu
   if (!MPA._histCleared) {
     MPA._histCleared = true;
     for (const p of Object.values(MP.peers || {})) {
-      p.hist = []; p.clockOff = 0; p.seq = 0; p._pt = 0; p._acceptAt = 0;
+      p.hist = []; p.clockOff = 0; p.seq = 0; p._pt = 0; p._acceptAt = 0; p._recvAt = 0;
       if (p.rx != null) { p.x = p.rx; p.y = p.ry; p.tx = p.rx; p.ty = p.ry; }
     }
   }
@@ -89,16 +75,55 @@ function mpaApplySnap(msg) {
   const live = new Set();
   for (const row of msg.peers) {
     if (!row || !row.cid || row.cid === my) continue;
-    live.add(String(row.cid));
-    if (typeof mpUpsertPeer === 'function') {
-      const pack = Object.assign({}, row, {
-        t: sampleT,
-        seq: tick || (++MPA._seqFake || (MPA._seqFake = 1))
-      });
-      mpUpsertPeer(pack, true);
+    const cid = String(row.cid);
+    live.add(cid);
+    // Auth render dung dead-reckon (tx/vx + _recvAt) — khong can hist Hermite
+    let p = MP.peers[cid];
+    if (!p) {
+      if (typeof mpUpsertPeer === 'function') {
+        mpUpsertPeer(Object.assign({}, row, { t: now, seq: tick }), true);
+        p = MP.peers[cid];
+      }
     }
+    if (!p) continue;
+    // meta
+    if (row.name != null) p.name = String(row.name).slice(0, 16);
+    if (row.fac != null) p.fac = row.fac || p.fac;
+    if (row.sex != null) p.sex = row.sex | 0;
+    if (row.lvl != null) p.lvl = row.lvl | 0;
+    if (row.face != null) p.face = row.face >= 0 ? 1 : -1;
+    if (row.dir != null) p.dir = row.dir | 0;
+    if (row.act != null && row.act !== p.act) {
+      p.act = row.act;
+      if (row.act === 'at' || row.act === 'hurt') p.actT = 0;
+    }
+    if (row.life != null) p.life = Math.max(0, Math.min(1, +row.life));
+    if (row.title != null) p.title = String(row.title).slice(0, 24);
+    if (row.titleCol != null) p.titleCol = row.titleCol;
+    if (row.titleId != null) p.titleId = String(row.titleId).slice(0, 24);
+    if (row.jx && typeof row.jx === 'object') {
+      const nj = { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 };
+      const nk = (p.sex | 0) + ':' + nj.h + ',' + nj.a + ',' + nj.w + ',' + nj.o;
+      if (nk !== p._joCache) p.jx = nj;
+      else p.jx = nj;
+    }
+    // vi tri + van toc tu server (client kinematic relay)
+    if (row.x != null && row.y != null) {
+      const tx = +row.x, ty = +row.y;
+      let vx = row.vx != null ? +row.vx : 0, vy = row.vy != null ? +row.vy : 0;
+      const spd = Math.hypot(vx, vy);
+      if (spd > 300) { const k = 300 / spd; vx *= k; vy *= k; }
+      if (spd < 6) { vx = 0; vy = 0; }
+      // EMA nhe van toc — bot rung khi auto/obsSteer
+      p.vx = p.vx != null ? p.vx * 0.35 + vx * 0.65 : vx;
+      p.vy = p.vy != null ? p.vy * 0.35 + vy * 0.65 : vy;
+      p.tx = tx; p.ty = ty;
+      p._recvAt = now;
+      p.seq = tick;
+      if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+    }
+    p.seen = now;
   }
-  // xoa peer bien mat khoi snap lau
   for (const k of Object.keys(MP.peers)) {
     if (live.has(k)) continue;
     const p = MP.peers[k];
@@ -165,19 +190,15 @@ function mpaSendInput(dt) {
   MPA.sendT = 0;
   const vel = typeof mpLocalVel === 'function' ? mpLocalVel() : { vx: 0, vy: 0 };
   MPA.seq++;
-  const spd = Math.hypot(vel.vx || 0, vel.vy || 0);
-  // Chay: chi vx/vy. Dung: kem x/y de server quiet-correct (het lech tich luy, khong rung khi chay).
-  const msg = {
+  // Gui ca x/y + vx/vy — server relay kinematic (khop duong di local, het khựng tich phan)
+  mpaSend({
     t: 'in', seq: MPA.seq,
+    x: H ? Math.round(H.x * 10) / 10 : 0,
+    y: H ? Math.round(H.y * 10) / 10 : 0,
     vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
     face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: H.act || 'st',
     life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
-  };
-  if (spd < 8 && H) {
-    msg.x = Math.round(H.x * 10) / 10;
-    msg.y = Math.round(H.y * 10) / 10;
-  }
-  mpaSend(msg);
+  });
   MPA.metaT = (MPA.metaT || 0) + 0.05;
   if (MPA.metaT > 2) {
     MPA.metaT = 0;

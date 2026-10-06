@@ -1,16 +1,19 @@
 /**
- * Mot phong = 1 map zone. Server tick la nguon dung vi tri.
+ * Mot phong = 1 map zone.
+ * Vi tri: client gui x/y (kinematic), server validate + relay — muot hon tich phan vx thuan.
  */
-const TICK_HZ = 30;           // 30Hz — muot hon 20Hz, bot dich chuyen khi noi suy
+const TICK_HZ = 30;
 const TICK_MS = 1000 / TICK_HZ;
-const MAX_SPD = 280;          // px/s — khop client ~150*speed, cho buffer
+const MAX_SPD = 280;          // px/s
 const MAX_PEERS = 8;
-const SNAP_META_EVERY = 15;   // moi 15 tick (~0.5s) kem name/fac/jx
+const SNAP_META_EVERY = 15;   // ~0.5s kem name/fac/jx
+const COAST_AFTER_MS = 55;    // het goi input: coast theo vx
+const STOP_AFTER_MS = 900;    // het tin hieu lau: dung
 
 export class Room {
   constructor(zoneId) {
     this.zoneId = zoneId;
-    this.players = new Map(); // cid -> Player
+    this.players = new Map();
     this.tickN = 0;
     this.timer = setInterval(() => this.tick(), TICK_MS);
   }
@@ -68,15 +71,17 @@ export class Room {
     this.players.delete(cid);
   }
 
-  /** Client gui input: van toc mong muon (+ optional predicted x/y de reconcile). */
+  /** Client gui x/y (+ vx/vy). Server validate buoc nhay, relay cho peer. */
   onInput(cid, msg) {
     const p = this.players.get(cid);
     if (!p) return;
     const seq = msg.seq | 0;
     if (seq && seq <= p.inSeq) return;
     p.inSeq = seq || p.inSeq;
-    p.lastIn = Date.now();
-    p.seen = p.lastIn;
+    const now = Date.now();
+    const dtIn = Math.min(0.25, Math.max(0.016, (now - p.lastIn) / 1000));
+    p.lastIn = now;
+    p.seen = now;
 
     let vx = +msg.vx || 0, vy = +msg.vy || 0;
     const spd = Math.hypot(vx, vy);
@@ -90,13 +95,20 @@ export class Room {
     if (msg.dir != null) p.dir = msg.dir | 0;
     if (msg.act != null) p.act = String(msg.act).slice(0, 8);
     if (msg.life != null) p.life = Math.max(0, Math.min(1, +msg.life));
-    // Quiet-correct CHI khi 2 ben dang dung (het lech tich luy). Khi chay: chi vx/vy.
-    if (vx === 0 && vy === 0 && msg.x != null && msg.y != null) {
+
+    if (msg.x != null && msg.y != null) {
       const tx = +msg.x, ty = +msg.y;
       if (Number.isFinite(tx) && Number.isFinite(ty)) {
         const dist = Math.hypot(tx - p.x, ty - p.y);
-        if (dist <= 120) { p.x = tx; p.y = ty; }
-        else if (dist <= 420) { p.x += (tx - p.x) * 0.35; p.y += (ty - p.y) * 0.35; }
+        // cho phep ~2.2x max spd + slack — du cho lag/jitter, chan tele
+        const maxStep = MAX_SPD * dtIn * 2.2 + 32;
+        if (dist <= maxStep) {
+          p.x = tx; p.y = ty;
+        } else {
+          const k = maxStep / dist;
+          p.x += (tx - p.x) * k;
+          p.y += (ty - p.y) * k;
+        }
       }
     }
   }
@@ -119,11 +131,15 @@ export class Room {
     const dt = TICK_MS / 1000;
     const now = Date.now();
     for (const p of this.players.values()) {
-      // timeout khong input: dung yen
-      if (now - p.lastIn > 400) { p.vx = 0; p.vy = 0; if (p.act === 'run') p.act = 'st'; }
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      // clamp map nhe (field ~800x600 thuong dung)
+      const age = now - p.lastIn;
+      if (age >= STOP_AFTER_MS) {
+        p.vx = 0; p.vy = 0;
+        if (p.act === 'run') p.act = 'st';
+      } else if (age > COAST_AFTER_MS) {
+        // gap ngan / tunnel burst: coast theo van toc cu
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
       p.x = Math.max(40, Math.min(2000, p.x));
       p.y = Math.max(40, Math.min(1600, p.y));
     }
