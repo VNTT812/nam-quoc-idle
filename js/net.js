@@ -63,7 +63,7 @@ function netThoAdminReady() {
   }
   if (NET.user && typeof isAdmin === 'function' && !isAdmin()) {
     window.__thoAwaitAdmin = false;
-    toast('Hệ Thổ★ / phái Test chỉ tài khoản admin — đăng nhập đúng tên admin');
+    toast('Hệ Việt★ / phái Test chỉ tài khoản admin — đăng nhập đúng tên admin');
     if (typeof slotMenu === 'function') slotMenu();
   }
 }

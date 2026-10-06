@@ -137,7 +137,7 @@ const ZONE_STAGES = 10, WAVES = 4;
 /* ---------- he quai co dinh (kieu JX1) ----------
    Npcs.txt: moi loai quai co 1 nguyen to khang toi da 90 (he cua no) va 1 nguyen to 60 (diem yeu). Thu tu rmax = ELEM = thu tu he
    (vat ly-Kim, doc-Moc, bang-Thuy, hoa-Hoa, loi-Tho). Khang deu nhau (vd Nhen 75/75/...): he theo ma quai. */
-const SERIES_ELEM = ['phys', 'poison', 'cold', 'fire', 'light', 'light']; /* index 5 = Tho Test → lôi như Thổ */
+const SERIES_ELEM = ['phys', 'poison', 'cold', 'fire', 'light', 'light']; /* index 5 = Việt★ (test) → lôi như Thổ */
 function monSeries(tid) {
   const m = MON[tid]; if (!m) return 0; if (m._s !== undefined) return m._s;
   const r = m.rmax || [], mx = Math.max(...r), top = r.map((v, i) => (v === mx ? i : -1)).filter(i => i >= 0);

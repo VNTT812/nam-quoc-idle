@@ -18,7 +18,7 @@ const JX_IDX_PART = Object.fromEntries(Object.entries(JX_PART_IDX).map(([k, v]) 
 const JX_GROUP = { '头部': 'helm', '发型': 'helm', '肩膀': 'armor', '躯体': 'armor', '左手': 'armor', '右手': 'armor', '左手武器': 'weapon', '右手武器': 'weapon', '马前': 'horse', '马中': 'horse', '马后': 'horse' };
 /* 'm:ten' = hinh dung chung cua nam (vd ngua cua nhan vat nu) */
 const jxSheetKey = (sx, nm) => (nm.startsWith('m:') ? 'm/' + nm.slice(2) : sx + '/' + nm);
-const jxOn = () => !!JXL && S && S.jxLook !== false;
+const jxOn = () => !!JXL && S && S.jxLook !== false && !(FAC[S.fac] && FAC[S.fac].viet);
 /* Dong (index du lieu, tinh tu 0) cua mot trang bi trong bang bo phan */
 function jxItemP(it) {
   if (!it) return -1;

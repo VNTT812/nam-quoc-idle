@@ -140,7 +140,7 @@ function init() {
     bootLoadHide();
     toast(typeof netOn === 'function' && netOn()
       ? 'Đang xác nhận tài khoản admin để chơi phái Test…'
-      : 'Hệ Thổ★ / phái Test chỉ tài khoản admin');
+      : 'Hệ Việt★ / phái Test chỉ tài khoản admin');
     slotMenu();
   } else if (S.fac && FAC[S.fac] && FAC[S.fac].test) {
     if (typeof thoTestUnlock90 === 'function') thoTestUnlock90(S.fac);

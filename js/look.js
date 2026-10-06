@@ -52,13 +52,24 @@ function tintedFrame(im, m, fr, d, L) {
 /* Thay cho drawAnim khi ve nhan vat: tra ve chieu cao da ve (nhu drawAnim) */
 function drawHeroAnim(key, act, dir, t, x, y, sc, alpha = 1) {
   if (typeof jxOn === 'function' && jxOn() && R.jx) { const h = drawJxHero(act, dir, t, x, y, sc, alpha, key); if (h) return h; }   // hinh JX1 theo trang bi
-  const L = R.look; if (!lookOn() || !L || (!L.body && !L.head)) return drawAnim(key, act, dir, t, x, y, sc, alpha);
+  const face = (typeof H !== 'undefined' && H && H.face < 0) ? -1 : 1;
+  const L = R.look; if (!lookOn() || !L || (!L.body && !L.head)) return drawAnim(key, act, dir, t, x, y, sc, alpha, face);
   const set = W.anim && W.anim[key]; if (!set) return false;
   const m = set[act] || set.st; if (!m) return false;
   const im = img('img/a/' + m.f); if (!im.complete || !im.naturalWidth) return false;
   let fr = Math.floor(t * 1000 / m.ms); fr = ONCE[act] ? Math.min(fr, m.n - 1) : fr % m.n;
   const d = m.d >= 8 ? dir : Math.floor(dir * m.d / 8);
-  CX.globalAlpha = alpha; CX.drawImage(tintedFrame(im, m, fr, d, L), x - m.ax * sc, y - m.ay * sc, m.w * sc, m.h * sc); CX.globalAlpha = 1;
+  const flip = !!(m.flip || m.d === 1) && face < 0;
+  const frame = tintedFrame(im, m, fr, d, L);
+  CX.globalAlpha = alpha;
+  if (flip) {
+    CX.save(); CX.translate(x, y); CX.scale(-1, 1);
+    CX.drawImage(frame, -m.ax * sc, -m.ay * sc, m.w * sc, m.h * sc);
+    CX.restore();
+  } else {
+    CX.drawImage(frame, x - m.ax * sc, y - m.ay * sc, m.w * sc, m.h * sc);
+  }
+  CX.globalAlpha = 1;
   return m.h * sc;
 }
 /* Hao quang duoi chan (ve truoc nhan vat) */

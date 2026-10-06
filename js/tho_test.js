@@ -1,5 +1,6 @@
-/* ======================= HE THO (TEST) — clone day du Võ Đang + Côn Lôn =======================
-   Chi tai khoan admin nhin / choi duoc. Skill id = 9000 + id goc → chinh sua khong dung data Tho that. */
+/* ======================= VIỆT★ (TEST) — nhân Việt riêng thay Thổ★ =======================
+   Clone skill Võ Đang + Côn Lôn (id 9000+). Hình: VIET_CHAR (pack Kiếm Hiệp + sheet recolor).
+   Chi tai khoan admin nhin / choi duoc. */
 'use strict';
 (function () {
   const SRC = ['wudang', 'kunlun'];
@@ -7,6 +8,7 @@
   const SER = 5;
   const MAP = Object.create(null);   // oldId -> newId
   const deep = x => JSON.parse(JSON.stringify(x));
+  const VC = window.VIET_CHAR || null;
 
   const canSeeThoTest = () => typeof isAdmin === 'function' && isAdmin();
   const isThoTestFac = f => !!(f && f.test);
@@ -16,14 +18,24 @@
   window.facVisible = facVisible;
   window.THO_TEST_SERIES = SER;
   window.THO_TEST_ID_BASE = BASE;
+  window.VIET_CHAR_SERIES = SER;
   window.thoTestId = id => (MAP[+id] || (+id >= BASE ? +id : 0));
   window.thoTestMap = MAP;
 
-  if (!SERIES.includes('Thổ★')) SERIES.push('Thổ★');
-  if (SERIES_COL.length < 6) SERIES_COL.push('#e0b070');
-  SERIES_DESC && SERIES_DESC.length < 6 && SERIES_DESC.push('Admin · clone Thổ (Võ Đang + Côn Lôn)');
+  /* Hệ Việt★ thay nhãn Thổ★ cũ */
+  const SER_NAME = (VC && VC.series) || 'Việt★';
+  const SER_COL = (VC && VC.seriesCol) || '#d4a017';
+  const SER_DESC = (VC && VC.seriesDesc) || 'Admin · nhân Việt riêng (Yên Tử★ · Bạch Đằng★)';
+  if (SERIES.length <= SER) SERIES.push(SER_NAME);
+  else SERIES[SER] = SER_NAME;
+  if (SERIES_COL.length <= SER) SERIES_COL.push(SER_COL);
+  else SERIES_COL[SER] = SER_COL;
+  if (typeof SERIES_DESC !== 'undefined') {
+    if (SERIES_DESC.length <= SER) SERIES_DESC.push(SER_DESC);
+    else SERIES_DESC[SER] = SER_DESC;
+  }
   if (!J.levelAdd[SER]) J.levelAdd[SER] = deep(J.levelAdd[4]);
-  /* start stats: copy Tho nam/nu */
+  /* start stats: copy Tho nam/nu (cùng hệ ngũ hành Thổ) */
   if (J.start.length < 12) {
     const m = deep(J.start[8]), f = deep(J.start[9]);
     m.series = SER; f.series = SER;
@@ -81,11 +93,12 @@
     }
   }
 
-  /* --- factions --- */
+  /* --- factions Việt★ --- */
   const srcFac = Object.fromEntries(J.factions.map(f => [f.key, f]));
+  const facNames = (VC && VC.factions) || {};
   const clones = [
-    { key: 'wudang_t', src: 'wudang', id: 108, n: 'Võ Đang (Test)', camp: 'C_JUSTICE' },
-    { key: 'kunlun_t', src: 'kunlun', id: 109, n: 'Côn Lôn (Test)', camp: 'C_BALANCE' },
+    { key: 'wudang_t', src: 'wudang', id: 108, n: (facNames.wudang_t && facNames.wudang_t.n) || 'Yên Tử★', camp: 'C_JUSTICE' },
+    { key: 'kunlun_t', src: 'kunlun', id: 109, n: (facNames.kunlun_t && facNames.kunlun_t.n) || 'Bạch Đằng★', camp: 'C_BALANCE' },
   ];
   for (const c of clones) {
     const o = srcFac[c.src];
@@ -93,7 +106,7 @@
     const f = {
       id: c.id, key: c.key, n: c.n, series: SER, camp: o.camp || c.camp,
       skills: (o.skills || []).map(id => MAP[id] || id),
-      test: 1, srcKey: c.src, srcId: o.id,
+      test: 1, srcKey: c.src, srcId: o.id, viet: 1,
     };
     J.factions.push(f);
     FACTIONS.push(f);
@@ -105,15 +118,33 @@
     const a = mastery && mastery.attr.addphysicsdamage_p[0];
     f.wcode = Array.isArray(a) && [0, 1, 2, 3, 4, 5, 7, 9].includes(a[2]) ? a[2] : (o.wcode != null ? o.wcode : -1);
   }
-  FAC['vo' + SER] = { key: 'vo' + SER, n: 'Vô Môn Phái', series: SER, skills: [], wcode: -1, id: -1, novice: true, test: 1 };
+  FAC['vo' + SER] = { key: 'vo' + SER, n: 'Vô Môn Phái', series: SER, skills: [], wcode: -1, id: -1, novice: true, test: 1, viet: 1 };
 
-  /* --- hinh nhan vat / danh hieu / can bang --- */
-  if (typeof W !== 'undefined' && W.hero) {
-    if (W.hero.wudang) W.hero.wudang_t = W.hero.wudang;
-    if (W.hero.kunlun) W.hero.kunlun_t = W.hero.kunlun;
+  /* --- hinh nhan vat Viet★ rieng (VIET_CHAR) / danh hieu / can bang --- */
+  if (typeof W !== 'undefined') {
+    W.anim = W.anim || {};
+    if (VC && VC.anims) {
+      for (const [k, v] of Object.entries(VC.anims)) W.anim[k] = deep(v);
+    }
+    W.hero = W.hero || {};
+    const applyHero = (facKey, fallbackSrc) => {
+      const h = VC && VC.heroes && VC.heroes[facKey];
+      if (h) {
+        /* Ưu tiên sprite Kiếm Hiệp (nhân Việt riêng); sheet 8 hướng giữ làm dự phòng */
+        const anim = h.animKh || h.anim;
+        W.hero[facKey] = { img: h.img, sz: h.sz.slice(), anim };
+      } else if (W.hero[fallbackSrc]) {
+        W.hero[facKey] = deep(W.hero[fallbackSrc]);
+      }
+    };
+    applyHero('wudang_t', 'wudang');
+    applyHero('kunlun_t', 'kunlun');
   }
   if (typeof CAMP !== 'undefined') { CAMP.wudang_t = 'chinh'; CAMP.kunlun_t = 'trung'; }
-  if (typeof FAC_SHORT !== 'undefined') { FAC_SHORT.wudang_t = 'Võ Đang★'; FAC_SHORT.kunlun_t = 'Côn Lôn★'; }
+  if (typeof FAC_SHORT !== 'undefined') {
+    FAC_SHORT.wudang_t = (facNames.wudang_t && facNames.wudang_t.short) || 'Yên Tử★';
+    FAC_SHORT.kunlun_t = (facNames.kunlun_t && facNames.kunlun_t.short) || 'Bạch Đằng★';
+  }
   if (typeof POWER_RAW !== 'undefined') {
     if (POWER_RAW.wudang) POWER_RAW.wudang_t = POWER_RAW.wudang.slice();
     if (POWER_RAW.kunlun) POWER_RAW.kunlun_t = POWER_RAW.kunlun.slice();
@@ -122,6 +153,13 @@
     if (FAC_DMG_NORM.wudang) FAC_DMG_NORM.wudang_t = FAC_DMG_NORM.wudang.slice();
     if (FAC_DMG_NORM.kunlun) FAC_DMG_NORM.kunlun_t = FAC_DMG_NORM.kunlun.slice();
   }
+
+  /* Tắt JX ghép bộ phận khi chơi Việt★ — hiện đúng sprite nhân Việt riêng (jxOn trong jxparts.js đọc f.viet) */
+  const isVietTestFac = key => {
+    const f = FAC[key];
+    return !!(f && f.test && (f.viet || f.series === SER));
+  };
+  window.isVietTestFac = isVietTestFac;
 
   /* --- FX / trang thai / bang phu --- */
   const copyKey = (obj, from, to) => {
@@ -225,7 +263,7 @@
         }
       }
     }
-    if (n) { R.dirty = true; if (typeof log === 'function') log(`⚡ Thổ★: mở <b>${n}</b> võ công 90 (không cần Mật Tịch).`); }
+    if (n) { R.dirty = true; if (typeof log === 'function') log(`⚡ Việt★: mở <b>${n}</b> võ công 90 (không cần Mật Tịch).`); }
     return n;
   }
   window.thoTestUnlock90 = thoTestUnlock90;
@@ -299,5 +337,5 @@
     if (S && S.fac && FAC[S.fac] && FAC[S.fac].test) { thoTestUnlock90(S.fac); thoTestEnsureWeapon(S.fac); }
   });
 
-  console.info('[tho_test] cloned', own.length, 'skills → ids', BASE + '+; factions wudang_t / kunlun_t; series', SER, 'Thổ★ (admin only); 90 unlocked; weapon/fac gear fixed');
+  console.info('[viet_char] Việt★ series', SER, '· factions Yên Tử★ / Bạch Đằng★ · cloned', own.length, 'skills →', BASE + '+; KH sprite + admin only; 90 unlocked');
 })();
