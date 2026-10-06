@@ -118,10 +118,15 @@ function mpaApplySnap(msg) {
       const spd = Math.hypot(vx, vy);
       if (spd > 300) { const k = 300 / spd; vx *= k; vy *= k; }
       if (spd < 6) { vx = 0; vy = 0; }
-      // EMA nhe — giu coast vel khi doi huong (tranh underrun = dung khung)
-      p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
-      p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
-      if (Math.hypot(p.vx, p.vy) > 20) { p._cVx = p.vx; p._cVy = p.vy; }
+      // Dung yen / danh: XOA coast — neu giu _cVx, peer se "chay mai" o tab kia
+      if (spd < 10 || row.act === 'st' || row.act === 'at' || row.act === 'hurt') {
+        p._cVx = 0; p._cVy = 0;
+        p.vx = vx; p.vy = vy;
+      } else {
+        p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
+        p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
+        if (Math.hypot(p.vx, p.vy) > 20) { p._cVx = p.vx; p._cVy = p.vy; }
+      }
       p.tx = tx; p.ty = ty;
       p._recvAt = now;
       p.seq = tick;

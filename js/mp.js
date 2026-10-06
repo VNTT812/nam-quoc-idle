@@ -89,12 +89,13 @@ function mpOnEpos(p) {
   if (!p || !Array.isArray(p.e) || mpIsHost()) return;
   if (p.host && MP.host && p.host !== MP.host && p.host > MP.host) return;
   MP.applying = true;
+  let miss = 0;
   try {
     for (const row of p.e) {
       if (!row || !row[0]) continue;
       const mid = row[0], x = +row[1], y = +row[2], hp = row[3] != null ? +row[3] : null;
       const e = R.enemies.find(z => z && z.mid === mid && !z.dead);
-      if (!e) continue;
+      if (!e) { miss++; continue; }
       const d = Math.hypot(x - e.x, y - e.y);
       if (d > 36) { e.x = x; e.y = y; }
       else if (d > 4) { e.x += (x - e.x) * 0.7; e.y += (y - e.y) * 0.7; }
@@ -102,6 +103,11 @@ function mpOnEpos(p) {
       e.mpRemote = true;
     }
   } finally { MP.applying = false; }
+  // Thieu mid = chua co field host → xin lai (het 2 tab quai khac nhau)
+  if (miss > 0 && (!MP._needT || Date.now() - MP._needT > 1200)) {
+    MP._needT = Date.now();
+    if (typeof mpSend === 'function') mpSend('need', { cid: mpCid() });
+  }
 }
 
 function mpSendField(force) {
@@ -174,6 +180,7 @@ function mpApplyField(snap) {
         if (e) {
           e.hp = Math.min(e.hp, src.e.hp); e.max = src.e.max || e.max;
           e.home = p; p.e = e; used.add(e.mid);
+          e.mpRemote = true;
           const tx = src.e.x != null ? src.e.x : p.x, ty = src.e.y != null ? src.e.y : p.y;
           const d = Math.hypot(tx - e.x, ty - e.y);
           // keo manh hon — het lech quai (nguyen nhan danh khong khi)
@@ -261,7 +268,12 @@ function mpElect() {
   const prev = MP.host;
   MP.host = ids[0] || mpCid();
   MP.online = Math.min(MP_MAX, new Set(ids).size);
-  if (prev && prev !== MP.host && mpIsHost() && R.field) mpSendField();
+  if (prev && prev !== MP.host && mpIsHost() && R.field) mpSendField(true);
+  // Peer moi vao: host gui field ngay (het khach khong thay quai)
+  if (mpIsHost() && R.field && ids.length > 1 && (!MP._electFieldAt || Date.now() - MP._electFieldAt > 800)) {
+    MP._electFieldAt = Date.now();
+    mpSendField(true);
+  }
   mpUi();
 }
 
@@ -687,7 +699,7 @@ function mpInit() {
 function mpAuthOn() {
   return typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
 }
-/* Auth: lerp theo thoi diem NHAN + coast khi underrun (het đứng khung). */
+/* Auth: lerp + coast CHI khi dang run; dung/danh khong coast (het chay ma). */
 function mpAuthGoal(p, now) {
   const h = p.ahist;
   if (!h || !h.length) {
@@ -695,8 +707,10 @@ function mpAuthGoal(p, now) {
     return { x: p.tx, y: p.ty };
   }
   const t = now - MP_AUTH_DELAY * 1000;
+  const stopped = p.act === 'st' || p.act === 'at' || p.act === 'hurt' || p.act === 'die';
   if (h.length === 1) {
     const s = h[0];
+    if (stopped) return { x: s.x, y: s.y };
     const age = Math.max(0, Math.min(MP_AUTH_EXTRAP, (t - s.t) / 1000));
     const vx = s.vx || p._cVx || 0, vy = s.vy || p._cVy || 0;
     return { x: s.x + vx * age, y: s.y + vy * age };
@@ -704,7 +718,7 @@ function mpAuthGoal(p, now) {
   if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
   const last = h[h.length - 1];
   if (t >= last.t) {
-    // Underrun: LUON coast theo van toc (khong bao gio freeze khi spd thap)
+    if (stopped) return { x: last.x, y: last.y };
     const age = Math.min(MP_AUTH_EXTRAP, Math.max(0, (t - last.t) / 1000));
     let vx = last.vx || 0, vy = last.vy || 0;
     if (Math.hypot(vx, vy) < 12) { vx = p._cVx || 0; vy = p._cVy || 0; }
@@ -715,7 +729,6 @@ function mpAuthGoal(p, now) {
       const a = h[i - 1], b = h[i];
       let u = (t - a.t) / Math.max(1, b.t - a.t);
       u = Math.max(0, Math.min(1, u));
-      // smoothstep nhe — bot giat o moc mau
       u = u * u * (3 - 2 * u);
       return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
     }
@@ -810,11 +823,12 @@ function othSmoothRender(dt) {
     }
     p.x = p.rx; p.y = p.ry;
     p.actT = (p.actT || 0) + dt;
-    const moveSpd = Math.hypot(p.vx || 0, p.vy || 0) || Math.hypot(p._cVx || 0, p._cVy || 0);
-    if (p.act === 'at' && p.actT > 0.5) p.act = moveSpd > 18 ? 'run' : 'st';
-    // Giữ run khi đang coast underrun — tránh nhấp nháy st/run (= cảm giác khựng)
-    else if (p.act === 'st' && moveSpd > 22) p.act = 'run';
-    else if (p.act === 'run' && moveSpd < 8 && Math.hypot((p.tx || p.rx) - p.rx, (p.ty || p.ry) - p.ry) < 1.5) p.act = 'st';
+    // CHI tin vx hien tai + act tu server — KHONG dung _cVx (gay chay mai khi dang dung/danh)
+    const moveSpd = Math.hypot(p.vx || 0, p.vy || 0);
+    if (p.act === 'at' || p.act === 'hurt' || p.act === 'die') {
+      if (p.act === 'at' && p.actT > 0.55) p.act = moveSpd > 28 ? 'run' : 'st';
+    } else if (moveSpd > 28) p.act = 'run';
+    else if (moveSpd < 12) p.act = 'st';
   }
 }
 function othEnts() {
@@ -863,26 +877,36 @@ function othTick(dt) {
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;
     MP.eposT = (MP.eposT || 0) + dt;
-    // epos nhe ~5Hz — giu quai khach trung host (het đứng đánh không khí sau vài giây)
-    if (MP.eposT >= 0.2 && Object.keys(MP.peers).length) {
+    const peerN = Object.keys(MP.peers).length;
+    // epos ~6Hz khi co peer — quai khach bam host
+    if (peerN && MP.eposT >= 0.16) {
       MP.eposT = 0;
       mpSendEpos();
     }
-    // field day du ~1s; dang danh / co peer: 0.45s
+    // field: co peer → 0.5s; dang danh → 0.35s; mot minh → MP_SYNC
     let gap = MP_SYNC;
-    if (Object.keys(MP.peers).length) {
-      let hot = false;
+    if (peerN) {
+      gap = 0.5;
+      if ((H.act || '') === 'at') gap = 0.35;
       for (const id of Object.keys(MP.peers)) {
         const p = MP.peers[id];
-        if (p && (p.act === 'at' || Math.hypot(p.vx || 0, p.vy || 0) > 40)) { hot = true; break; }
+        if (p && p.act === 'at') { gap = 0.35; break; }
       }
-      if (hot || (H.act || '') === 'at') gap = 0.45;
     }
     if (MP.syncT >= gap) { MP.syncT = 0; mpSendField(); }
   } else if (MP.waitHost && Date.now() > MP.waitHost && !MP.fieldSnap) {
-    MP.waitHost = 0;
-    if (!R.field) fieldBuild();
-    else mpSendField(true);
+    // Co peer: KHONG tu build quai local (do la nguyen nhan 2 tab quai khac nhau)
+    if (Object.keys(MP.peers).length) {
+      MP.waitHost = Date.now() + MP_WAIT;
+      if (!MP._needT || Date.now() - MP._needT > 1000) {
+        MP._needT = Date.now();
+        if (typeof mpSend === 'function') mpSend('need', { cid: mpCid() });
+      }
+    } else {
+      MP.waitHost = 0;
+      if (!R.field) fieldBuild();
+      else if (typeof mpSendField === 'function') { /* alone: se thanh host */ }
+    }
   }
 }
 function othDraw(c, p) {
@@ -903,9 +927,8 @@ function othDraw(c, p) {
   c.strokeStyle = typeof campCol === 'function' ? campCol(p.fac) : '#8fe0b8'; c.lineWidth = 2; c.globalAlpha = 0.85;
   c.beginPath(); c.ellipse(px, py, 18, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1;
   const hw = typeof heroGfx === 'function' ? heroGfx(p.fac, p.sex) : null;
-  const moving = Math.hypot(p.vx || 0, p.vy || 0) > 14
-    || Math.hypot(p._cVx || 0, p._cVy || 0) > 20
-    || Math.hypot((p.tx || px) - px, (p.ty || py) - py) > 2.5;
+  const moving = Math.hypot(p.vx || 0, p.vy || 0) > 18
+    || (p.act === 'run' && Math.hypot((p.tx || px) - px, (p.ty || py) - py) > 2);
   const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (moving ? 'run' : 'st');
   const sc = typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1;
   let h = 0;
