@@ -9,7 +9,7 @@ const WSS = (fs.existsSync('/tmp/mp-cf-tunnel.url')
   ? fs.readFileSync('/tmp/mp-cf-tunnel.url', 'utf8').trim().replace('https', 'wss')
   : 'ws://127.0.0.1:3847');
 
-const MP_DELAY = 90, MP_DELAY_IDLE = 110, MP_HIST = 48, MP_EXTRAP = 0.12, MP_HARD = 1400, MP_MAX_SPD = 300;
+const MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_HARD = 1400, MP_MAX_SPD = 300;
 
 function upsert(p, row, now) {
   const tx = +row.x, ty = +row.y;
@@ -106,13 +106,27 @@ await Promise.all([
 const peer = { seq: 0, clockOff: 0, hist: [] };
 const jumps = [];
 let prev = null, frames = 0, teleports = 0;
+let lastTick = null, lastSampleT = null;
 
 b.on('message', (buf) => {
   const m = JSON.parse(buf);
   if (m.t !== 'snap') return;
+  const tick = m.tick | 0;
+  if (lastTick != null && tick <= lastTick) return;
+  const now = Date.now();
+  const tickMs = m.tickHz ? (1000 / m.tickHz) : 33.33;
+  let sampleT = now;
+  if (lastTick != null && lastSampleT != null) {
+    const dTick = Math.max(1, tick - lastTick);
+    const ideal = lastSampleT + dTick * tickMs;
+    const minT = lastSampleT + dTick * 8;
+    sampleT = Math.min(now, Math.max(ideal, minT));
+    if (now - sampleT > 280) sampleT = now - 100;
+  }
+  lastTick = tick; lastSampleT = sampleT;
   const row = (m.peers || []).find(x => x.cid === 'sm-a');
   if (!row) return;
-  upsert(peer, { ...row, t: m.serverT, seq: m.tick | 0 }, Date.now());
+  upsert(peer, { ...row, t: sampleT, seq: tick }, now);
 });
 
 a.send(JSON.stringify({ t: 'join', devCid: 'sm-a', zone: 2, name: 'Runner', fac: 'shaolin', lvl: 20, x: 100, y: 200 }));
