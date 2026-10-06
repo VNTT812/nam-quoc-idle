@@ -3,7 +3,7 @@
    Sat thuong: attacker tinh + gui; victim ap dung (tran theo % mau). Relay qua auth WSS + SB. */
 'use strict';
 
-const MP_PK_RANGE_PAD = 28;
+const MP_PK_RANGE_PAD = 56; // melee PK: them le mang (peer interp)
 const MP_PK_HIT_GAP = 0.12;
 const MP_PK_MAX_FRAC = 0.32; // toi da ~32% mau max / don (chong 1-shot hack)
 
@@ -119,18 +119,25 @@ function mpPkCalcDmg(a, peer) {
   return { dmg: tot, miss: false, el: best, crit };
 }
 
-function mpPkStrike(peer) {
+function mpPkStrike(peer, forceAtk) {
   if (!mpPkOn() || !mpPkAlive(peer) || !R.P) return 0.25;
   const { x, y } = mpPkPeerXY(peer);
-  let a = typeof pickAttack === 'function' ? pickAttack(R.P, false) : (R.P.main || R.P.basic);
+  let a = forceAtk || (typeof pickAttack === 'function' ? pickAttack(R.P, false) : (R.P.main || R.P.basic));
   if (!a) return 0.3;
-  const d = Math.hypot(x - H.x, y - H.y) - 18;
-  if (d > a.rad + MP_PK_RANGE_PAD) {
-    if (!manual()) R.moveTo = { x, y, hp: 1 };
-    return 0.05;
+  // Dam bao co parts de tinh sat thuong
+  if ((!a.parts || !Object.keys(a.parts).length) && a.id && typeof activeInfo === 'function' && SK[a.id]) {
+    try { a = Object.assign({}, a, activeInfo(R.P, SK[a.id], a.L || S.sk[a.id] || 1)); } catch (e) { /* bo qua */ }
   }
-  if (typeof obsSee === 'function' && !obsSee(H.x, H.y, x, y)) {
-    if (!manual()) R.moveTo = { x, y, hp: 1 };
+  const d = Math.hypot(x - H.x, y - H.y) - 18;
+  const reach = (a.rad || 80) + MP_PK_RANGE_PAD;
+  if (d > reach) {
+    // Auto: duoi theo; Manual: van co the "kep" them neu lech < 1.35*tam (jitter mang)
+    if (!manual()) { R.moveTo = { x, y, hp: 1 }; return 0.05; }
+    if (d > reach * 1.35) return 0.05;
+  }
+  // PK sat: bo qua tuong neu dang dung sat (tranh interp/obs map chan sai)
+  if (d > 90 && typeof obsSee === 'function' && !obsSee(H.x, H.y, x, y)) {
+    if (!manual()) { R.moveTo = { x, y, hp: 1 }; return 0.05; }
     return 0.05;
   }
   R.moveTo = null;
@@ -168,8 +175,27 @@ function mpPkStrike(peer) {
       crit: hit.crit ? 1 : 0
     });
   }
+  // Ep gui act at qua auth ngay
+  if (typeof mpaSend === 'function' && typeof MPA !== 'undefined' && MPA.state === 'ok') {
+    try {
+      mpaSend({
+        t: 'in', seq: (MPA.seq = (MPA.seq | 0) + 1),
+        x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10,
+        vx: 0, vy: 0, face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: 'at',
+        life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1,
+        pk: 1
+      });
+    } catch (e) { /* bo qua */ }
+  }
   if (typeof mpTrackNow === 'function') mpTrackNow(true);
   return a.rate > 0 ? 1 / a.rate : 0.4;
+}
+
+/** Build attack tu skill id (dung de test / ep chieu). */
+function mpPkAtkFromSkill(id) {
+  if (!id || !SK[id] || !R.P || typeof activeInfo !== 'function') return null;
+  const L = Math.max(1, (S.sk && S.sk[id]) || 1);
+  try { return activeInfo(R.P, SK[id], L); } catch (e) { return null; }
 }
 
 function mpOnPkFlag(p) {
@@ -186,12 +212,26 @@ function mpOnPkHit(p) {
   const atk = MP.peers[String(p.cid || '')];
   const vic = p.to === my ? null : MP.peers[String(p.to)];
 
-  // Spectator / attacker client: ve FX tren nan nhan
+  // Cap nhat anim attacker (neu co)
+  if (atk) {
+    atk.act = 'at'; atk.actT = 0;
+    if (p.face != null) atk.face = p.face >= 0 ? 1 : -1;
+    if (p.dir != null) atk.dir = p.dir | 0;
+    atk._cVx = 0; atk._cVy = 0; atk._coast = false;
+  }
+
+  // Spectator / attacker client: so huyet + hurt — FX chiêu do mpOnSkill lo (tranh double)
   if (p.to !== my) {
-    if (vic && typeof skillFx === 'function') {
-      const from = atk ? mpPkPeerXY(atk) : { x: +p.ax || 0, y: +p.ay || 0 };
+    if (vic) {
       const to = mpPkPeerXY(vic);
-      skillFx(from, to, { id: p.id | 0, L: p.L || 1, nMis: p.nMis || 1, melee: !!p.melee, around: !!p.around });
+      // Fallback FX neu skill broadcast bi rot (~200ms)
+      const skAt = (MP._pkSkAt && MP._pkSkAt[p.cid]) || 0;
+      if (typeof skillFx === 'function' && Date.now() - skAt > 180) {
+        const from = (p.ax != null && p.ay != null)
+          ? { x: +p.ax, y: +p.ay }
+          : (atk ? mpPkPeerXY(atk) : to);
+        skillFx(from, to, { id: p.id | 0, L: p.L || 1, nMis: p.nMis || 1, melee: !!p.melee, around: !!p.around });
+      }
       if (typeof addText === 'function' && p.dmg > 0) {
         addText(to.x, to.y - 28, '-' + (typeof fmt === 'function' ? fmt(p.dmg) : p.dmg),
           p.crit ? '#ffe14a' : '#ff6a5a', p.crit ? 15 : 12);
@@ -209,7 +249,7 @@ function mpOnPkHit(p) {
   if (R.deadT > 0 || R.town) return;
   // Chi nhan neu minh dang bat PK (tranh grief)
   if (!MP.pk) {
-    if (typeof toast === 'function') toast((atk && atk.name) || 'Ai đó' + ' muốn PK — bật PK để đáp trả');
+    if (typeof toast === 'function') toast(((atk && atk.name) || 'Ai đó') + ' muốn PK — bật PK để đáp trả');
     return;
   }
   let dmg = Math.max(0, Math.round(+p.dmg || 0));
@@ -220,9 +260,12 @@ function mpOnPkHit(p) {
   const cap = Math.max(1, (R.P && R.P.life ? R.P.life : 100) * MP_PK_MAX_FRAC);
   dmg = Math.min(dmg, cap);
 
-  // FX tu attacker
-  if (typeof skillFx === 'function') {
-    const from = atk ? mpPkPeerXY(atk) : { x: +p.ax || H.x, y: +p.ay || H.y };
+  // Fallback FX neu skill broadcast rot
+  const skAt = (MP._pkSkAt && MP._pkSkAt[p.cid]) || 0;
+  if (typeof skillFx === 'function' && Date.now() - skAt > 180) {
+    const from = (p.ax != null && p.ay != null)
+      ? { x: +p.ax, y: +p.ay }
+      : (atk ? mpPkPeerXY(atk) : { x: H.x, y: H.y });
     skillFx(from, H, { id: p.id | 0, L: p.L || 1, nMis: p.nMis || 1, melee: !!p.melee, around: !!p.around });
   }
   R.life -= dmg;
