@@ -99,6 +99,8 @@
   const clones = [
     { key: 'wudang_t', src: 'wudang', id: 108, n: (facNames.wudang_t && facNames.wudang_t.n) || 'Yên Tử★', camp: 'C_JUSTICE' },
     { key: 'kunlun_t', src: 'kunlun', id: 109, n: (facNames.kunlun_t && facNames.kunlun_t.n) || 'Bạch Đằng★', camp: 'C_BALANCE' },
+    /* Nam hệ Thổ — clone Côn Lôn (đao), chỉ nhận nam */
+    { key: 'thoman_t', src: 'kunlun', id: 110, n: (facNames.thoman_t && facNames.thoman_t.n) || 'Thạch Sơn★', camp: 'C_BALANCE', maleOnly: 1 },
   ];
   for (const c of clones) {
     const o = srcFac[c.src];
@@ -111,6 +113,7 @@
     J.factions.push(f);
     FACTIONS.push(f);
     FAC[c.key] = f;
+    if (c.maleOnly && typeof FAC_SEX !== 'undefined') FAC_SEX[c.key] = 0;
     /* starter + wcode nhu core.js */
     const first = f.skills.map(id => SK[id]).filter(s => s && s.enemy && ['physicsenhance_p', 'physicsdamage_v', 'poisondamage_v', 'colddamage_v', 'firedamage_v', 'lightingdamage_v'].some(a => s.attr && s.attr[a])).sort((a, b) => a.req - b.req || a.id - b.id);
     if (first.length) { first[0].req = 1; f.starter = first[0].id; }
@@ -138,19 +141,27 @@
     };
     applyHero('wudang_t', 'wudang');
     applyHero('kunlun_t', 'kunlun');
+    applyHero('thoman_t', 'kunlun');
   }
-  if (typeof CAMP !== 'undefined') { CAMP.wudang_t = 'chinh'; CAMP.kunlun_t = 'trung'; }
+  if (typeof CAMP !== 'undefined') { CAMP.wudang_t = 'chinh'; CAMP.kunlun_t = 'trung'; CAMP.thoman_t = 'trung'; }
   if (typeof FAC_SHORT !== 'undefined') {
     FAC_SHORT.wudang_t = (facNames.wudang_t && facNames.wudang_t.short) || 'Yên Tử★';
     FAC_SHORT.kunlun_t = (facNames.kunlun_t && facNames.kunlun_t.short) || 'Bạch Đằng★';
+    FAC_SHORT.thoman_t = (facNames.thoman_t && facNames.thoman_t.short) || 'Thạch Sơn★';
   }
   if (typeof POWER_RAW !== 'undefined') {
     if (POWER_RAW.wudang) POWER_RAW.wudang_t = POWER_RAW.wudang.slice();
-    if (POWER_RAW.kunlun) POWER_RAW.kunlun_t = POWER_RAW.kunlun.slice();
+    if (POWER_RAW.kunlun) {
+      POWER_RAW.kunlun_t = POWER_RAW.kunlun.slice();
+      POWER_RAW.thoman_t = POWER_RAW.kunlun.slice();
+    }
   }
   if (typeof FAC_DMG_NORM !== 'undefined') {
     if (FAC_DMG_NORM.wudang) FAC_DMG_NORM.wudang_t = FAC_DMG_NORM.wudang.slice();
-    if (FAC_DMG_NORM.kunlun) FAC_DMG_NORM.kunlun_t = FAC_DMG_NORM.kunlun.slice();
+    if (FAC_DMG_NORM.kunlun) {
+      FAC_DMG_NORM.kunlun_t = FAC_DMG_NORM.kunlun.slice();
+      FAC_DMG_NORM.thoman_t = FAC_DMG_NORM.kunlun.slice();
+    }
   }
 
   /* Tắt JX ghép bộ phận khi chơi Việt★ — hiện đúng sprite nhân Việt riêng (jxOn trong jxparts.js đọc f.viet) */
@@ -336,5 +347,5 @@
     if (S && S.fac && FAC[S.fac] && FAC[S.fac].test) { thoTestUnlock90(S.fac); thoTestEnsureWeapon(S.fac); }
   });
 
-  console.info('[viet_char] Việt★ series', SER, '· factions Yên Tử★ / Bạch Đằng★ · cloned', own.length, 'skills →', BASE + '+; KH sprite + admin only; 90 unlocked');
+  console.info('[viet_char] Việt★ series', SER, '· Yên Tử★ / Bạch Đằng★ / Thạch Sơn★(nam Thổ) · cloned', own.length, 'skills →', BASE + '+; admin only');
 })();

@@ -520,7 +520,7 @@ function pickFaction() {
     <div class="card lootf newc"><div class="row">Tên <input id="ncName" maxlength="14" placeholder="Tên nhân vật" value="${esc(NEWC.name)}"></div>
       <div class="row">Giới tính <span class="seg">${['Nam', 'Nữ'].map((n, i) => `<button class="btn sm${NEWC.sex === i ? ' on' : ''}" data-sx="${i}">${n}</button>`).join('')}</span></div>
       <div class="dim small">Hệ ngũ hành (Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim):</div>
-      <div class="serpick">${serIdx.map(i => `<button data-se="${i}" class="${NEWC.s === i ? 'on' : ''}" style="--c:${SERIES_COL[i]}"><b>${SERIES[i]}</b><small>${SERIES_DESC[i] || ''}</small><small>Phái: ${facTxt(i, NEWC.sex) || (i === 5 ? 'Yên Tử★ · Bạch Đằng★' : '—')}</small></button>`).join('')}</div>
+      <div class="serpick">${serIdx.map(i => `<button data-se="${i}" class="${NEWC.s === i ? 'on' : ''}" style="--c:${SERIES_COL[i]}"><b>${SERIES[i]}</b><small>${SERIES_DESC[i] || ''}</small><small>Phái: ${facTxt(i, NEWC.sex) || (i === 5 ? 'Yên Tử★ · Bạch Đằng★ · Thạch Sơn★' : '—')}</small></button>`).join('')}</div>
       <div class="stats"><span>Sức mạnh</span><span>${st.str ?? '-'}</span><span>Thân pháp</span><span>${st.dex ?? '-'}</span><span>Sinh khí</span><span>${st.vit ?? '-'}</span><span>Nội công</span><span>${st.eng ?? '-'}</span></div>
       ${ok ? '' : `<p class="reqbad">Hệ ${SERIES[NEWC.s]} không có môn phái nhận ${NEWC.sex ? 'nữ' : 'nam'}.</p>`}
       <div class="btnrow"><button class="btn" id="ncGo" ${ok ? '' : 'disabled'}>Vào giang hồ</button></div></div>`, () => {
