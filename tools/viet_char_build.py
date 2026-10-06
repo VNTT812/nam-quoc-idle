@@ -116,17 +116,17 @@ def recolor(im: Image.Image, mode: str) -> Image.Image:
     keep = soft | skin | dark_hair
 
     if mode == 'gold':
-        # áo → hổ phách / vàng đồng
-        h2 = 0.10 + (h - 0.55) * 0.08
-        s2 = np.clip(s * 1.15 + 0.18, 0, 1)
-        v2 = np.clip(v * 1.08 + 0.04, 0, 1)
-        hs, ss, vs = 0.12, 0.28, np.clip(v * 1.04, 0, 1)
+        # áo → vàng kim / hổ phách sáng (Yên Tử★)
+        h2 = 0.12 + (h - 0.55) * 0.05
+        s2 = np.clip(s * 1.35 + 0.28, 0, 1)
+        v2 = np.clip(v * 1.18 + 0.08, 0, 1)
+        hs, ss, vs = 0.13, 0.35, np.clip(v * 1.1, 0, 1)
     elif mode == 'earth':
-        # hệ Thổ: nâu đất / hổ phách đậm (khác hẳn xanh KH gốc)
-        h2 = 0.075 + (h - 0.55) * 0.06
-        s2 = np.clip(s * 1.25 + 0.22, 0, 1)
-        v2 = np.clip(v * 1.05 + 0.02, 0, 1)
-        hs, ss, vs = 0.10, 0.30, np.clip(v * 1.03, 0, 1)
+        # hệ Thổ: nâu đất / đất nung đậm (Thạch Sơn★) — khác rõ vàng
+        h2 = 0.055 + (h - 0.55) * 0.04
+        s2 = np.clip(s * 1.15 + 0.18, 0, 1)
+        v2 = np.clip(v * 0.92 + 0.02, 0, 1)
+        hs, ss, vs = 0.08, 0.25, np.clip(v * 0.95, 0, 1)
     else:
         # đỏ son
         h2 = 0.985 + (h - 0.55) * 0.05
