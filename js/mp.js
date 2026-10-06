@@ -27,16 +27,20 @@ function mpDom() {
   if ($('#mpBadge')) return;
   const b = document.createElement('div');
   b.id = 'mpBadge'; b.title = 'Đồng đội trên bản đồ (beta)';
-  b.innerHTML = `<b>Đồng đội</b><span id="mpTxt">tắt</span>`;
+  b.innerHTML = `<b>Đồng đội</b><span id="mpPeerTxt">…</span>`;
   const battle = $('#battle'); if (battle) battle.appendChild(b);
 }
 function mpUi() {
-  const el = $('#mpTxt'), badge = $('#mpBadge'); if (!el || !badge) return;
-  if (!netOn || !netOn() || NET.offline) { badge.className = 'off'; el.textContent = 'offline'; return; }
-  if (!fieldMode() || R.town || R.dg || R.tower) { badge.className = 'idle'; el.textContent = 'solo'; return; }
+  const badge = $('#mpBadge'), el = badge && badge.querySelector('#mpPeerTxt'); if (!el || !badge) return;
+  if (typeof netOn !== 'function' || !netOn() || (typeof NET !== 'undefined' && NET.offline)) {
+    badge.className = 'off'; el.textContent = 'offline'; return;
+  }
+  if (typeof fieldMode !== 'function' || !fieldMode() || R.town || R.dg || R.tower) {
+    badge.className = 'idle'; el.textContent = 'solo'; return;
+  }
   if (MP.state === 'load') { badge.className = 'load'; el.textContent = 'đang nối…'; return; }
   if (MP.state === 'err') { badge.className = 'err'; el.textContent = 'lỗi'; return; }
-  if (MP.state !== 'ok') { badge.className = 'off'; el.textContent = 'tắt'; return; }
+  if (MP.state !== 'ok') { badge.className = 'off'; el.textContent = 'chưa nối'; return; }
   const n = Math.max(1, MP.online);
   badge.className = n > 1 ? 'on' : 'ok';
   el.textContent = n > 1 ? `${n} người · ${mpIsHost() ? 'chủ' : 'khách'}` : '1 người (chủ)';
