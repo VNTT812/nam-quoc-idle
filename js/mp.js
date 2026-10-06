@@ -9,10 +9,10 @@ const MP = {
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
 /* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
-const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
+const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 1, MP_WAIT = 1600, MP_PEER_TTL = 45000;
 const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_MAX_SPD = 300;
-/* Auth peer: dead-reckon + blend — buffer/extrap dai hon de het khựng khi tunnel jitter */
-const MP_AUTH_DELAY = 0.12, MP_AUTH_EXTRAP = 0.35, MP_AUTH_BLEND = 14;
+/* Auth peer: delay thap + extrap dai — bot lech / danh khong khi */
+const MP_AUTH_DELAY = 0.05, MP_AUTH_EXTRAP = 0.45, MP_AUTH_BLEND = 16;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -144,8 +144,9 @@ function mpApplyField(snap) {
           e.home = p; p.e = e; used.add(e.mid);
           const tx = src.e.x != null ? src.e.x : p.x, ty = src.e.y != null ? src.e.y : p.y;
           const d = Math.hypot(tx - e.x, ty - e.y);
-          if (d > 280) { e.x = tx; e.y = ty; }
-          else if (d > 100) { e.x += (tx - e.x) * 0.2; e.y += (ty - e.y) * 0.2; }
+          // keo manh hon — het lech quai (nguyen nhan danh khong khi)
+          if (d > 90) { e.x = tx; e.y = ty; }
+          else if (d > 18) { e.x += (tx - e.x) * 0.55; e.y += (ty - e.y) * 0.55; }
           live.push(e);
         } else {
           live.push(mpEnsureEnemy(src.e, p, true));
@@ -372,13 +373,15 @@ function mpPresenceSync() {
   for (const k of Object.keys(st)) {
     const metas = st[k];
     const raw = Array.isArray(metas) ? (metas[0] || {}) : (metas && metas.metas && metas.metas[0]) || metas || {};
-    // khi auth: chi lay meta, BO x/y/vx trong presence (tranh ghi de vi tri server)
-    const row = authPos
+    const peer = MP.peers[k];
+    const needBoot = authPos && (!peer || !peer._recvAt || Date.now() - peer._recvAt > 2000);
+    // auth: meta only; bootstrap x/y neu chua co snap auth (tranh peer bien mat / dung o 0,0)
+    const row = authPos && !needBoot
       ? { cid: k, name: raw.name, fac: raw.fac, sex: raw.sex, lvl: raw.lvl, jx: raw.jx, title: raw.title, titleId: raw.titleId, titleCol: raw.titleCol, face: raw.face, dir: raw.dir, act: raw.act, life: raw.life }
       : Object.assign({}, raw, { cid: k });
     live.add(k);
     if (k === mpCid()) continue;
-    mpUpsertPeer(row, false); // presence: meta only, khong day pos cu vao hist
+    mpUpsertPeer(row, !!(needBoot && raw.x != null)); // bootstrap co toa do
     if (mpPeerIncomplete(MP.peers[k])) needWho = true;
   }
   // chi xoa peer khi mat presence LAU + khong con nhan pos (tranh nhap nhay khi sync nhip)
@@ -393,8 +396,11 @@ function mpPresenceSync() {
 
 function mpOnPos(p) {
   if (!p || p.cid === mpCid()) return;
-  // Auth server dang la nguon dung vi tri — bo pos Supabase (tranh 2 nguon = giật/dich chuyen)
-  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return;
+  // Auth dang ok: chi dung SB pos lam FALLBACK khi peer chua co snap auth (mat noi / join tre)
+  if (mpAuthOn()) {
+    const peer = MP.peers[String(p.cid || '')];
+    if (peer && peer._recvAt && Date.now() - peer._recvAt < 2000) return;
+  }
   mpUpsertPeer(p, true);
   const peer = MP.peers[String(p.cid || '')];
   if (peer && mpPeerIncomplete(peer)) mpAskWho();
@@ -703,16 +709,29 @@ function othSmoothRender(dt) {
   for (const id of Object.keys(MP.peers)) {
     const p = MP.peers[id];
     if (now - (p.seen || 0) > MP_PEER_TTL) { delete MP.peers[id]; continue; }
-    const goal = auth ? mpAuthGoal(p, now) : mpInterpAt(p, now);
+    let goal = auth ? mpAuthGoal(p, now) : mpInterpAt(p, now);
+    // Dang danh: keo nhe ve quai gan nhat (het hinh danh khong khi do lech quai/peer)
+    if ((p.act === 'at' || p.act === 'hurt') && typeof R !== 'undefined' && R.enemies) {
+      let best = null, bestD = 160;
+      for (const e of R.enemies) {
+        if (!e || e.dead || !(e.hp > 0)) continue;
+        const d = Math.hypot(e.x - goal.x, e.y - goal.y);
+        if (d < bestD) { bestD = d; best = e; }
+      }
+      if (best) {
+        const pull = p.act === 'at' ? 0.35 : 0.15;
+        goal = { x: goal.x + (best.x - goal.x) * pull, y: goal.y + (best.y - goal.y) * pull };
+        p.face = best.x >= goal.x ? 1 : -1;
+      }
+    }
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
     const spd = Math.hypot(p.vx || 0, p.vy || 0);
     if (dist > MP_HARD) {
       p.rx = goal.x; p.ry = goal.y;
     } else if (auth) {
-      // Exponential blend — KHONG cap toc do (cap = thô/khựng khi goal nhay)
       if (dist > 0.04) {
-        const rate = dist > 120 ? MP_AUTH_BLEND + 8 : dist > 48 ? MP_AUTH_BLEND + 3 : MP_AUTH_BLEND;
+        const rate = dist > 120 ? MP_AUTH_BLEND + 10 : dist > 48 ? MP_AUTH_BLEND + 4 : MP_AUTH_BLEND;
         const a = 1 - Math.exp(-dt * rate);
         p.rx += (goal.x - p.rx) * a;
         p.ry += (goal.y - p.ry) * a;
@@ -767,7 +786,17 @@ function othTick(dt) {
   if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;
-    if (MP.syncT >= MP_SYNC) { MP.syncT = 0; mpSendField(); }
+    // sync field ~1s; gan peer dang danh thi ~0.4s (bot danh khong khi)
+    let gap = MP_SYNC;
+    if (Object.keys(MP.peers).length) {
+      let hot = false;
+      for (const id of Object.keys(MP.peers)) {
+        const p = MP.peers[id];
+        if (p && (p.act === 'at' || Math.hypot(p.vx || 0, p.vy || 0) > 40)) { hot = true; break; }
+      }
+      if (hot || (H.act || '') === 'at') gap = 0.4;
+    }
+    if (MP.syncT >= gap) { MP.syncT = 0; mpSendField(); }
   } else if (MP.waitHost && Date.now() > MP.waitHost && !MP.fieldSnap) {
     MP.waitHost = 0;
     if (!R.field) fieldBuild();

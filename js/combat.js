@@ -348,12 +348,13 @@ function tick(dt) {
     if (!(R.stunT > 0)) { R.atkT -= dt * (R.slowT > 0 ? ELEM_SLOW : 1); if (R.atkT <= 0) R.atkT = heroAttack(); }   // choang: dung danh; cham: danh cham
   }
   for (const e of alive()) {
-    // khach MP: quai remote dung yen/idle — tranh 2 may AI lech roi field sync keo (an-hien / dich)
-    if (typeof mpActive === 'function' && mpActive() && typeof mpIsHost === 'function' && !mpIsHost() && e.mpRemote && e.home && !e.aggro) {
+    // khach MP: TAT AI di chuyen/danh cua quai remote — chi host dieu khien (het lech → danh khong khi)
+    if (typeof mpActive === 'function' && mpActive() && typeof mpIsHost === 'function' && !mpIsHost() && e.mpRemote) {
       if (e.stun > 0) e.stun -= dt;
       if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
       if (e.slowT > 0) e.slowT -= dt;
-      if (e.home && typeof fieldIdle === 'function') fieldIdle(e, dt);
+      if (e.resBrkT > 0) e.resBrkT -= dt;
+      e.moving = false;
       continue;
     }
     enemyAI(e, dt);

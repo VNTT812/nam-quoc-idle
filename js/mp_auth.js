@@ -244,8 +244,7 @@ function mpaInit() {
         try {
           const m = typeof mpMetaPayload === 'function' ? mpMetaPayload() : null;
           if (m) {
-            // khong day x/y qua presence khi auth — tranh peer ghi de hist
-            delete m.x; delete m.y;
+            // GIU x/y trong presence — peer moi / mat auth dung bootstrap (auth snap van uu tien)
             MP.ch.track(m);
           }
         } catch (e) { /* bo qua */ }

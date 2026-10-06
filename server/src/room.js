@@ -100,8 +100,8 @@ export class Room {
       const tx = +msg.x, ty = +msg.y;
       if (Number.isFinite(tx) && Number.isFinite(ty)) {
         const dist = Math.hypot(tx - p.x, ty - p.y);
-        // cho phep ~2.2x max spd + slack — du cho lag/jitter, chan tele
-        const maxStep = MAX_SPD * dtIn * 2.2 + 32;
+        // Chap nhan trong ~0.5s di chuyen max — burst tunnel khong keo lech manh
+        const maxStep = Math.max(MAX_SPD * 0.5 + 40, MAX_SPD * dtIn * 2.5 + 48);
         if (dist <= maxStep) {
           p.x = tx; p.y = ty;
         } else {
