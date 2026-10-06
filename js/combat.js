@@ -285,6 +285,12 @@ function enemyAI(e, dt) {
   if (e.stun > 0) { e.stun -= dt; return; }
   const sl = e.slowT > 0 ? (e.slowT -= dt, ELEM_SLOW) : 1;               // bi lam cham
   if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
+  // GameMaster tang hinh: quai khong target / khong duoi / khong danh
+  if (typeof titleGmStealth === 'function' && titleGmStealth()) {
+    e.aggro = false; e.moving = false;
+    if (e.home && typeof fieldIdle === 'function') fieldIdle(e, dt);
+    return;
+  }
   if (e.home && fieldIdle(e, dt)) return;                                // chua giao chien: loanh quanh diem goc (field.js)
   const d = Math.hypot(H.x - e.x, H.y - e.y), reach = e.ranged ? (e.reach || 200) : Math.max(e.r + 24, Math.min(e.reach || 0, 90));
   // mat huong: SoM chỉ lật trái/phải + deadzone (hết xoay); quái thường giữ logic cũ

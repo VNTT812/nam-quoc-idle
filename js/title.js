@@ -54,7 +54,7 @@ const TITLES = [
   // Banner trang tri tren dau
   ['thienha', 'Thiên Hạ Đệ Nhất', 'Giang hồ', 5, () => true, 'Danh hiệu trang trí trên đầu', ['allres_p', 10]],
   // GameMaster: chi tai khoan admin (netUname === 'admin')
-  ['gm', 'GameMaster', 'Đặc biệt', 6, () => typeof isAdmin === 'function' && isAdmin(), 'Chỉ tài khoản admin', ['allres_p', 20]],
+  ['gm', 'GameMaster', 'Đặc biệt', 6, () => typeof isAdmin === 'function' && isAdmin(), 'Chỉ tài khoản admin · đeo: tàng hình (quái không target)', ['allres_p', 20]],
 ];
 const TITLE_BY = Object.fromEntries(TITLES.map(t => [t[0], t]));
 const titleName = t => typeof t[1] === 'function' ? t[1]() : t[1];
