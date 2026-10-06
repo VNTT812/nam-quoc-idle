@@ -30,3 +30,8 @@ Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
 ## Đang áp: J Mythic + F Pixel remaster
 - Tool: `tools/quai_remaster_jf.py` (Mythic J rồi Pixel remaster F)
 - Cache `?v=306`
+
+## Map 2 · Thiên Trường (duyệt)
+- Sói xám `ani009` = Ám · Sói đỏ `ani010` = Hỏa · Sói xanh `ani011` = Lôi
+- Tool: `tools/quai_remaster_jf_map2.py` (J Mythic + F remaster)
+- Cache `?v=307` · backup trong `assets/pack/quai-orig-backup/`

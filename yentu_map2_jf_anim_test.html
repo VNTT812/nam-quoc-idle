@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<title>Thiên Trường J+F · anim test</title>
+<style>
+  html,body{margin:0;background:#12141a;color:#f0e6c8;font:14px/1.4 system-ui,sans-serif}
+  h1{font-size:16px;margin:12px 16px 4px;font-weight:600}
+  p{margin:0 16px 10px;opacity:.75;font-size:12px}
+  #wrap{display:flex;flex-wrap:wrap;gap:12px;padding:8px 16px 24px}
+  .card{background:#1b2030;border:1px solid #2c3348;border-radius:8px;padding:10px 12px;min-width:280px}
+  .card h2{margin:0 0 6px;font-size:13px;color:#ffd27a}
+  canvas{image-rendering:pixelated;background:#1f5a32;border-radius:4px;display:block}
+  .acts{display:flex;gap:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>Thiên Trường (map 2) — J Mythic + F remaster · duyệt</h1>
+<p>Sói xám=Ám · Sói đỏ=Hỏa · Sói xanh=Lôi · sheet <code>?v=307</code> · giữ n/d/w/h</p>
+<div id="wrap"></div>
+<script>
+const MONS = [
+  {
+    "n": "Sói xám · Ám",
+    "stem": "ani009",
+    "anim": {
+      "st": {
+        "f": "ani009_st.webp?v=307",
+        "n": 6,
+        "d": 8,
+        "w": 49,
+        "h": 43,
+        "ax": 25,
+        "ay": 41,
+        "ms": 143,
+        "fixed": 1
+      },
+      "run": {
+        "f": "ani009_run.webp?v=307",
+        "n": 8,
+        "d": 8,
+        "w": 53,
+        "h": 46,
+        "ax": 26,
+        "ay": 43,
+        "ms": 71,
+        "fixed": 1
+      },
+      "at": {
+        "f": "ani009_at.webp?v=307",
+        "n": 7,
+        "d": 8,
+        "w": 73,
+        "h": 55,
+        "ax": 37,
+        "ay": 53,
+        "ms": 62,
+        "fixed": 1
+      },
+      "hurt": {
+        "f": "ani009_hurt.webp?v=307",
+        "n": 3,
+        "d": 8,
+        "w": 72,
+        "h": 46,
+        "ax": 36,
+        "ay": 42,
+        "ms": 83,
+        "fixed": 1
+      },
+      "die": {
+        "f": "ani009_die.webp?v=307",
+        "n": 5,
+        "d": 8,
+        "w": 73,
+        "h": 50,
+        "ax": 37,
+        "ay": 41,
+        "ms": 100,
+        "fixed": 1
+      }
+    }
+  },
+  {
+    "n": "Sói đỏ · Hỏa",
+    "stem": "ani010",
+    "anim": {
+      "st": {
+        "f": "ani010_st.webp?v=307",
+        "n": 6,
+        "d": 8,
+        "w": 48,
+        "h": 41,
+        "ax": 24,
+        "ay": 39,
+        "ms": 143,
+        "fixed": 1
+      },
+      "run": {
+        "f": "ani010_run.webp?v=307",
+        "n": 8,
+        "d": 8,
+        "w": 52,
+        "h": 44,
+        "ax": 26,
+        "ay": 42,
+        "ms": 71,
+        "fixed": 1
+      },
+      "at": {
+        "f": "ani010_at.webp?v=307",
+        "n": 7,
+        "d": 8,
+        "w": 71,
+        "h": 53,
+        "ax": 35,
+        "ay": 51,
+        "ms": 62,
+        "fixed": 1
+      },
+      "hurt": {
+        "f": "ani010_hurt.webp?v=307",
+        "n": 3,
+        "d": 8,
+        "w": 71,
+        "h": 44,
+        "ax": 35,
+        "ay": 40,
+        "ms": 83,
+        "fixed": 1
+      },
+      "die": {
+        "f": "ani010_die.webp?v=307",
+        "n": 5,
+        "d": 8,
+        "w": 72,
+        "h": 50,
+        "ax": 36,
+        "ay": 39,
+        "ms": 100,
+        "fixed": 1
+      }
+    }
+  },
+  {
+    "n": "Sói xanh · Lôi",
+    "stem": "ani011",
+    "anim": {
+      "st": {
+        "f": "ani011_st.webp?v=307",
+        "n": 6,
+        "d": 8,
+        "w": 43,
+        "h": 38,
+        "ax": 22,
+        "ay": 36,
+        "ms": 143,
+        "fixed": 1
+      },
+      "run": {
+        "f": "ani011_run.webp?v=307",
+        "n": 8,
+        "d": 8,
+        "w": 47,
+        "h": 40,
+        "ax": 23,
+        "ay": 38,
+        "ms": 71,
+        "fixed": 1
+      },
+      "at": {
+        "f": "ani011_at.webp?v=307",
+        "n": 7,
+        "d": 8,
+        "w": 65,
+        "h": 49,
+        "ax": 32,
+        "ay": 47,
+        "ms": 62,
+        "fixed": 1
+      },
+      "hurt": {
+        "f": "ani011_hurt.webp?v=307",
+        "n": 3,
+        "d": 8,
+        "w": 65,
+        "h": 40,
+        "ax": 32,
+        "ay": 37,
+        "ms": 83,
+        "fixed": 1
+      },
+      "die": {
+        "f": "ani011_die.webp?v=307",
+        "n": 5,
+        "d": 8,
+        "w": 66,
+        "h": 45,
+        "ax": 33,
+        "ay": 36,
+        "ms": 100,
+        "fixed": 1
+      }
+    }
+  }
+];
+const ACTS = ['st','run','at','hurt','die'];
+const IMG = {};
+function img(src){ let i=IMG[src]; if(!i){ i=new Image(); i.src='img/a/'+src; IMG[src]=i; } return i; }
+function draw(cx, m, act, dir, t, x, y, sc){
+  const meta = m.anim[act]; if(!meta) return;
+  const im = img(meta.f); if(!im.complete || !im.naturalWidth) return;
+  let fr = Math.floor(t*1000/meta.ms);
+  if(act==='at'||act==='hurt'||act==='die') fr=Math.min(fr, meta.n-1); else fr%=meta.n;
+  const d = dir % meta.d;
+  cx.drawImage(im, fr*meta.w, d*meta.h, meta.w, meta.h, x-meta.ax*sc, y-meta.ay*sc, meta.w*sc, meta.h*sc);
+}
+const wrap = document.getElementById('wrap');
+const cards = MONS.map(m => {
+  const el = document.createElement('div'); el.className='card';
+  el.innerHTML = `<h2>${m.n} · ${m.stem}</h2><div class="acts"></div>`;
+  const row = el.querySelector('.acts');
+  const cvs = ACTS.map(act => {
+    const c = document.createElement('canvas');
+    c.width = 120; c.height = 110; c.dataset.act = act;
+    const lab = document.createElement('div');
+    lab.style.cssText='text-align:center;font-size:11px;opacity:.7;margin-top:2px';
+    lab.textContent = act;
+    const box = document.createElement('div');
+    box.appendChild(c); box.appendChild(lab);
+    row.appendChild(box);
+    return c;
+  });
+  wrap.appendChild(el);
+  return { m, cvs };
+});
+MONS.forEach(m => ACTS.forEach(a => img(m.anim[a].f)));
+let t0 = performance.now();
+function tick(now){
+  const t = (now - t0)/1000;
+  const dir = Math.floor(t*1.2) % 8;
+  for(const {m, cvs} of cards){
+    cvs.forEach((c,i) => {
+      const cx = c.getContext('2d');
+      cx.clearRect(0,0,c.width,c.height);
+      cx.fillStyle = '#1f5a32'; cx.fillRect(0,0,c.width,c.height);
+      const act = ACTS[i];
+      const once = (act==='at'||act==='hurt'||act==='die');
+      draw(cx, m, act, dir, once ? (t % 1.6) : t, 60, 95, 1.6);
+    });
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
