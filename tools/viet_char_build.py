@@ -375,7 +375,7 @@ def main():
     data = {
         'series': 'Việt★',
         'seriesCol': '#d4a017',
-        'seriesDesc': 'Admin · Việt★ ghép bộ phận JX (đầu/tóc/thân/tay) · anim 8 hướng như NV gốc',
+        'seriesDesc': 'Admin · Việt★ dựng lại toàn thân (đầu/tóc/thân/tay/kiếm) · anim 8 hướng như NV gốc',
         'heroes': {
             'wudang_t': heroes['ys'],
             'kunlun_t': heroes['bd'],
