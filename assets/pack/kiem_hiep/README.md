@@ -1,6 +1,6 @@
-# Nguồn Kiếm Hiệp (nhân Việt★ trẻ — dựng lại)
+# Nguồn Kiếm Hiệp (đầu trẻ Việt★)
 
-- `600.png` + `580/620/640/680/700` → Yên Tử★ / Thạch Sơn★ (nam, không nón)
-- `75.png` tham chiếu nữ; Bạch Đằng★ dùng sheet Nga My 8 hướng
+- `600.png` → đầu búi tóc thay nón lá (Yên Tử★ / Thạch Sơn★)
+- Anim 8 hướng lấy từ Võ Đang / Côn Lôn / Nga My (tay chân mượt như NV gốc)
 
 Tái tạo: `python3 tools/viet_char_build.py`
