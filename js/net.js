@@ -29,8 +29,10 @@ async function netClient() {
   NET.sb = window.supabase.createClient(c.url, c.key, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'jxidle_auth' } });
   try { const { data } = await NET.sb.auth.getSession(); NET.user = data && data.session ? data.session.user : null; } catch (e) { NET.user = null; }
   NET.sb.auth.onAuthStateChange((ev, s) => {
-    if (s && s.user) NET.user = s.user;
-    else if (ev === 'SIGNED_OUT') { const was = !!NET.user; NET.user = null; if (was && !NET.loggingOut && S && S.fac) setTimeout(() => netRelogin(), 0); }   // v194: phien het han giua chung -> bat dang nhap lai (truoc day game chay tiep ma khong luu)
+    if (s && s.user) {
+      NET.user = s.user;
+      if (ev === 'SIGNED_IN' && typeof mpEnsure === 'function') setTimeout(() => { try { mpEnsure(); } catch (e) { /* dong doi */ } }, 300);
+    } else if (ev === 'SIGNED_OUT') { const was = !!NET.user; NET.user = null; if (typeof mpLeave === 'function') try { mpLeave(); } catch (e) { /* bo qua */ } if (was && !NET.loggingOut && S && S.fac) setTimeout(() => netRelogin(), 0); }   // v194: phien het han giua chung -> bat dang nhap lai (truoc day game chay tiep ma khong luu)
     netDot();
   });
   return NET.sb;

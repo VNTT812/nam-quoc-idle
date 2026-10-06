@@ -56,9 +56,10 @@ const TITLES = [
 ];
 const TITLE_BY = Object.fromEntries(TITLES.map(t => [t[0], t]));
 const titleName = t => typeof t[1] === 'function' ? t[1]() : t[1];
-/* Banner sprite tren dau (JX1-style). id -> anh + kich thuoc ve */
+/* Banner sprite tren dau (JX1-style). frames>1 = sheet ngang (fw x fh moi frame) */
 const TITLE_FX = {
-  thienha: { src: 'img/title/thienha.png', w: 152, h: 38 }
+  /* SPR 206x91 x8 frame (lua/hoa) — decode tu VLTK SPR RLE */
+  thienha: { src: 'img/title/thienha.png', w: 156, h: 69, frames: 8, fps: 12, fw: 206, fh: 91 }
 };
 const titleFxOf = t => {
   const id = !t ? null : (typeof t === 'string' ? t : t[0]);
@@ -73,9 +74,14 @@ function drawTitleFx(c, x, yTop, id) {
   const bob = Math.sin(t * 3.1) * 1.6;
   const pulse = 0.97 + 0.04 * Math.sin(t * 4.2);
   const w = fx.w * pulse, h = fx.h * pulse;
+  const n = fx.frames | 0;
+  const fw = fx.fw || (n > 1 ? (im.naturalWidth / n) | 0 : im.naturalWidth);
+  const fh = fx.fh || im.naturalHeight;
+  const fi = n > 1 ? ((t * (fx.fps || 10)) | 0) % n : 0;
   c.save();
   c.globalAlpha = 0.96;
-  c.drawImage(im, x - w / 2, yTop - h + bob, w, h);
+  if (n > 1) c.drawImage(im, fi * fw, 0, fw, fh, x - w / 2, yTop - h + bob, w, h);
+  else c.drawImage(im, x - w / 2, yTop - h + bob, w, h);
   c.restore();
   return h + 2;
 }
