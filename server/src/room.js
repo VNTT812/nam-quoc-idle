@@ -1,11 +1,11 @@
 /**
  * Mot phong = 1 map zone. Server tick la nguon dung vi tri.
  */
-const TICK_HZ = 20;
+const TICK_HZ = 30;           // 30Hz — muot hon 20Hz, bot dich chuyen khi noi suy
 const TICK_MS = 1000 / TICK_HZ;
 const MAX_SPD = 280;          // px/s — khop client ~150*speed, cho buffer
 const MAX_PEERS = 8;
-const SNAP_META_EVERY = 10;   // moi 10 tick kem name/fac/jx
+const SNAP_META_EVERY = 15;   // moi 15 tick (~0.5s) kem name/fac/jx
 
 export class Room {
   constructor(zoneId) {

@@ -64,11 +64,11 @@ function mpaApplySnap(msg) {
     live.add(String(row.cid));
     // tai su dung upsert + clockOff cua mp.js
     if (typeof mpUpsertPeer === 'function') {
+      // seq = tick server (monotonic) — TRUOC DAY XOR theo x → seq lung tung → drop/tele
       const pack = Object.assign({}, row, {
         t: msg.serverT || Date.now(),
-        seq: (MPA.tick << 8) ^ (row.cid.length + (row.x * 10 | 0))
+        seq: (msg.tick | 0) || (++MPA._seqFake || (MPA._seqFake = 1))
       });
-      // full meta moi ~0.5s; goi nhe van co name neu server gui
       mpUpsertPeer(pack, true);
     }
   }

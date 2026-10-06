@@ -8,9 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~30Hz khi chay; delay thich ung (chay ~0–16ms / dung ~50ms) — RTT~32ms, bot buffer de bot delay. */
+/* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 180, MP_HARD = 560, MP_DELAY = 12, MP_DELAY_IDLE = 50, MP_HIST = 40, MP_EXTRAP = 0.35, MP_MAX_SPD = 300;
+const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 90, MP_DELAY_IDLE = 110, MP_HIST = 48, MP_EXTRAP = 0.12, MP_MAX_SPD = 300;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -268,9 +268,9 @@ function mpUpsertPeer(row, fromPos) {
     if (!drop) {
       if (seq) p.seq = Math.max(p.seq || 0, seq);
       if (!p.clockOff) p.clockOff = off;
-      else if (p.clockOff - off > 600) p.clockOff = off; // goi tuoi sau poison — neo ngay (tranh dung im ~0.5s)
-      else if (off < p.clockOff) p.clockOff = p.clockOff * 0.65 + off * 0.35; // keo ve duong tuoi
-      else p.clockOff = p.clockOff * 0.96 + off * 0.04;
+      else if (p.clockOff - off > 600) p.clockOff = p.clockOff * 0.4 + off * 0.6; // neo mem — tranh nhay render
+      else if (off < p.clockOff) p.clockOff = p.clockOff * 0.7 + off * 0.3;
+      else p.clockOff = p.clockOff * 0.97 + off * 0.03;
       let vx, vy;
       if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
       else {
@@ -280,18 +280,32 @@ function mpUpsertPeer(row, fromPos) {
       const spd = Math.hypot(vx, vy);
       if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
       if (spd < 6) { vx = 0; vy = 0; }
-      p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
-      p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
+      p.vx = p.vx != null ? p.vx * 0.45 + vx * 0.55 : vx;
+      p.vy = p.vy != null ? p.vy * 0.45 + vy * 0.55 : vy;
       p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt); p._acceptAt = now;
       if (!p.hist) p.hist = [];
       const last = p.hist[p.hist.length - 1];
       const ht = pt;
-      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 35) {
-        if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
-          p.hist.push({ t: last.t + Math.max(35, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
+      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 30) {
+        // chen diem mid khi nhay xa — tranh Hermite bung / dich chuyen
+        if (last) {
+          const gap = Math.hypot(tx - last.x, ty - last.y);
+          const dtH = ht - last.t;
+          if (gap > 48 && dtH > 0 && dtH < 800) {
+            const n = Math.min(4, Math.max(1, Math.floor(gap / 70)));
+            for (let i = 1; i <= n; i++) {
+              const u = i / (n + 1);
+              p.hist.push({
+                t: last.t + dtH * u,
+                x: last.x + (tx - last.x) * u,
+                y: last.y + (ty - last.y) * u,
+                vx: p.vx, vy: p.vy
+              });
+            }
+          }
         }
         p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
-        if (p.hist.length > MP_HIST) p.hist.shift();
+        while (p.hist.length > MP_HIST) p.hist.shift();
       } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
       if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
     }
@@ -616,7 +630,7 @@ function mpInit() {
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
-/* Noi suy: chay gan live (delay ~RTT/2) + extrapolate; dung yen buffer muot. */
+/* Noi suy: buffer ~90ms de luon nam GIUA 2 mau hist — extrap ngan, het rubber-band/tele. */
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
@@ -633,22 +647,21 @@ function mpInterpAt(p, now) {
   if (t >= last.t) {
     const vx = last.vx != null ? last.vx : (p.vx || 0), vy = last.vy != null ? last.vy : (p.vy || 0);
     if (Math.hypot(vx, vy) < 10) return { x: last.x, y: last.y };
-    // extrapolate + lead ~ nua RTT khi dang chay
-    const lead = spd > 36 ? 0.04 : 0;
-    const u = Math.min(MP_EXTRAP, (t - last.t) / 1000 + lead);
+    // extrap ngan — qua lau se dung o last (tranh bay xa roi bi keo ve = dich chuyen)
+    const u = Math.min(MP_EXTRAP, Math.max(0, (t - last.t) / 1000));
     return { x: last.x + vx * u, y: last.y + vy * u };
   }
   for (let i = 1; i < h.length; i++) {
     if (t <= h[i].t) {
       const a = h[i - 1], b = h[i];
       let u = (t - a.t) / Math.max(1, b.t - a.t);
-      // dang chay: noi suy thang (it tre hon smoothstep)
-      if (spd <= 36) u = u * u * (3 - 2 * u);
-      const dtSec = Math.max(0.035, (b.t - a.t) / 1000);
-      const m0x = (a.vx != null ? a.vx : (b.x - a.x) / dtSec) * dtSec;
-      const m0y = (a.vy != null ? a.vy : (b.y - a.y) / dtSec) * dtSec;
-      const m1x = (b.vx != null ? b.vx : (b.x - a.x) / dtSec) * dtSec;
-      const m1y = (b.vy != null ? b.vy : (b.y - a.y) / dtSec) * dtSec;
+      u = Math.max(0, Math.min(1, u));
+      // Catmull-ish nhe: lerp + hermite yeu — muot hon, it overshoot hon Hermite day du
+      const dtSec = Math.max(0.03, (b.t - a.t) / 1000);
+      const m0x = (a.vx != null ? a.vx : (b.x - a.x) / dtSec) * dtSec * 0.55;
+      const m0y = (a.vy != null ? a.vy : (b.y - a.y) / dtSec) * dtSec * 0.55;
+      const m1x = (b.vx != null ? b.vx : (b.x - a.x) / dtSec) * dtSec * 0.55;
+      const m1y = (b.vy != null ? b.vy : (b.y - a.y) / dtSec) * dtSec * 0.55;
       const u2 = u * u, u3 = u2 * u;
       const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
       return { x: h00 * a.x + h10 * m0x + h01 * b.x + h11 * m1x, y: h00 * a.y + h10 * m0y + h01 * b.y + h11 * m1y };
@@ -656,7 +669,7 @@ function mpInterpAt(p, now) {
   }
   return { x: last.x, y: last.y };
 }
-/* Goi moi frame ve (qua othEnts) — tach khoi tick 60Hz de muot tren man 120Hz */
+/* Goi moi frame ve — bat goal voi van toc gioi han (KHONG hard-tele tru khi lech cuc lon). */
 function othSmoothRender(dt) {
   const now = Date.now();
   dt = Math.max(0.001, Math.min(0.05, dt));
@@ -667,15 +680,24 @@ function othSmoothRender(dt) {
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
     const spd = Math.hypot(p.vx || 0, p.vy || 0);
-    if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; }
-    else if (spd > 40 && dist > 8) {
-      // dang chay: bám goal rat nhanh (bot delay cam nhan)
-      const a = 1 - Math.exp(-dt * 55);
-      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
-    } else {
-      const rate = dist > MP_SNAP ? 24 : (dist > 28 ? 32 : 42);
-      const a = 1 - Math.exp(-dt * rate);
-      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
+    if (dist > MP_HARD) {
+      // chi tele khi desync that (doi map / lag cuc do)
+      p.rx = goal.x; p.ry = goal.y;
+    } else if (dist > 0.05) {
+      // bat kip mem: toi da ~1.25x toc do peer + floor, khong nhay cuc
+      const cap = Math.max(160, spd * 1.25 + 40) * dt;
+      if (dist <= cap) { p.rx = goal.x; p.ry = goal.y; }
+      else {
+        const k = cap / dist;
+        p.rx += (goal.x - p.rx) * k;
+        p.ry += (goal.y - p.ry) * k;
+      }
+      // them spring nhe khi gan — het rung micro
+      if (dist < 28) {
+        const a = 1 - Math.exp(-dt * 18);
+        p.rx += (goal.x - p.rx) * a;
+        p.ry += (goal.y - p.ry) * a;
+      }
     }
     p.x = p.rx; p.y = p.ry;
     p.actT = (p.actT || 0) + dt;
