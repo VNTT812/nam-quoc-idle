@@ -67,6 +67,18 @@
     SK[String(nid)] = s;
     J.skills[nid] = s;
     J.skills[String(nid)] = s;
+    /* Vo cong 90 Test: mo thang — khong can cap 80 / Mat Tich */
+    if (s.learn === '90' || s.tier === 90 || s.book === 'bk90') {
+      s.req = 1; s.tier = 90; s.learn = '90'; delete s.book;
+    }
+  }
+
+  /* Remap nhanh ho tro 90 (Tuy Tien Ta Cot → id Test) */
+  if (typeof SK9_BRANCH !== 'undefined') {
+    for (const oid of Object.keys(SK9_BRANCH)) {
+      const nid = MAP[+oid]; if (!nid) continue;
+      SK9_BRANCH[nid] = SK9_BRANCH[oid].map(x => MAP[x] || x);
+    }
   }
 
   /* --- factions --- */
@@ -196,13 +208,37 @@
   const visibleSeries = () => SERIES.map((_, i) => i).filter(i => i !== SER || canSeeThoTest());
   window.visibleSeries = visibleSeries;
 
+  /* Cap vo cong 90 Test ngay khi vao phai / load save */
+  function thoTestUnlock90(facKey) {
+    const f = FAC[facKey]; if (!f || !f.test || f.novice || !S) return 0;
+    let n = 0;
+    const t = typeof SKL === 'function' ? SKL() : (S.skL || (S.skL = {}));
+    for (const id of f.skills || []) {
+      const s = SK[id]; if (!s || s.tier !== 90) continue;
+      s.req = 1; delete s.book;
+      if (!(S.sk[id] > 0)) {
+        /* Test: mo ca nhanh tan cong + ho tro 90 (Tuy Tien…) ngay cap 1 */
+        S.sk[id] = 1; n++;
+        if (!(typeof isBr90 === 'function' && isBr90(id))) {
+          if (!t[id]) t[id] = { lv: 1, xp: 0 };
+          else S.sk[id] = Math.max(1, t[id].lv || 1);
+        }
+      }
+    }
+    if (n) { R.dirty = true; if (typeof log === 'function') log(`⚡ Thổ★: mở <b>${n}</b> võ công 90 (không cần Mật Tịch).`); }
+    return n;
+  }
+  window.thoTestUnlock90 = thoTestUnlock90;
+
   /* chan doi phai / join sang Test neu khong phai admin */
   const _joinFaction = typeof joinFaction === 'function' ? joinFaction : null;
   if (_joinFaction) {
     joinFaction = function (key) {
       const f = FAC[key];
       if (f && f.test && !canSeeThoTest()) { toast('Chỉ tài khoản admin'); return; }
-      return _joinFaction(key);
+      const r = _joinFaction(key);
+      if (FAC[key] && FAC[key].test) thoTestUnlock90(key);
+      return r;
     };
   }
   const _changeFaction = typeof changeFaction === 'function' ? changeFaction : null;
@@ -210,7 +246,9 @@
     changeFaction = function (key) {
       const f = FAC[key];
       if (f && f.test && !canSeeThoTest()) { toast('Chỉ tài khoản admin'); return; }
-      return _changeFaction(key);
+      const r = _changeFaction(key);
+      if (FAC[key] && FAC[key].test) thoTestUnlock90(key);
+      return r;
     };
   }
   const _createCharacter = typeof createCharacter === 'function' ? createCharacter : null;
@@ -229,5 +267,13 @@
     return true;
   };
 
-  console.info('[tho_test] cloned', own.length, 'skills → ids', BASE + '+; factions wudang_t / kunlun_t; series', SER, 'Thổ★ (admin only)');
+  /* Load save dang o phai Test: tu mo 90 */
+  if (typeof S !== 'undefined' && S && S.fac && FAC[S.fac] && FAC[S.fac].test) {
+    try { thoTestUnlock90(S.fac); } catch (e) { /* S chua san sang */ }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    if (S && S.fac && FAC[S.fac] && FAC[S.fac].test) thoTestUnlock90(S.fac);
+  });
+
+  console.info('[tho_test] cloned', own.length, 'skills → ids', BASE + '+; factions wudang_t / kunlun_t; series', SER, 'Thổ★ (admin only); 90 unlocked');
 })();

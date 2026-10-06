@@ -135,6 +135,7 @@ function init() {
   if (S.fac && typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(S.fac)) {
     bootLoadHide(); toast('Hệ Thổ★ / phái Test chỉ tài khoản admin'); slotMenu(); return;
   }
+  if (S.fac && typeof thoTestUnlock90 === 'function' && FAC[S.fac] && FAC[S.fac].test) thoTestUnlock90(S.fac);
   if (pk.menu) { bootLoadHide(); slotMenu(); }
   else if (!S.fac) { bootLoadHide(); pickFaction(); }
   else {
