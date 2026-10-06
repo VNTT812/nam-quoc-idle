@@ -10,7 +10,7 @@ const MP = {
 };
 /* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 90, MP_DELAY_IDLE = 110, MP_HIST = 48, MP_EXTRAP = 0.12, MP_MAX_SPD = 300;
+const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_MAX_SPD = 300;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -366,10 +366,14 @@ function mpPresenceSync() {
   if (!MP.ch) return;
   const st = MP.ch.presenceState() || {}, live = new Set();
   let needWho = false;
+  const authPos = typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
   for (const k of Object.keys(st)) {
     const metas = st[k];
     const raw = Array.isArray(metas) ? (metas[0] || {}) : (metas && metas.metas && metas.metas[0]) || metas || {};
-    const row = Object.assign({}, raw, { cid: k });
+    // khi auth: chi lay meta, BO x/y/vx trong presence (tranh ghi de vi tri server)
+    const row = authPos
+      ? { cid: k, name: raw.name, fac: raw.fac, sex: raw.sex, lvl: raw.lvl, jx: raw.jx, title: raw.title, titleId: raw.titleId, titleCol: raw.titleCol, face: raw.face, dir: raw.dir, act: raw.act, life: raw.life }
+      : Object.assign({}, raw, { cid: k });
     live.add(k);
     if (k === mpCid()) continue;
     mpUpsertPeer(row, false); // presence: meta only, khong day pos cu vao hist
@@ -387,6 +391,8 @@ function mpPresenceSync() {
 
 function mpOnPos(p) {
   if (!p || p.cid === mpCid()) return;
+  // Auth server dang la nguon dung vi tri — bo pos Supabase (tranh 2 nguon = giật/dich chuyen)
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return;
   mpUpsertPeer(p, true);
   const peer = MP.peers[String(p.cid || '')];
   if (peer && mpPeerIncomplete(peer)) mpAskWho();
@@ -577,7 +583,10 @@ async function mpJoin(z) {
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
         mpSend('who', { want: mpCid() });
-        mpSend('pos', mpPosPayload(true));
+        // auth dang ok: khong broadcast pos Supabase (tranh 2 nguon)
+        if (!(typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok')) {
+          mpSend('pos', mpPosPayload(true));
+        }
         if (mpIsHost() && R.field) mpSendField(true);
         mpUi();
       } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') {
@@ -692,9 +701,10 @@ function othSmoothRender(dt) {
         p.rx += (goal.x - p.rx) * k;
         p.ry += (goal.y - p.ry) * k;
       }
-      // them spring nhe khi gan — het rung micro
-      if (dist < 28) {
-        const a = 1 - Math.exp(-dt * 18);
+      // spring nhe khi gan — het rung micro (auth: manh hon vi 1 nguon sach)
+      if (dist < 36) {
+        const k = (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') ? 22 : 18;
+        const a = 1 - Math.exp(-dt * k);
         p.rx += (goal.x - p.rx) * a;
         p.ry += (goal.y - p.ry) * a;
       }

@@ -54,20 +54,46 @@ function mpaSend(obj) {
 
 function mpaApplySnap(msg) {
   if (!msg || !Array.isArray(msg.peers)) return;
-  MPA.tick = msg.tick | 0;
-  MPA.lastSnap = Date.now();
+  const tick = msg.tick | 0;
+  const now = Date.now();
+  // goi cu / out-of-order — bo ca snap
+  if (MPA._lastTick != null && tick <= MPA._lastTick) return;
+  MPA.tick = tick;
+  MPA.lastSnap = now;
+  const tickMs = msg.tickHz ? (1000 / msg.tickHz) : (MPA._tickMs || 33.33);
+  MPA._tickMs = tickMs;
+  // Neo mau theo thoi diem NHAN (tunnel burst khong tao timeline ao trong tuong lai).
+  // Neu mat goi: giãn toi da ~tickMs*dTick; neu den som: kep <= now.
+  let sampleT = now;
+  if (MPA._lastTick != null && MPA._lastSampleT != null) {
+    const dTick = Math.max(1, tick - MPA._lastTick);
+    const ideal = MPA._lastSampleT + dTick * tickMs;
+    // bunched burst: van cach toi thieu ~8ms/tick de Hermite khong xep chong
+    const minT = MPA._lastSampleT + dTick * 8;
+    sampleT = Math.min(now, Math.max(ideal, minT));
+    // neu bi kep qua nhieu (lag spike), keo ve now-80 de buffer con choi duoc
+    if (now - sampleT > 280) sampleT = now - 100;
+  }
+  MPA._lastTick = tick;
+  MPA._lastSampleT = sampleT;
   if (typeof MP === 'undefined') return;
+  // Lan snap dau sau reconnect: xoa hist Supabase cu (tranh 2 nguon / tele)
+  if (!MPA._histCleared) {
+    MPA._histCleared = true;
+    for (const p of Object.values(MP.peers || {})) {
+      p.hist = []; p.clockOff = 0; p.seq = 0; p._pt = 0; p._acceptAt = 0;
+      if (p.rx != null) { p.x = p.rx; p.y = p.ry; p.tx = p.rx; p.ty = p.ry; }
+    }
+  }
   const my = typeof mpCid === 'function' ? mpCid() : '';
   const live = new Set();
   for (const row of msg.peers) {
     if (!row || !row.cid || row.cid === my) continue;
     live.add(String(row.cid));
-    // tai su dung upsert + clockOff cua mp.js
     if (typeof mpUpsertPeer === 'function') {
-      // seq = tick server (monotonic) — TRUOC DAY XOR theo x → seq lung tung → drop/tele
       const pack = Object.assign({}, row, {
-        t: msg.serverT || Date.now(),
-        seq: (msg.tick | 0) || (++MPA._seqFake || (MPA._seqFake = 1))
+        t: sampleT,
+        seq: tick || (++MPA._seqFake || (MPA._seqFake = 1))
       });
       mpUpsertPeer(pack, true);
     }
@@ -127,6 +153,7 @@ async function mpaJoin() {
 
 function mpaClose() {
   const ws = MPA.ws; MPA.ws = null; MPA.state = 'off';
+  MPA._lastTick = null; MPA._lastSampleT = null; MPA._histCleared = false;
   if (ws) try { ws.close(); } catch (e) {}
 }
 
@@ -134,17 +161,23 @@ function mpaSendInput(dt) {
   if (!MPA.ws || MPA.ws.readyState !== 1 || MPA.state !== 'ok') return;
   if (typeof fieldMode === 'function' && (!fieldMode() || R.town || R.dg || R.tower)) return;
   MPA.sendT = (MPA.sendT || 0) + dt;
-  if (MPA.sendT < 0.05) return; // 20Hz
+  if (MPA.sendT < 0.033) return; // 30Hz khop server tick
   MPA.sendT = 0;
   const vel = typeof mpLocalVel === 'function' ? mpLocalVel() : { vx: 0, vy: 0 };
   MPA.seq++;
-  mpaSend({
+  const spd = Math.hypot(vel.vx || 0, vel.vy || 0);
+  // Chay: chi vx/vy. Dung: kem x/y de server quiet-correct (het lech tich luy, khong rung khi chay).
+  const msg = {
     t: 'in', seq: MPA.seq,
     vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
-    x: H.x, y: H.y,
     face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: H.act || 'st',
     life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
-  });
+  };
+  if (spd < 8 && H) {
+    msg.x = Math.round(H.x * 10) / 10;
+    msg.y = Math.round(H.y * 10) / 10;
+  }
+  mpaSend(msg);
   MPA.metaT = (MPA.metaT || 0) + 0.05;
   if (MPA.metaT > 2) {
     MPA.metaT = 0;
@@ -182,7 +215,19 @@ function mpaInit() {
     const _track = mpTrackNow;
     mpTrackNow = function (force) {
       if (mpaEnabled() && MPA.state === 'ok') {
-        // chi track presence meta nhe neu van dung Supabase room — bo broadcast pos
+        // van track presence META (look) — BO broadcast pos (1 nguon = auth)
+        if (!MP || !MP.ch || (MP.state !== 'ok' && MP.state !== 'retry')) return;
+        const now = Date.now();
+        if (!force && MP._metaAt && now - MP._metaAt < 1500) return;
+        MP._metaAt = now;
+        try {
+          const m = typeof mpMetaPayload === 'function' ? mpMetaPayload() : null;
+          if (m) {
+            // khong day x/y qua presence khi auth — tranh peer ghi de hist
+            delete m.x; delete m.y;
+            MP.ch.track(m);
+          }
+        } catch (e) { /* bo qua */ }
         return;
       }
       return _track(force);

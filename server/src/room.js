@@ -90,16 +90,14 @@ export class Room {
     if (msg.dir != null) p.dir = msg.dir | 0;
     if (msg.act != null) p.act = String(msg.act).slice(0, 8);
     if (msg.life != null) p.life = Math.max(0, Math.min(1, +msg.life));
-
-    // Soft reconcile: chap nhan predicted neu lech nhe; reject teleport
-    if (msg.x != null && msg.y != null) {
-      const dx = +msg.x - p.x, dy = +msg.y - p.y;
-      const dist = Math.hypot(dx, dy);
-      const slack = MAX_SPD * (TICK_MS / 1000) * 3 + 40;
-      if (dist <= slack) {
-        p.x = +msg.x; p.y = +msg.y;
+    // Quiet-correct CHI khi 2 ben dang dung (het lech tich luy). Khi chay: chi vx/vy.
+    if (vx === 0 && vy === 0 && msg.x != null && msg.y != null) {
+      const tx = +msg.x, ty = +msg.y;
+      if (Number.isFinite(tx) && Number.isFinite(ty)) {
+        const dist = Math.hypot(tx - p.x, ty - p.y);
+        if (dist <= 120) { p.x = tx; p.y = ty; }
+        else if (dist <= 420) { p.x += (tx - p.x) * 0.35; p.y += (ty - p.y) * 0.35; }
       }
-      // neu lech xa: bo qua predicted — server giu quyen
     }
   }
 
@@ -155,6 +153,7 @@ export class Room {
     const body = JSON.stringify({
       t: 'snap',
       tick: this.tickN,
+      tickHz: TICK_HZ,
       zone: this.zoneId,
       full: !!full,
       serverT: Date.now(),
