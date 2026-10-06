@@ -775,18 +775,28 @@ function mpJxBodyReady(Jo, act) {
 function othTick(dt) {
   if (typeof mpaTick === 'function') mpaTick(dt); // dedicated auth server (js/mp_auth.js)
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
-  // auth mode dang ok: bo gui pos Supabase (server la nguon dung)
-  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return;
-  // di chuyen ve o othSmoothRender (theo FPS). Day chi gui mang.
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
+  const authOk = typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
+  // Auth: bo broadcast pos Supabase — NHUNG VAN phai sync field/epos (bug cu: return som → quai lech → đánh không khí)
   MP.trackT = (MP.trackT || 0) + dt;
-  const moving = !!(H.moving || (H.act || '') === 'run' || (H.act || '') === 'at');
-  const gap = moving ? MP_POS : MP_POS_IDLE;
-  if (MP.trackT >= gap) { MP.trackT = 0; mpTrackNow(); }
-  if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
+  if (!authOk) {
+    const moving = !!(H.moving || (H.act || '') === 'run' || (H.act || '') === 'at');
+    const gap = moving ? MP_POS : MP_POS_IDLE;
+    if (MP.trackT >= gap) { MP.trackT = 0; mpTrackNow(); }
+    if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
+  } else {
+    if (MP.trackT >= 1.2) { MP.trackT = 0; mpTrackNow(); }
+    if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
+  }
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;
-    // sync field ~1s; gan peer dang danh thi ~0.4s (bot danh khong khi)
+    MP.eposT = (MP.eposT || 0) + dt;
+    // epos nhe ~5Hz — giu quai khach trung host (het đứng đánh không khí sau vài giây)
+    if (MP.eposT >= 0.2 && Object.keys(MP.peers).length) {
+      MP.eposT = 0;
+      mpSendEpos();
+    }
+    // field day du ~1s; dang danh / co peer: 0.45s
     let gap = MP_SYNC;
     if (Object.keys(MP.peers).length) {
       let hot = false;
@@ -794,7 +804,7 @@ function othTick(dt) {
         const p = MP.peers[id];
         if (p && (p.act === 'at' || Math.hypot(p.vx || 0, p.vy || 0) > 40)) { hot = true; break; }
       }
-      if (hot || (H.act || '') === 'at') gap = 0.4;
+      if (hot || (H.act || '') === 'at') gap = 0.45;
     }
     if (MP.syncT >= gap) { MP.syncT = 0; mpSendField(); }
   } else if (MP.waitHost && Date.now() > MP.waitHost && !MP.fieldSnap) {

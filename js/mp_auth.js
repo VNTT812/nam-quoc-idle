@@ -56,8 +56,12 @@ function mpaApplySnap(msg) {
   if (!msg || !Array.isArray(msg.peers)) return;
   const tick = msg.tick | 0;
   const now = Date.now();
-  // goi cu / out-of-order — bo ca snap
-  if (MPA._lastTick != null && tick <= MPA._lastTick) return;
+  // goi cu / out-of-order — bo; neu tick tut (server/room reset) thi neo lai (tranh freeze vinh vien)
+  if (MPA._lastTick != null && tick <= MPA._lastTick) {
+    if (MPA._lastTick - tick > 30) {
+      MPA._lastTick = null; MPA._histCleared = false;
+    } else return;
+  }
   MPA.tick = tick;
   MPA.lastSnap = now;
   MPA._tickMs = msg.tickHz ? (1000 / msg.tickHz) : (MPA._tickMs || 33.33);
