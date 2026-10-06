@@ -8,9 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~20Hz khi chay / ~7Hz dung; noi suy tre 180ms + van toc gui kem; field soft-merge. */
-const MP_MAX = 6, MP_POS = 0.05, MP_POS_IDLE = 0.15, MP_SYNC = 8, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 280, MP_HARD = 720, MP_DELAY = 140, MP_HIST = 36, MP_EXTRAP = 0.16, MP_MAX_SPD = 260;
+/* Pos ~30Hz khi chay / ~8Hz dung; noi suy tre ~70ms + van toc; it flap "nối lại". */
+const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
+const MP_SNAP = 220, MP_HARD = 640, MP_DELAY = 70, MP_HIST = 40, MP_EXTRAP = 0.22, MP_MAX_SPD = 280;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -55,7 +55,9 @@ function mpUi() {
 
 /* ---------- goi / nhan broadcast ---------- */
 function mpSend(ev, payload) {
-  if (!MP.ch || MP.state !== 'ok' || MP.applying) return;
+  // van gui luc retry ngan — tranh peer dung hinh khi badge "nối lại"
+  if (!MP.ch || MP.applying) return;
+  if (MP.state !== 'ok' && MP.state !== 'retry') return;
   try { MP.ch.send({ type: 'broadcast', event: ev, payload: Object.assign({ t: Date.now(), cid: mpCid() }, payload) }); }
   catch (e) { /* bo qua */ }
 }
@@ -418,19 +420,18 @@ function mpPosPayload(full) {
 }
 function mpTrackNow(forceBcast) {
   if (!MP.ch || (MP.state !== 'ok' && MP.state !== 'retry') || !S || !S.fac) return;
-  if (MP.state !== 'ok') return; // chi gui khi SUBSCRIBED
   const now = Date.now();
   const vel = mpLocalVel();
   const moving = !!(H.moving || Math.hypot(vel.vx, vel.vy) > 8 || (H.act || '') === 'run' || (H.act || '') === 'at');
-  const minGap = forceBcast ? 0 : (moving ? 48 : 140);
+  const minGap = forceBcast ? 0 : (moving ? 32 : 110);
   if (now - (MP.lastTrack || 0) < minGap) return;
   MP.lastTrack = now;
   const act = H.act || 'st';
   const urgent = forceBcast || act === 'at' || act !== MP.lastAct;
   const p = mpPosPayload(!!forceBcast);
-  // presence track thua hon (meta): ~6 goi pos / 1 track — KHONG dung presence de noi suy
+  // presence track thua hon (meta): ~10 goi pos / 1 track — giam tai kenh
   MP.posN = (MP.posN || 0) + 1;
-  if (urgent || MP.posN % 6 === 0) {
+  if (urgent || MP.posN % 10 === 0) {
     try { MP.ch.track(Object.assign({}, p, { name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, jx: p.jx || mpJxPack() })); } catch (e) { /* bo qua */ }
   }
   mpSend('pos', p);
@@ -446,8 +447,11 @@ async function mpLeave(keepPeers) {
 
 function mpChAlive(ch) {
   if (!ch) return false;
-  const st = ch.state;
-  return st === 'joined' || st === 'joining' || st === 'subscribed' || st === 'SUBSCRIBED';
+  const st = String(ch.state || '').toLowerCase();
+  if (st === 'joined' || st === 'joining' || st === 'subscribed') return true;
+  // vua SUBSCRIBED gan day: coi nhu song (tranh flap state → "nối lại" lap)
+  if (MP._subOkAt && Date.now() - MP._subOkAt < 10000 && (MP.state === 'ok' || MP.state === 'retry')) return true;
+  return false;
 }
 
 async function mpJoin(z) {
@@ -456,26 +460,31 @@ async function mpJoin(z) {
   const rid = mpRoom(z);
   // kenh cung map con song: KHONG go + tao lai (tranh "nối lại" lap / peer tele)
   if (MP.ch && MP.zoneId === z.id && mpChAlive(MP.ch)) {
-    if (MP.state !== 'ok') MP.state = 'ok';
-    MP.joinBusy = false; mpTrackNow(true); mpUi(); return;
+    if (MP.state !== 'ok') { MP.state = 'ok'; mpUi(); }
+    MP.joinBusy = false; mpTrackNow(true); return;
   }
   if (MP.joinBusy) return;
   // backoff: khong spam recreate khi vua loi
   if (MP._nextJoin && Date.now() < MP._nextJoin && MP.zoneId === z.id) return;
+  // grace: neu vua ok < 4s thi chua recreate (tranh CLOSED nhip nhip)
+  if (MP.ch && MP.zoneId === z.id && MP._subOkAt && Date.now() - MP._subOkAt < 4000) {
+    MP.state = 'ok'; MP.joinBusy = false; mpUi(); return;
+  }
   MP.joinBusy = true;
   mpDom();
-  // giu peers khi doi kenh / noi lai cung map
   const sameZone = MP.zoneId === z.id;
-  MP.state = sameZone && Object.keys(MP.peers).length ? 'retry' : 'load';
+  // chi hien "nối lại" khi mat kenh that su > 2s
+  const showRetry = sameZone && Object.keys(MP.peers).length && !(MP._subOkAt && Date.now() - MP._subOkAt < 2000);
+  MP.state = showRetry ? 'retry' : 'load';
   MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; mpUi();
   try {
     if (!MP.sb) MP.sb = await netClient();
-  } catch (e) { MP.state = 'err'; MP.joinBusy = false; MP._nextJoin = Date.now() + 3000; mpUi(); return; }
+  } catch (e) { MP.state = 'err'; MP.joinBusy = false; MP._nextJoin = Date.now() + 4000; mpUi(); return; }
   const old = MP.ch; MP.ch = null; MP.leaving = old;
   if (old) { try { await MP.sb.removeChannel(old); } catch (e) { /* bo qua */ } }
   MP.leaving = null;
-  if (!sameZone) MP.peers = {}; // doi map: xoa peer cu
-  const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false }, presence: { key: mpCid() } } });
+  if (!sameZone) MP.peers = {};
+  const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false, ack: false }, presence: { key: mpCid() } } });
   ch.on('presence', { event: 'sync' }, () => { if (MP.ch === ch) mpPresenceSync(); })
     .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(true); } })
     .on('presence', { event: 'leave' }, () => { if (MP.ch === ch) mpPresenceSync(); })
@@ -492,7 +501,7 @@ async function mpJoin(z) {
     .subscribe(async st => {
       if (MP.ch !== ch || MP.leaving === ch) return;
       if (st === 'SUBSCRIBED') {
-        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0; MP._nextJoin = 0;
+        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0; MP._nextJoin = 0; MP._subOkAt = Date.now();
         try { await ch.track(mpPosPayload(true)); } catch (e) { /* bo qua */ }
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
@@ -500,31 +509,42 @@ async function mpJoin(z) {
         if (mpIsHost() && R.field) mpSendField(true);
         mpUi();
       } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') {
-        MP.state = 'retry'; MP.joinBusy = false; MP.retries = (MP.retries || 0) + 1; mpUi();
-        const wait = Math.min(15000, 2500 + MP.retries * 2000);
+        // KHONG go kenh ngay — cho grace, chi recreate neu het grace
+        MP.retries = (MP.retries || 0) + 1;
+        MP.joinBusy = false;
+        if (MP._subOkAt && Date.now() - MP._subOkAt < 5000) {
+          MP.state = 'ok'; mpUi(); // blip ngan: giu OK, van gui pos
+          return;
+        }
+        MP.state = 'retry'; mpUi();
+        const wait = Math.min(18000, 4000 + MP.retries * 2500);
         MP._nextJoin = Date.now() + wait;
         clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
       } else if (st === 'CLOSED') {
         if (MP.ch === ch && MP.leaving !== ch) {
-          MP.state = 'retry'; MP.joinBusy = false; mpUi();
-          const wait = Math.min(12000, 3000 + (MP.retries || 0) * 1500);
+          MP.joinBusy = false;
+          if (MP._subOkAt && Date.now() - MP._subOkAt < 5000) { MP.state = 'ok'; mpUi(); return; }
+          MP.state = 'retry'; mpUi();
+          const wait = Math.min(15000, 5000 + (MP.retries || 0) * 2000);
           MP._nextJoin = Date.now() + wait;
           clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
         }
       }
     });
-  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 6000);
+  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 8000);
 }
 
 function mpEnsure() {
   if (!mpCanPlay()) { mpUi(); return; }
   const zid = zoneOf(Math.min(S.stage, STAGES)).id;
   if (MP.ch && MP.zoneId === zid && mpChAlive(MP.ch)) {
-    if (MP.state !== 'ok') { MP.state = 'ok'; mpUi(); }
+    if (MP.state !== 'ok') { MP.state = 'ok'; MP._subOkAt = Date.now(); mpUi(); }
     return;
   }
   if (MP.state === 'load' || MP.joinBusy) return;
   if (MP._nextJoin && Date.now() < MP._nextJoin) return;
+  // dang retry nhung chua den luc recreate
+  if (MP.state === 'retry' && MP.ch && MP.zoneId === zid) return;
   mpJoin(zoneOf(Math.min(S.stage, STAGES)));
 }
 
@@ -586,10 +606,10 @@ function othSmoothRender(dt) {
     const goal = mpInterpAt(p, now);
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
-    if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; } // tele that (doi map / lag lon)
+    if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; }
     else {
-      // spring mem: lech lon keo nhanh hon, lech nho muot (tranh rung)
-      const rate = dist > MP_SNAP ? 14 : (dist > 40 ? 18 : 26);
+      // spring nhanh hon → bot cam giac delay (van muot)
+      const rate = dist > MP_SNAP ? 18 : (dist > 36 ? 24 : 32);
       const a = 1 - Math.exp(-dt * rate);
       p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     }
@@ -619,7 +639,6 @@ function othTick(dt) {
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
   // di chuyen ve o othSmoothRender (theo FPS). Day chi gui mang.
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
-  if (MP.state !== 'ok') return;
   MP.trackT = (MP.trackT || 0) + dt;
   const moving = !!(H.moving || (H.act || '') === 'run' || (H.act || '') === 'at');
   const gap = moving ? MP_POS : MP_POS_IDLE;
