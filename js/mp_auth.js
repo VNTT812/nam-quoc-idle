@@ -152,6 +152,8 @@ function mpaApplySnap(msg) {
     const p = MP.peers[k];
     if (Date.now() - (p.seen || 0) > 5000) delete MP.peers[k];
   }
+  // Auth snap cung peer — bat buoc elect host (truoc do chi elect o presence → 2 host / quai lech)
+  if (typeof mpElect === 'function') mpElect();
   if (typeof mpUi === 'function') mpUi();
 }
 

@@ -825,10 +825,11 @@ function othSmoothRender(dt) {
     p.actT = (p.actT || 0) + dt;
     // CHI tin vx hien tai + act tu server — KHONG dung _cVx (gay chay mai khi dang dung/danh)
     const moveSpd = Math.hypot(p.vx || 0, p.vy || 0);
+    const drift = Math.hypot((p.tx || p.rx) - p.rx, (p.ty || p.ry) - p.ry);
     if (p.act === 'at' || p.act === 'hurt' || p.act === 'die') {
       if (p.act === 'at' && p.actT > 0.55) p.act = moveSpd > 28 ? 'run' : 'st';
-    } else if (moveSpd > 28) p.act = 'run';
-    else if (moveSpd < 12) p.act = 'st';
+    } else if (moveSpd > 28 && drift > 1.2) p.act = 'run';
+    else if (moveSpd < 14 || drift < 0.6) p.act = 'st';
   }
 }
 function othEnts() {
