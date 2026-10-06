@@ -230,6 +230,29 @@
   }
   window.thoTestUnlock90 = thoTestUnlock90;
 
+  /* Dam bao cam dung loai vu khi phai (kiem VD / dao CL) — sau join, doi phai, load save */
+  function thoTestEnsureWeapon(facKey) {
+    const f = FAC[facKey || (S && S.fac)]; if (!f || !f.test || f.novice || !S) return false;
+    const ok = it => it && it.d <= 1 && typeof weaponFits === 'function' && weaponFits(it) && typeof reqOk === 'function' && reqOk(it);
+    if (ok(S.eq && S.eq.weapon)) return false;
+    let w = (S.inv || []).find(ok);
+    if (!w && typeof makeItem === 'function' && typeof facWeaponDP === 'function') {
+      const dp = facWeaponDP(f), lv = typeof clamp === 'function' ? clamp(Math.round(S.lvl / 12) + 1, 1, 10) : Math.max(1, Math.min(10, Math.round(S.lvl / 12) + 1));
+      w = makeItem(dp[0], dp[1], lv, 0);
+      if (w) { S.inv = S.inv || []; S.inv.unshift(w); if (typeof invDirty !== 'undefined') invDirty = true; }
+    }
+    if (w && ok(w) && typeof equip === 'function') {
+      /* Du diem tiem nang: uu tien du yeu cau Suc manh / Than phap vu khi phai */
+      if (typeof reqDeficit === 'function' && S.attrPts > 0) {
+        const d = reqDeficit(w);
+        for (const k in d) { const n = Math.min(d[k], S.attrPts); S.attr[k] = (S.attr[k] || 0) + n; S.attrPts -= n; }
+      }
+      if (ok(w)) { equip(w, true); R.dirty = true; return true; }
+    }
+    return false;
+  }
+  window.thoTestEnsureWeapon = thoTestEnsureWeapon;
+
   /* chan doi phai / join sang Test neu khong phai admin */
   const _joinFaction = typeof joinFaction === 'function' ? joinFaction : null;
   if (_joinFaction) {
@@ -237,7 +260,7 @@
       const f = FAC[key];
       if (f && f.test && !canSeeThoTest()) { toast('Chỉ tài khoản admin'); return; }
       const r = _joinFaction(key);
-      if (FAC[key] && FAC[key].test) thoTestUnlock90(key);
+      if (FAC[key] && FAC[key].test) { thoTestUnlock90(key); thoTestEnsureWeapon(key); }
       return r;
     };
   }
@@ -247,7 +270,7 @@
       const f = FAC[key];
       if (f && f.test && !canSeeThoTest()) { toast('Chỉ tài khoản admin'); return; }
       const r = _changeFaction(key);
-      if (FAC[key] && FAC[key].test) thoTestUnlock90(key);
+      if (FAC[key] && FAC[key].test) { thoTestUnlock90(key); thoTestEnsureWeapon(key); }
       return r;
     };
   }
@@ -267,13 +290,13 @@
     return true;
   };
 
-  /* Load save dang o phai Test: tu mo 90 */
+  /* Load save dang o phai Test: tu mo 90 + dam bao vu khi */
   if (typeof S !== 'undefined' && S && S.fac && FAC[S.fac] && FAC[S.fac].test) {
-    try { thoTestUnlock90(S.fac); } catch (e) { /* S chua san sang */ }
+    try { thoTestUnlock90(S.fac); thoTestEnsureWeapon(S.fac); } catch (e) { /* S chua san sang */ }
   }
   document.addEventListener('DOMContentLoaded', () => {
-    if (S && S.fac && FAC[S.fac] && FAC[S.fac].test) thoTestUnlock90(S.fac);
+    if (S && S.fac && FAC[S.fac] && FAC[S.fac].test) { thoTestUnlock90(S.fac); thoTestEnsureWeapon(S.fac); }
   });
 
-  console.info('[tho_test] cloned', own.length, 'skills → ids', BASE + '+; factions wudang_t / kunlun_t; series', SER, 'Thổ★ (admin only); 90 unlocked');
+  console.info('[tho_test] cloned', own.length, 'skills → ids', BASE + '+; factions wudang_t / kunlun_t; series', SER, 'Thổ★ (admin only); 90 unlocked; weapon/fac gear fixed');
 })();

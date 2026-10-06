@@ -51,7 +51,7 @@ function rollSetDrop(e) {
   const chance = (e.cls === 'boss' ? 0.02 + zoneIdx(Math.min(S.stage, STAGES)) * 0.0015 : e.cls === 'elite' ? 0.003 : 0.00015 * densK(e)) * dropMul() * goldMul('drop') * SET_DROP_K;   // v125: x0.6   // Hoang Kim hiem nhu JX1: chu yeu tu Trum
   if (Math.random() >= chance) return null;
   const kind = verPlat() && e.L >= 90 && Math.random() < (e.cls === 'boss' ? (e.L >= 120 ? 0.2 : 0.1) : 0.06) ? 'platina' : 'gold';   // Bach Kim roi hiem (chu yeu che tu Hoang Kim); chi phien ban 3
-  const lvCap = Math.max(S.lvl, e.L) + 10, fid = FAC[S.fac] ? FAC[S.fac].id : -1;
+  const lvCap = Math.max(S.lvl, e.L) + 10;
   const reqOf = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
   const Lr = Math.max(S.lvl, e.L);
   let pool = J.sets[kind].filter(r => reqOf(r, 36) <= lvCap && sexReqOk(r.req) && setRowOk(r) && setVerOk(r, Lr));
@@ -61,7 +61,7 @@ function rollSetDrop(e) {
     const pX = e.cls === 'boss' ? SET_XIN_P.boss : e.cls === 'elite' ? SET_XIN_P.elite : SET_XIN_P.normal;
     pool = hi.length && (!lo.length || Math.random() < pX) ? hi : lo;
   }
-  const mine = pool.filter(r => reqOf(r, 39) === fid);
+  const mine = pool.filter(r => facIdMatch(reqOf(r, 39)));   // phái Test: srcId khớp đồ Võ Đang/Côn Lôn
   if (mine.length && Math.random() < SET_MINE_P) pool = mine;          // v125: uu tien bo phai minh 70% -> 20% (de giao dich doi do)
   if (!pool.length) return null;
   return makeSetItem(kind, pick(pool), R.P ? Math.min(10, Math.floor(R.P.lucky / 10)) : 0);

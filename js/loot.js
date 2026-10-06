@@ -170,7 +170,7 @@ function itemLines(it) {
     const gen = +Object.keys(ACCRUE).find(k => ACCRUE[k] === it.s), slot = slotOfEquipped(it, S.eq) || slotFor(it);
     const full = typeof enoughToActive === 'function' && enoughToActive(S.eq);
     L.push(['r', `Kích hoạt thuộc tính ẩn:${it.set ? ' (đủ bộ tự kích hết)' : ''}`]);
-    L.push([full || heroSeries() === gen ? 'h on' : 'h', `  Nhân vật: hệ ${SERIES[gen]}`]);
+    L.push([full || accrues(heroSeries(), it.s) ? 'h on' : 'h', `  Nhân vật: hệ ${SERIES[gen]}`]);
     for (const k of ACTIVATED_BY[slot] || []) L.push([full || (S.eq[k] && S.eq[k].s === gen) ? 'h on' : 'h', `  ${SLOT_VI[k]}: hệ ${SERIES[gen]}`]);
   }
   if (it.set) {
@@ -213,7 +213,7 @@ function setFamily(it) {
 function setKept(it) {
   if (!it || !it.set) return false;
   const f = S.lootF; if (!f) return true;
-  if (f.setMine && FAC[S.fac] && !FAC[S.fac].novice && setFac(it) >= 0 && setFac(it) !== FAC[S.fac].id) return false;   // bo cua phai khac
+  if (f.setMine && FAC[S.fac] && !FAC[S.fac].novice && setFac(it) >= 0 && !facIdMatch(setFac(it))) return false;   // bo cua phai khac (+ phái Test qua srcId)
   if (!f.setOnly) return true;
   const fam = setFamily(it); return !!fam && (f.setKeep || []).includes(fam);
 }

@@ -268,12 +268,12 @@ const shardRows = (() => { const m = new Map(); for (const r of J.sets.gold) if 
 const reqOfRow = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
 function shardDrop(e, force) {
   if (!force && Math.random() >= dropP('shard', e) * goldMul('shard')) return null;
-  const cap = Math.max(S.lvl, e.L) + 10, fid = FAC[S.fac] ? FAC[S.fac].id : -1;
+  const cap = Math.max(S.lvl, e.L) + 10;
   let pool = [...shardRows.values()].filter(r => reqOfRow(r, 36) <= cap && sexReqOk(r.req) && setVerOk(r, Math.max(S.lvl, e.L)));
   // da co manh do dang gom: 75% roi tiep manh cua mon do (tranh gom nua chung khong bao gio du bo)
   const part = pool.filter(r => matHave('shard', r.n) > 0 && matHave('shard', r.n) < SHARDS[r.n]);
   if (part.length && Math.random() < 0.75) pool = part;
-  else { const mine = pool.filter(r => reqOfRow(r, 39) === fid); if (mine.length && Math.random() < 0.7) pool = mine; }
+  else { const mine = pool.filter(r => facIdMatch(reqOfRow(r, 39))); if (mine.length && Math.random() < 0.7) pool = mine; }
   if (!pool.length) return null;
   const r = pick(part.length && pool === part ? part.sort((a, b) => matHave('shard', b.n) - matHave('shard', a.n)).slice(0, 2) : pool); matAdd('shard', r.n); return `Mảnh ${r.n} (${matHave('shard', r.n)}/${SHARDS[r.n]})`;
 }

@@ -143,10 +143,9 @@ function adminGiveWeapon() {
 function adminGiveSet(kind) {
   if (!isAdmin() || !S || !S.fac) return toast('Chỉ tài khoản admin');
   kind = kind === 'platina' && typeof verPlat === 'function' && verPlat() ? 'platina' : 'gold';
-  const fid = FAC[S.fac] ? FAC[S.fac].id : -1;
   const reqOf = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
   let pool = (J.sets[kind] || []).filter(r => sexReqOk(r.req) && setRowOk(r) && reqOf(r, 36) <= S.lvl + 20);
-  const mine = pool.filter(r => reqOf(r, 39) === fid);
+  const mine = pool.filter(r => facIdMatch(reqOf(r, 39)));   // phái Test dùng srcId (8/9)
   if (mine.length) pool = mine;
   if (!pool.length) return toast('Không có bộ phù hợp');
   const it = makeSetItem(kind, pick(pool), 10);

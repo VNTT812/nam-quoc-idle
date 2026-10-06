@@ -16,7 +16,9 @@ const SERIES_COL = ['#f3d35b', '#6fd46a', '#5fb8ff', '#ff6a3a', '#c8965a'];
 const KHAC = { 0: 1, 1: 4, 4: 2, 2: 3, 3: 0 }; // Kim khac Moc, Moc khac Tho, Tho khac Thuy, Thuy khac Hoa, Hoa khac Kim
 /* He Test (5) dung co che giong Tho (4) — khong xung dot data Tho that */
 const mechSeries = s => (s === 5 ? 4 : s);
-const seriesMatch = (hero, need) => need < 0 || hero === need || mechSeries(hero) === need;
+const seriesMatch = (hero, need) => need < 0 || hero === need || mechSeries(hero) === need || mechSeries(need) === hero || mechSeries(hero) === mechSeries(need);
+const khacOf = s => KHAC[mechSeries(s)];
+const counteredBy = s => { const m = mechSeries(s); return +Object.keys(KHAC).find(k => KHAC[k] === m); };
 const counters = (a, t) => a >= 0 && t >= 0 && KHAC[mechSeries(a)] === mechSeries(t);
 /* nguyen to sat thuong: vat ly, doc, bang, hoa, loi (thu tu rmax trong world.js) */
 const ELEM = ['phys', 'poison', 'cold', 'fire', 'light'];

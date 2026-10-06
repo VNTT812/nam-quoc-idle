@@ -143,7 +143,7 @@ function renderLog() {
     const chips = alts && open ? `<div class="zalt">${[q].concat(alts).map((a, k) => `<button class="chip2${k === sel ? ' on' : ''}" data-za="${i}:${k}">${esc(a.n)}</button>`).join('')}</div>` : '';
     return `<button class="zrow${cur ? ' cur' : ''}${open ? '' : ' lock'}" data-z="${i}" ${open ? '' : 'disabled'}><b>${esc(zq.n)}</b><span>${seriesDots(zq)} Cấp ${q.lo}–${q.hi}${alts ? ` · ${alts.length + 1} bản đồ` : ''}</span></button>${chips}`;
   }).join('');
-  $('#t-log').innerHTML = `${todoHTML()}${modeCard(z)}<div class="card"><div><small class="dim">Quái hệ: ${seriesMix(z)}${FAC[S.fac] ? ` · bạn hệ <span style="color:${SERIES_COL[heroSeries()]}">${SERIES[heroSeries()]}</span>: khắc <span style="color:${SERIES_COL[KHAC[heroSeries()]]}">${SERIES[KHAC[heroSeries()]]}</span> (+10%), bị <span style="color:${SERIES_COL[+Object.keys(KHAC).find(k => KHAC[k] === heroSeries())]}">${SERIES[+Object.keys(KHAC).find(k => KHAC[k] === heroSeries())]}</span> khắc (−10%)` : ''}</small></div>
+  $('#t-log').innerHTML = `${todoHTML()}${modeCard(z)}<div class="card"><div><small class="dim">Quái hệ: ${seriesMix(z)}${FAC[S.fac] ? ` · bạn hệ <span style="color:${SERIES_COL[heroSeries()]}">${SERIES[heroSeries()]}</span>: khắc <span style="color:${SERIES_COL[khacOf(heroSeries())]}">${SERIES[khacOf(heroSeries())]}</span> (+10%), bị <span style="color:${SERIES_COL[counteredBy(heroSeries())]}">${SERIES[counteredBy(heroSeries())]}</span> khắc (−10%)` : ''}</small></div>
     ${buffText() ? `<div class="small">${buffText()}</div>` : ''}</div>
     <div class="log" id="logBox">${R.logs.map(l => `<div>${l}</div>`).join('')}</div>
     <h3>Bản đồ luyện công <small>chạm để chọn bãi (tắt tự đổi theo cấp)</small></h3><div class="zlist">${zl}</div>`;
@@ -331,7 +331,7 @@ function renderInv() {
       <div class="lc row">Độ hiếm từ <select id="fRar">${rar}</select> · cấp đồ từ <select id="fLvl">${lv}</select> · ít nhất <select id="fMag">${mg}</select> dòng</div>
       <label class="lc"><input type="checkbox" id="fWear" ${f.wear ? 'checked' : ''}> Chỉ đồ nhân vật mặc được (giới tính, hệ, môn phái; cấp yêu cầu ≤ cấp hiện tại + 5)</label>
       <label class="lc"><input type="checkbox" id="fFacW" ${f.facW ? 'checked' : ''}> Vũ khí: chỉ đúng loại của môn phái</label>
-      <label class="lc"><input type="checkbox" id="fAcc" ${f.accrue ? 'checked' : ''}> Chỉ hệ được nhân vật tương sinh (${FAC[S.fac] ? SERIES[heroSeries()] + ' → ' + SERIES[ACCRUE[heroSeries()]] : ''}: tự mở 1 dòng ẩn)</label>
+      <label class="lc"><input type="checkbox" id="fAcc" ${f.accrue ? 'checked' : ''}> Chỉ hệ được nhân vật tương sinh (${FAC[S.fac] ? SERIES[heroSeries()] + ' → ' + SERIES[accrueOf(heroSeries())] : ''}: tự mở 1 dòng ẩn)</label>
       <div class="lc dim small">Loại trang bị (bỏ trống = mọi loại):</div><div class="lc chips">${slt}</div>
       <div class="lc dim small">Có ít nhất một thuộc tính (bỏ trống = mọi thuộc tính):</div><div class="lc chips">${grp}</div>
       <div class="lc dim small">Hệ của món đồ (bỏ trống = mọi hệ):</div><div class="lc chips">${ser}</div>

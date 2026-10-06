@@ -39,14 +39,14 @@ function grant(g, why) {
 }
 const EVENT_GOLD = /^(An Bang|Định Quốc|Hiệp Cốt|Nhu Tình|Kim Phong|Thiên Hoàng|Động Sát)/i;   // Hoang Kim dung chung kinh dien (khong ban [Tinh Xao] / [Cuc pham] / [Phong che]...)
 function forceSetItem(common) { // do bo Hoang Kim cua phai (common: Hoang Kim dung chung - Kim Phong, An Bang, Dinh Quoc...), cap yeu cau gan cap nhan vat
-  const fid = FAC[S.fac] ? FAC[S.fac].id : -1, cap = S.lvl + 15;
+  const cap = S.lvl + 15;
   const req = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
   const G = J.sets.gold.filter(r => sexReqOk(r.req) && setRowOk(r) && setVerOk(r, S.lvl));
   if (common) { const C = J.sets.gold.filter(r => sexReqOk(r.req) && setRowOk(r) && req(r, 39) < 0 && EVENT_GOLD.test(r.n)); const c1 = C.filter(r => req(r, 36) <= cap && setVerOk(r, S.lvl)), c2 = C.filter(r => req(r, 36) <= cap);
     const pc = c1.length ? c1 : c2.length ? c2 : C; return pc.length ? makeSetItem('gold', pick(pc), 5) : null; }
-  let pool = G.filter(r => req(r, 39) === fid && req(r, 36) <= cap);
+  let pool = G.filter(r => facIdMatch(req(r, 39)) && req(r, 36) <= cap);   // phái Test: đồ Võ Đang/Côn Lôn (srcId)
   if (!pool.length) pool = G.filter(r => req(r, 36) <= cap);
-  if (!pool.length) pool = G.filter(r => req(r, 39) === fid);
+  if (!pool.length) pool = G.filter(r => facIdMatch(req(r, 39)));
   return pool.length ? makeSetItem('gold', pick(pool), 5) : null;
 }
 

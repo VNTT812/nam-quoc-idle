@@ -24,6 +24,7 @@ const av = (A, n, i = 0) => (A[n] ? A[n][i] : 0);
    +1 cho moi mon o 2 o lien ket (ms_ActivedEquip) co he sinh he mon do. Ngua luon mo du. */
 const ACCRUE = { 0: 2, 2: 1, 1: 3, 3: 4, 4: 0 }; // Kim sinh Thuy, Thuy sinh Moc, Moc sinh Hoa, Hoa sinh Tho, Tho sinh Kim
 const accrues = (a, b) => a >= 0 && b >= 0 && ACCRUE[mechSeries(a)] === mechSeries(b);
+const accrueOf = s => ACCRUE[mechSeries(s)];
 const ACTIVATED_BY = { helm: ['armor', 'amulet'], armor: ['ring2', 'belt'], belt: ['pendant', 'cuff'], weapon: ['amulet', 'armor'],
   boot: ['weapon', 'helm'], cuff: ['boot', 'ring1'], amulet: ['belt', 'ring2'], ring1: ['weapon', 'helm'], ring2: ['cuff', 'pendant'],
   pendant: ['boot', 'ring1'] };
@@ -41,7 +42,9 @@ function hiddenActive(it, eq = S.eq) {
 }
 function heroStart() { const f = FAC[S.fac]; const s = mechSeries(f ? f.series : 0); return J.start[s * 2 + (S.sex || 0)] || J.start[0]; }
 function heroSeries() { return FAC[S.fac] ? FAC[S.fac].series : 0; }
+/* Phái Test (wudang_t / kunlun_t) dùng id 108/109 nhưng đồ bộ / requiremenpai vẫn là id gốc (8/9) qua srcId */
 const facIdMatch = need => { const f = FAC[S.fac]; if (!f || need < 0) return need < 0; return f.id === need || f.srcId === need; };
+const facEffId = (f = FAC[S && S.fac]) => (f ? (f.srcId != null ? f.srcId : f.id) : -1);
 function weaponCode(eq) {
   const w = eq.weapon; if (!w) return 9;               // 9 = tay khong (Quyen/Chuong phap)
   // ma loai vu khi cua mon vu khi phai (tham so 3 cua addphysicsdamage_p): 0 kiem, 1 dao, 2 con, 3 thuong, 4 chuy,
