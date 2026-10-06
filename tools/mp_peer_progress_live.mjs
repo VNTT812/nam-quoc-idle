@@ -2,7 +2,7 @@
  * Live 2-client test: A walks, B applies NEW upsert logic — peer must keep moving
  * even after a synthetic late/poison packet is injected.
  */
-import { createClient } from '/tmp/node_modules/@supabase/supabase-js/dist/esm/index.js';
+import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 
 const URL = 'https://khwkokiflhzwxuzoilux.supabase.co';
