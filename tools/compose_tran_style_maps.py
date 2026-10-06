@@ -50,6 +50,8 @@ THEME = {
     "340": "tran-cave-map",
     "201": "tran-cave-map",
     "205": "tran-cave-map",
+    "400": "tran-pho-minh-map",
+    "401": "tran-ho-tay-map",
 }
 
 

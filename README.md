@@ -4,6 +4,8 @@ Idle giang hồ Đại Việt, bản đồ và kiến trúc mang hơi thời nh�
 
 Nền bản đồ giữ họa phong isometric kiểu Võ Lâm (layout + vật cản gốc), phủ texture kiến trúc thời Trần (đình, cổng, ao sen…). Tái tạo: `tools/compose_tran_style_maps.py` (cần `img/z/_tran_tiles/`).
 
+Map chọn thêm: **Phổ Minh Tự** (cùng bậc Yên Tử), **Hồ Tây** (cùng bậc Bạch Đằng) — chọn chip bản đồ trong UI.
+
 ## Chạy local
 
 Cần một máy chủ tĩnh (game dùng đường dẫn tương đối và service worker):
