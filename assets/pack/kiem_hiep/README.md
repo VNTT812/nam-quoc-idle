@@ -1,6 +1,7 @@
-# Nguồn Kiếm Hiệp (đầu trẻ Việt★)
+# Kiếm Hiệp — nhân Việt★ toàn thân
 
-- `600.png` → đầu búi tóc thay nón lá (Yên Tử★ / Thạch Sơn★)
-- Anim 8 hướng lấy từ Võ Đang / Côn Lôn / Nga My (tay chân mượt như NV gốc)
+- Nam: `600/580/620/640/680/700.png` (không dùng pl_kunlun)
+- Nữ: `75.png`
+- Tách bộ phận trên cùng sprite → anim chạy/đánh
 
-Tái tạo: `python3 tools/viet_char_build.py`
+`python3 tools/viet_char_build.py`
