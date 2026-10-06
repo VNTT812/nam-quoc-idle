@@ -298,8 +298,9 @@ function mpOnSkill(p) {
   if (!p || p.cid === mpCid() || MP.applying) return;
   if (R.quiet) return;
   const peer = MP.peers[String(p.cid || '')];
-  const ax = peer && peer.rx != null ? peer.rx : (p.ax != null ? +p.ax : (peer ? peer.x : H.x));
-  const ay = peer && peer.ry != null ? peer.ry : (p.ay != null ? +p.ay : (peer ? peer.y : H.y));
+  // Uu tien toa do trong goi skill (luc tung) — tranh peer.rx lech / cham
+  const ax = p.ax != null ? +p.ax : (peer && peer.rx != null ? peer.rx : (peer ? peer.x : H.x));
+  const ay = p.ay != null ? +p.ay : (peer && peer.ry != null ? peer.ry : (peer ? peer.y : H.y));
   const caster = { x: ax, y: ay };
   if (peer) {
     peer.act = 'at'; peer.actT = 0;
