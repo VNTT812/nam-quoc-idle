@@ -15,12 +15,12 @@ CATALOG = ROOT / "assets/pack/quai/catalog.json"
 OUT = Path("/opt/cursor/artifacts/yentu-j-remaster")
 ACTS = ("st", "run", "at", "hurt", "die")
 
-# stem → (label, RGB glow, warm push, cool push, sat, contrast) — đậm hơn
+# stem → (label, RGB glow, warm push, cool push, sat, contrast) — đậm nhưng còn form
 STYLES = {
-    "ani019": ("Nhím · Độc", (190, 60, 255), 0.88, 1.28, 1.55, 1.28),  # violet poison
-    "ani018": ("Heo rừng · Hỏa", (255, 90, 10), 1.45, 0.62, 1.60, 1.32),  # ember fire
-    "ani051": ("Hoán hùng · Ám", (110, 55, 255), 0.72, 1.38, 1.35, 1.35),  # shadow indigo
-    "ani052": ("Linh Miêu · Lôi", (40, 230, 255), 0.78, 1.45, 1.55, 1.28),  # lightning cyan
+    "ani019": ("Nhím · Độc", (185, 55, 255), 0.90, 1.22, 1.45, 1.25),  # violet poison
+    "ani018": ("Heo rừng · Hỏa", (255, 95, 15), 1.38, 0.68, 1.50, 1.28),  # ember fire
+    "ani051": ("Hoán hùng · Ám", (100, 50, 240), 0.78, 1.32, 1.30, 1.30),  # shadow indigo
+    "ani052": ("Linh Miêu · Lôi", (45, 220, 255), 0.82, 1.38, 1.45, 1.25),  # lightning cyan
 }
 
 
@@ -35,44 +35,39 @@ def mythic_cell(cell: Image.Image, glow: tuple[int, int, int], warm: float, cool
 
     a = np.asarray(up).astype(np.float32)
     rgb, alpha = a[..., :3], a[..., 3]
-    # warm/cool balance
     rgb[..., 0] = np.clip(rgb[..., 0] * warm, 0, 255)
     rgb[..., 2] = np.clip(rgb[..., 2] * cool, 0, 255)
-    # mạnh hơn: nhuộm body theo hệ + giữ chút form gốc
+    # giữ form gốc nhiều hơn, nhuộm hệ rõ
     gray = rgb.mean(axis=2, keepdims=True)
     tint = np.array(glow, dtype=np.float32)
-    rgb = rgb * 0.48 + gray * 0.12 + tint * 0.40
+    rgb = rgb * 0.58 + gray * 0.10 + tint * 0.32
 
-    # highlight sáng theo hệ (lông/gai sáng hơn)
     lum = gray[..., 0] / 255.0
-    hi = np.clip((lum - 0.45) * 2.2, 0, 1)
+    hi = np.clip((lum - 0.50) * 1.8, 0, 1)
     for i in range(3):
-        rgb[..., i] = np.clip(rgb[..., i] + hi * glow[i] * 0.35, 0, 255)
+        rgb[..., i] = np.clip(rgb[..., i] + hi * glow[i] * 0.22, 0, 255)
 
     mask = Image.fromarray(np.clip(alpha, 0, 255).astype(np.uint8))
     edge = np.asarray(mask.filter(ImageFilter.FIND_EDGES)).astype(np.float32) / 255.0
-    edge = np.clip(edge * 2.8, 0, 1)
-    # aura kép: ring gần + ring xa
+    edge = np.clip(edge * 2.6, 0, 1)
     dil_near = np.asarray(mask.filter(ImageFilter.MaxFilter(5))).astype(np.float32)
     dil_far = np.asarray(mask.filter(ImageFilter.MaxFilter(11))).astype(np.float32)
     body = alpha > 40
     ring_near = (dil_near > 40) & (~body)
     ring_far = (dil_far > 40) & (~body) & (~ring_near)
-    # rim sáng đậm theo hệ
     for i in range(3):
         rgb[..., i] = np.where(
             edge > 0.04,
-            np.clip(rgb[..., i] * (1 - edge * 0.45) + glow[i] * edge * 1.15, 0, 255),
+            np.clip(rgb[..., i] * (1 - edge * 0.35) + glow[i] * edge * 1.05, 0, 255),
             rgb[..., i],
         )
     out_rgb = rgb.copy()
     out_a = alpha.copy()
     for i in range(3):
-        out_rgb[..., i] = np.where(ring_near, np.clip(glow[i] * 0.95, 0, 255), out_rgb[..., i])
-        out_rgb[..., i] = np.where(ring_far, np.clip(glow[i] * 0.55, 0, 255), out_rgb[..., i])
-    out_a = np.where(ring_near, np.maximum(out_a, 200), out_a)
-    out_a = np.where(ring_far, np.maximum(out_a, 130), out_a)
-    # clean fringe
+        out_rgb[..., i] = np.where(ring_near, np.clip(glow[i] * 0.90, 0, 255), out_rgb[..., i])
+        out_rgb[..., i] = np.where(ring_far, np.clip(glow[i] * 0.48, 0, 255), out_rgb[..., i])
+    out_a = np.where(ring_near, np.maximum(out_a, 190), out_a)
+    out_a = np.where(ring_far, np.maximum(out_a, 120), out_a)
     out_a = np.where(out_a < 10, 0, out_a)
 
     out = np.dstack([out_rgb.clip(0, 255), out_a.clip(0, 255)]).astype(np.uint8)
