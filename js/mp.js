@@ -268,8 +268,19 @@ function mpElect() {
   const prev = MP.host;
   MP.host = ids[0] || mpCid();
   MP.online = Math.min(MP_MAX, new Set(ids).size);
-  if (prev && prev !== MP.host && mpIsHost() && R.field) mpSendField(true);
-  // Peer moi vao: host gui field ngay (het khach khong thay quai)
+  if (prev && prev !== MP.host) {
+    if (mpIsHost() && R.field) mpSendField(true);
+    else if (!mpIsHost()) {
+      // Vua thanh khach: bo quai local (mid theo cid cu), xin field host
+      MP.fieldSnap = null;
+      MP.waitHost = Date.now() + MP_WAIT;
+      if (!MP._needT || Date.now() - MP._needT > 400) {
+        MP._needT = Date.now();
+        if (typeof mpSend === 'function') mpSend('need', { cid: mpCid() });
+      }
+    }
+  }
+  // Peer moi / dang host: gui field dinh ky nhe
   if (mpIsHost() && R.field && ids.length > 1 && (!MP._electFieldAt || Date.now() - MP._electFieldAt > 800)) {
     MP._electFieldAt = Date.now();
     mpSendField(true);
