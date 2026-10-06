@@ -208,18 +208,77 @@ async function netMailCount() {
   netDot();
 }
 function netCleanItem(it) {
-  if (!it || typeof it !== 'object' || !Array.isArray(it.base) || !Array.isArray(it.mag)) return null;
+  if (!it || typeof it !== 'object') return null;
+  if (it.__admin) return it;                                                 // goi cap phat admin (cap / knb / do)
+  if (!Array.isArray(it.base) || !Array.isArray(it.mag)) return null;
   const x = JSON.parse(JSON.stringify(it)); x.uid = S.uid++; delete x.lock; return x;
 }
+function netMailLabel(m) {
+  if (!m) return '';
+  const it = m.item;
+  if (it && it.__admin) {
+    const bits = [];
+    if (it.lvl) bits.push('cấp → ' + it.lvl);
+    if (it.addLv) bits.push('+' + it.addLv + ' cấp');
+    if (it.attrPts) bits.push('+' + it.attrPts + ' tiềm năng');
+    if (it.skPts) bits.push('+' + it.skPts + ' kỹ năng');
+    if (it.knb) bits.push('+' + fmt(it.knb) + ' KNB');
+    if (it.gear && it.gear.n) bits.push(it.gear.n);
+    return bits.join(' · ') || 'Quà Admin';
+  }
+  return it ? it.n : '';
+}
+function netApplyAdminGrant(a) {
+  const parts = [];
+  if (!a || !a.__admin) return parts;
+  if (a.lvl != null) {
+    const lv = clamp(Math.floor(+a.lvl) || 1, 1, typeof MAX_LEVEL !== 'undefined' ? MAX_LEVEL : 200);
+    const old = S.lvl | 0;
+    if (lv > old) {
+      S.attrPts = (S.attrPts | 0) + (typeof PTS_PER_LEVEL !== 'undefined' ? PTS_PER_LEVEL : 5) * (lv - old);
+      S.skPts = (S.skPts | 0) + (typeof SKILL_PTS_PER_LEVEL !== 'undefined' ? SKILL_PTS_PER_LEVEL : 1) * (lv - old);
+    }
+    S.lvl = lv; S.xp = 0;
+    if (typeof syncMaxStage === 'function') syncMaxStage();
+    parts.push('cấp ' + lv);
+  }
+  if (a.addLv > 0) {
+    const n = clamp(Math.floor(+a.addLv) || 0, 0, 200);
+    const nv = Math.min(typeof MAX_LEVEL !== 'undefined' ? MAX_LEVEL : 200, (S.lvl | 0) + n);
+    const gained = nv - (S.lvl | 0);
+    if (gained > 0) {
+      S.attrPts = (S.attrPts | 0) + (typeof PTS_PER_LEVEL !== 'undefined' ? PTS_PER_LEVEL : 5) * gained;
+      S.skPts = (S.skPts | 0) + (typeof SKILL_PTS_PER_LEVEL !== 'undefined' ? SKILL_PTS_PER_LEVEL : 1) * gained;
+      S.lvl = nv; S.xp = 0;
+      if (typeof syncMaxStage === 'function') syncMaxStage();
+      parts.push('+' + gained + ' cấp');
+    }
+  }
+  if (a.attrPts > 0) { S.attrPts = (S.attrPts | 0) + (a.attrPts | 0); parts.push('+' + (a.attrPts | 0) + ' tiềm năng'); }
+  if (a.skPts > 0) { S.skPts = (S.skPts | 0) + (a.skPts | 0); parts.push('+' + (a.skPts | 0) + ' kỹ năng'); }
+  if (a.knb > 0) { S.knb = (S.knb || 0) + (a.knb | 0); parts.push('+' + fmt(a.knb) + ' KNB'); }
+  if (a.gear && Array.isArray(a.gear.base)) {
+    if (S.inv.length >= INV_MAX) throw new Error('Hành trang đầy — nhận quà Admin sau khi dọn túi');
+    const it = netCleanItem(a.gear);
+    if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; }
+  }
+  R.dirty = true; if (typeof recalc === 'function') recalc();
+  return parts;
+}
 async function netClaim(m, quiet) {
-  if (m.item && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
+  const isAdminMail = !!(m.item && m.item.__admin);
+  if (m.item && !isAdminMail && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
+  if (isAdminMail && m.item.gear && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
   const r = await netCall(sb => sb.rpc('claim_mail', { mid: m.id })), d = r.data || m;
   const parts = [];
-  if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
+  if (d.item && d.item.__admin) parts.push(...netApplyAdminGrant(d.item));
+  else if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
   if (d.gold > 0) { S.gold += +d.gold; parts.push(fmt(+d.gold) + ' lượng'); }
-  save(); if (!quiet) log(`📨 Nhận thư từ <b>${esc(d.from_name)}</b>: ${esc(parts.join(', '))}`);
+  save(); if (!quiet) log(`📨 Nhận thư từ <b>${esc(d.from_name)}</b>: ${esc(parts.join(', ') || netMailLabel(d) || 'quà')}`);
+  if (typeof updateTop === 'function') updateTop();
+  if (typeof refresh === 'function') refresh();
   netUpload().catch(() => {});                                               // v195: luu ngay (thu da nhan tren may chu, tranh mat do neu tat game)
-  return parts;
+  return parts.length ? parts : [netMailLabel(d) || 'quà'];
 }
 async function netSendGift(to, it, gold, note) {
   to = String(to || '').trim(); gold = Math.max(0, Math.floor(+gold || 0));
@@ -380,10 +439,22 @@ async function netMailBody(el) {
   const r = await netCall(sb => sb.from('mail').select('*').order('id', { ascending: false }).limit(50)), list = r.data || [];
   NET.mailN = list.length; netDot();
   const inv = S.fac ? S.inv.filter(it => !it.lock) : [];
+  const rowHtml = m => {
+    const adm = !!(m.item && m.item.__admin);
+    const label = netMailLabel(m);
+    let icon = '<span class="nmg">💰</span>';
+    if (adm && m.item.gear && Array.isArray(m.item.gear.base)) icon = netCell(m.item.gear).replace('data-uid=', `data-mi="${m.id}" data-x=`);
+    else if (adm) icon = '<span class="nmg">🛠</span>';
+    else if (m.item) icon = netCell(m.item).replace('data-uid=', `data-mi="${m.id}" data-x=`);
+    const nameHtml = adm
+      ? `<span class="cp">${esc(label || 'Quà Admin')}</span>`
+      : (m.item ? `<span style="color:${RAR_COL[m.item.r] || '#ddd'}">${esc(m.item.n)}</span>` : '');
+    return `<div class="nmrow">${icon}<span><b>${esc(m.from_name)}</b> <small class="dim">${new Date(m.created).toLocaleString('vi-VN')}</small><br>
+        ${nameHtml}${m.gold > 0 ? ` <span class="cp">+${fmt(m.gold)} lượng</span>` : ''}${m.note ? `<br><small class="dim">${esc(m.note)}</small>` : ''}</span>
+        <button class="btn sm" data-take="${m.id}" ${S.fac ? '' : 'disabled'}>Nhận</button></div>`;
+  };
   el.innerHTML = `<div class="card"><b>📥 Hộp thư</b> ${list.length ? `<button class="btn sm" id="nmAll">Nhận tất cả</button>` : ''}
-      ${list.map(m => `<div class="nmrow">${m.item ? netCell(m.item).replace('data-uid=', `data-mi="${m.id}" data-x=`) : '<span class="nmg">💰</span>'}<span><b>${esc(m.from_name)}</b> <small class="dim">${new Date(m.created).toLocaleString('vi-VN')}</small><br>
-        ${m.item ? `<span style="color:${RAR_COL[m.item.r] || '#ddd'}">${esc(m.item.n)}</span>` : ''}${m.gold > 0 ? ` <span class="cp">+${fmt(m.gold)} lượng</span>` : ''}${m.note ? `<br><small class="dim">${esc(m.note)}</small>` : ''}</span>
-        <button class="btn sm" data-take="${m.id}" ${S.fac ? '' : 'disabled'}>Nhận</button></div>`).join('') || '<p class="dim small">Không có thư.</p>'}</div>
+      ${list.map(rowHtml).join('') || '<p class="dim small">Không có thư.</p>'}</div>
     ${S.fac ? `<div class="card"><b>📤 Gửi thư</b> <small class="dim">từ ${esc(hasRealName() ? S.name : '(chưa đặt tên)')} · tối đa 30 thư / ngày</small>
       <div class="row">Gửi cho <input id="nmTo" maxlength="14" placeholder="Tên nhân vật" value="${esc(NET.mailTo || '')}"></div>
       <div class="row">Ngân lượng <input id="nmGold" type="number" min="0" placeholder="0"> <small class="dim">có ${fmt(S.gold)}</small></div>
@@ -391,7 +462,11 @@ async function netMailBody(el) {
       <div class="small">Kèm món đồ (chạm để chọn, chạm lại để bỏ):</div>
       <div class="invgrid" id="nmInv">${inv.map(it => netCell(it).replace('class="it', `class="it${NET.sel === it.uid ? ' ep-on' : ''}`)).join('') || '<small class="dim">Hành trang trống</small>'}</div>
       <div class="btnrow"><button class="btn" id="nmSend">Gửi</button></div></div>` : ''}`;
-  el.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => { const m = list.find(x => x.id === +b.dataset.mi); netItemModal(m.item, '', () => netModal('mail')); });
+  el.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => {
+    const m = list.find(x => x.id === +b.dataset.mi); if (!m) return;
+    const it = (m.item && m.item.__admin && m.item.gear) ? m.item.gear : m.item;
+    if (it && !it.__admin) netItemModal(it, '', () => netModal('mail'));
+  });
   el.querySelectorAll('[data-take]').forEach(b => b.onclick = () => busy(b, () => netClaim(list.find(x => x.id === +b.dataset.take)), p => { toast('Đã nhận: ' + p.join(', ')); refresh(); netModal('mail'); }));
   const all = $('#nmAll'); if (all) all.onclick = () => busy(all, async () => { let n = 0; for (const m of list) { try { await netClaim(m, false); n++; } catch (e) { toast(e.message); break; } } return n; }, n => { toast(`Đã nhận ${n} thư`); refresh(); netModal('mail'); });
   if (!S.fac) return;

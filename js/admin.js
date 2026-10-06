@@ -1,6 +1,7 @@
 /* ======================= ADMIN CHEAT (chi tai khoan admin) =======================
    Chi hien khi dang nhap dung ten "admin". Cheat client-side: gold, KNB, cap, diem,
-   hoi mau, bat tu, xoa quai, dich chuyen, nguyen lieu, trieu hoi quai/trum, them do. */
+   hoi mau, bat tu, xoa quai, dich chuyen, nguyen lieu, trieu hoi quai/trum, them do.
+   Cap cho nguoi khac: gui thu item.__admin (cap / diem / KNB / do) — ho nhan trong Thu. */
 'use strict';
 
 const isAdmin = () => typeof netUname === 'function' && netUname() === 'admin';
@@ -167,6 +168,88 @@ function adminGiveHorse() {
   return it;
 }
 
+/** Tạo đồ để gửi người khác (không bỏ vào túi admin). */
+function adminMakeGear(detail, part, tier, nMagic) {
+  detail = +detail; tier = clamp(Math.floor(+tier) || Math.max(1, Math.floor(S.lvl / 12)), 1, 10);
+  nMagic = clamp(Math.floor(+nMagic) || 0, 0, 6);
+  const g = J.items[detail]; if (!g) throw new Error('Loại đồ không hợp lệ');
+  if (part === '' || part == null || part === 'auto') {
+    const ks = [...new Set(g.list.filter(r => sexReqOk(r.req)).map(r => r.k))];
+    part = ks.length ? pick(ks) : (g.list[0] && g.list[0].k);
+  } else part = +part;
+  part = typeof sexPart === 'function' ? sexPart(detail, part) : part;
+  let it = makeItem(detail, part, tier, nMagic);
+  for (let t = 0; it && !sexOk(it) && t < 8; t++) it = makeItem(detail, part, tier, nMagic);
+  if (!it || !sexOk(it)) throw new Error('Không tạo được món (sai giới tính / dữ liệu)');
+  delete it.lock;
+  return it;
+}
+function adminMakeSetGear(kind) {
+  kind = kind === 'platina' && typeof verPlat === 'function' && verPlat() ? 'platina' : 'gold';
+  const reqOf = (r, id) => (r.req.find(q => q[0] === id) || [0, -1])[1];
+  let pool = (J.sets[kind] || []).filter(r => sexReqOk(r.req) && setRowOk(r) && reqOf(r, 36) <= S.lvl + 20);
+  const mine = pool.filter(r => facIdMatch(reqOf(r, 39)));
+  if (mine.length) pool = mine;
+  if (!pool.length) throw new Error('Không có bộ phù hợp');
+  const it = makeSetItem(kind, pick(pool), 10);
+  if (!it) throw new Error('Không tạo được bộ');
+  delete it.lock;
+  return it;
+}
+function adminMakeHorseGear() {
+  const it = typeof rareHorse === 'function' ? rareHorse() : (typeof horseRoll === 'function' ? horseRoll(true) : null);
+  if (!it) throw new Error('Không tạo được ngựa');
+  delete it.lock;
+  return it;
+}
+
+async function adminFindChar(name) {
+  name = String(name || '').trim();
+  if (!name) throw new Error('Nhập tên nhân vật nhận');
+  if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
+  const r = await netCall(sb => sb.from('chars').select('name,fac,lvl,power,sex').eq('name', name).maybeSingle());
+  if (!r.data) throw new Error('Không tìm thấy «' + name + '» (cần họ từng lưu xếp hạng / đặt tên)');
+  return r.data;
+}
+
+/** Gửi quà Admin qua thư: cấp / điểm / KNB / đồ. Người nhận bấm Nhận trong Thư. */
+async function adminGrantPlayer(opts) {
+  if (!isAdmin()) throw new Error('Chỉ tài khoản admin');
+  if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
+  const to = String((opts && opts.to) || '').trim();
+  const ch = await adminFindChar(to);
+  const payload = { __admin: 1 };
+  let has = false;
+  if (opts.lvl != null && opts.lvl !== '') {
+    payload.lvl = clamp(Math.floor(+opts.lvl) || 1, 1, MAX_LEVEL);
+    has = true;
+  }
+  if (opts.addLv > 0) {
+    payload.addLv = clamp(Math.floor(+opts.addLv) || 0, 0, 200);
+    has = true;
+  }
+  if (opts.attrPts > 0) { payload.attrPts = Math.max(0, Math.floor(+opts.attrPts) || 0); has = true; }
+  if (opts.skPts > 0) { payload.skPts = Math.max(0, Math.floor(+opts.skPts) || 0); has = true; }
+  if (opts.knb > 0) { payload.knb = Math.max(0, Math.floor(+opts.knb) || 0); has = true; }
+  if (opts.gear && Array.isArray(opts.gear.base)) {
+    const g = JSON.parse(JSON.stringify(opts.gear));
+    delete g.uid; delete g.lock;
+    payload.gear = g;
+    has = true;
+  }
+  if (!has) throw new Error('Chọn cấp, điểm, KNB hoặc đồ để cấp');
+  if (typeof netNeedChar === 'function') await netNeedChar();
+  const note = String(opts.note || 'Quà từ Admin').slice(0, 100);
+  const from = (S && typeof hasRealName === 'function' && hasRealName() && S.name) ? S.name : 'Admin';
+  await netCall(sb => sb.from('mail').insert({
+    to_name: ch.name, from_name: from, from_owner: NET.user.id,
+    kind: 'admin', item: payload, gold: 0, note
+  }));
+  const label = typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'quà';
+  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)}`);
+  return { char: ch, label, payload };
+}
+
 function adminModal() {
   if (!isAdmin()) return toast('Chỉ tài khoản admin');
   if (!S || !S.fac) return toast('Chọn nhân vật trước');
@@ -179,7 +262,7 @@ function adminModal() {
   }).join('');
   const defLv = stageLevel(S.stage);
   modal(`<h3>🛠 Admin Cheat <small class="dim">@${esc(netUname())}</small></h3>
-    <p class="desc small dim">Chỉ hiện với tài khoản <b>admin</b>. Thay đổi lưu vào nhân vật đang chơi.</p>
+    <p class="desc small dim">Chỉ hiện với tài khoản <b>admin</b>. Phần trên = cheat bản thân; phần dưới = cấp cho người khác qua Thư.</p>
     <div class="card">
       <div class="row">Ngân lượng <input type="number" id="adGold" value="${S.gold | 0}" min="0" step="100000" style="width:9em">
         <button class="btn sm" id="adGoldSet">Đặt</button>
@@ -248,6 +331,37 @@ function adminModal() {
       <select id="adZone">${zones}</select>
       <button class="btn sm" id="adGo">Đi</button>
     </div>
+    <div class="card" style="margin-top:.7em;border-color:#c9a227">
+      <b>📨 Cấp cho người khác</b>
+      <p class="desc small dim">Gửi qua Thư (họ bấm <b>Nhận</b>). Cần đăng nhập online; tên nhân vật phải có trên xếp hạng.</p>
+      <div class="row" style="flex-wrap:wrap;gap:.35em">
+        Tên NV <input id="adTo" maxlength="14" placeholder="Tên nhân vật" style="width:9em">
+        <button class="btn sm" id="adToFind">Tìm</button>
+        <small id="adToInfo" class="dim"></small>
+      </div>
+      <div class="row" style="margin-top:.35em;flex-wrap:wrap;gap:.35em">
+        Đặt cấp <input type="number" id="adGLv" min="1" max="${MAX_LEVEL}" placeholder="vd 90" style="width:4em">
+        hoặc +cấp <input type="number" id="adGAdd" min="0" max="200" value="0" style="width:3em">
+        KNB <input type="number" id="adGKnb" min="0" value="0" style="width:4em">
+        TN <input type="number" id="adGPts" min="0" value="0" style="width:4em" title="Tiềm năng">
+        KN <input type="number" id="adGSk" min="0" value="0" style="width:3em" title="Điểm kỹ năng">
+        <button class="btn sm" id="adGSendStat">Gửi cấp / điểm</button>
+      </div>
+      <div class="row" style="margin-top:.35em;flex-wrap:wrap;gap:.35em">
+        <select id="adGItemD" style="max-width:12em">${itemOpts}</select>
+        Part <input type="number" id="adGItemK" placeholder="auto" style="width:4em">
+        Tier <input type="number" id="adGItemT" value="${Math.max(1, Math.floor(S.lvl / 12))}" min="1" max="10" style="width:3em">
+        Dòng <input type="number" id="adGItemM" value="4" min="0" max="6" style="width:3em">
+        <button class="btn sm" id="adGSendItem">Gửi đồ</button>
+      </div>
+      <div class="btnrow" style="margin-top:.35em">
+        <button class="btn sm" id="adGWep">Gửi vũ khí phái</button>
+        <button class="btn sm" id="adGGold">Gửi Hoàng Kim</button>
+        <button class="btn sm" id="adGPlat">Gửi Bạch Kim</button>
+        <button class="btn sm" id="adGHorse">Gửi ngựa</button>
+      </div>
+      <div class="row" style="margin-top:.35em">Lời nhắn <input id="adGNote" maxlength="100" value="Quà từ Admin" style="flex:1;min-width:10em"></div>
+    </div>
     <div class="btnrow" style="margin-top:.6em"><button class="btn" id="adSwitch">Đổi tài khoản</button></div>`, () => {
     const $g = $('#adGold'), $k = $('#adKnb'), $l = $('#adLv');
     $('#adZone').value = String(curZ);
@@ -291,6 +405,45 @@ function adminModal() {
     $('#adGivePlat').onclick = () => adminGiveSet('platina');
     $('#adGiveHorse').onclick = () => adminGiveHorse();
     $('#adGo').onclick = () => adminGotoZone($('#adZone').value);
+    const grantTo = () => ($('#adTo') && $('#adTo').value) || '';
+    const grantNote = () => ($('#adGNote') && $('#adGNote').value) || 'Quà từ Admin';
+    const showTo = ch => {
+      const el = $('#adToInfo'); if (!el) return;
+      if (!ch) { el.textContent = ''; return; }
+      el.innerHTML = `→ <b>${esc(ch.name)}</b> Lv${ch.lvl}${FAC[ch.fac] ? ' · ' + esc(FAC[ch.fac].n) : ''}`;
+    };
+    const done = (btn, msg, ch) => { toast(msg); if (ch) showTo(ch); if (btn) btn.disabled = false; };
+    $('#adToFind').onclick = () => busy($('#adToFind'), () => adminFindChar(grantTo()), ch => done($('#adToFind'), 'Tìm thấy ' + ch.name, ch));
+    $('#adGSendStat').onclick = () => {
+      const btn = $('#adGSendStat'), lvRaw = $('#adGLv').value, addLv = +$('#adGAdd').value || 0;
+      const opts = { to: grantTo(), note: grantNote(), knb: +$('#adGKnb').value || 0, attrPts: +$('#adGPts').value || 0, skPts: +$('#adGSk').value || 0 };
+      if (lvRaw !== '') opts.lvl = lvRaw;
+      if (addLv > 0) opts.addLv = addLv;
+      busy(btn, () => adminGrantPlayer(opts), r => done(btn, 'Đã gửi: ' + r.label, r.char));
+    };
+    const sendGear = (btn, make) => busy(btn, async () => {
+      const ch = await adminFindChar(grantTo());
+      const oldSex = S.sex, oldFac = S.fac;
+      let gear;
+      try {
+        if (ch.sex != null) S.sex = ch.sex | 0;
+        if (ch.fac && FAC[ch.fac]) S.fac = ch.fac;           // bộ / vũ khí theo phái người nhận
+        gear = typeof make === 'function' ? make() : make;
+      } finally { S.sex = oldSex; S.fac = oldFac; }
+      const r = await adminGrantPlayer({ to: ch.name, note: grantNote(), gear });
+      return r;
+    }, r => done(btn, 'Đã gửi: ' + r.label, r.char));
+    $('#adGSendItem').onclick = () => {
+      const k = $('#adGItemK').value;
+      sendGear($('#adGSendItem'), () => adminMakeGear($('#adGItemD').value, k === '' ? 'auto' : k, $('#adGItemT').value, $('#adGItemM').value));
+    };
+    $('#adGWep').onclick = () => sendGear($('#adGWep'), () => {
+      const [d, p] = wantWeaponDP();
+      return adminMakeGear(d, p, Math.max(1, Math.floor(S.lvl / 12)), 4);
+    });
+    $('#adGGold').onclick = () => sendGear($('#adGGold'), () => adminMakeSetGear('gold'));
+    $('#adGPlat').onclick = () => sendGear($('#adGPlat'), () => adminMakeSetGear('platina'));
+    $('#adGHorse').onclick = () => sendGear($('#adGHorse'), () => adminMakeHorseGear());
     $('#adSwitch').onclick = () => typeof netSwitchAccount === 'function' && netSwitchAccount($('#adSwitch'));
   });
 }
