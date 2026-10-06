@@ -177,8 +177,8 @@ def hat_mask(rgb: np.ndarray, alpha: np.ndarray, ay_hint: int) -> np.ndarray:
         return np.zeros((H, W), dtype=bool)
     y0, y1 = int(ys.min()), int(ys.max())
     ch = max(1, y1 - y0 + 1)
-    # nón nằm trong ~38% trên của silhouette
-    top_band = (np.arange(H)[:, None] >= y0) & (np.arange(H)[:, None] < y0 + int(ch * 0.38))
+    # nón nằm trong ~30% trên của silhouette
+    top_band = (np.arange(H)[:, None] >= y0) & (np.arange(H)[:, None] < y0 + int(ch * 0.30))
 
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     mean = rgb.mean(axis=2)
@@ -191,13 +191,14 @@ def hat_mask(rgb: np.ndarray, alpha: np.ndarray, ay_hint: int) -> np.ndarray:
 
 
 def remove_hat_and_place_head(frame: Image.Image, head: Image.Image, meta: dict) -> Image.Image:
-    """Xóa nón lá + dán đầu KH trẻ vào đúng vị trí đầu."""
+    """Chỉ xóa nón lá; neo đầu KH vào đỉnh THÂN (bỏ qua mũi kiếm/vũ khí)."""
     fr = frame.convert('RGBA')
     a = np.asarray(fr).astype(np.float32)
     rgb, alpha = a[..., :3], a[..., 3]
     H, W = rgb.shape[:2]
 
-    ys, xs = np.where(alpha > 40)
+    opaque = alpha > 40
+    ys, xs = np.where(opaque)
     if len(xs) == 0:
         return fr
 
@@ -205,32 +206,36 @@ def remove_hat_and_place_head(frame: Image.Image, head: Image.Image, meta: dict)
     ch = max(1, y1 - y0 + 1)
     mask = hat_mask(rgb, alpha, meta.get('ay', H - 2))
 
-    # tóc bạc / vùng sáng xám chỉ trên đỉnh (không phải áo)
     mean = rgb.mean(axis=2)
     chroma = rgb.max(axis=2) - rgb.min(axis=2)
     white_top = (
-        (np.arange(H)[:, None] >= y0) & (np.arange(H)[:, None] < y0 + int(ch * 0.32))
-        & (mean > 160) & (chroma < 38) & (alpha > 30)
+        (np.arange(H)[:, None] >= y0) & (np.arange(H)[:, None] < y0 + int(ch * 0.28))
+        & (mean > 165) & (chroma < 36) & (alpha > 30)
     )
     clear = mask | white_top
-
-    out = rgb.copy()
     out_a = alpha.copy()
     out_a[clear] = 0
-    base = Image.fromarray(np.dstack([out.astype(np.uint8), out_a.astype(np.uint8)]), 'RGBA')
+    base = Image.fromarray(
+        np.dstack([rgb.astype(np.uint8), out_a.astype(np.uint8)]), 'RGBA'
+    )
 
-    body = np.asarray(base)
-    bys, bxs = np.where(body[..., 3] > 40)
-    if len(bxs) == 0:
-        # nếu xóa hết (hiếm) — fallback gốc + đầu
-        base = fr.copy()
-        bys, bxs = ys, xs
-        y0 = int(bys.min())
+    # Đỉnh thân = hàng đầu có bề ngang đủ rộng (không phải mũi kiếm mỏng)
+    row_w = opaque.sum(axis=1)
+    body_rows = np.where(row_w >= 8)[0]
+    if len(body_rows) == 0:
+        body_rows = np.where(row_w >= 4)[0]
+    if len(body_rows) == 0:
+        body_top = y0
+        cx = int((int(xs.min()) + int(xs.max())) / 2)
     else:
-        y0 = int(bys.min())
-    cx = int((int(bxs.min()) + int(bxs.max())) / 2)
+        body_top = int(body_rows[0])
+        # tâm ngang tại vài hàng gần đỉnh thân
+        band = opaque[body_top:min(H, body_top + 6)]
+        bxs = np.where(band.any(axis=0))[0]
+        cx = int((int(bxs.min()) + int(bxs.max())) / 2) if len(bxs) else W // 2
+
     hx = cx - head.width // 2
-    hy = max(0, y0 - head.height + 10)
+    hy = max(0, body_top - head.height + 12)
     base.alpha_composite(head, (hx, hy))
     return base
 
