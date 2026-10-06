@@ -1,0 +1,97 @@
+{
+  "stem": "enemy107",
+  "type": "enemy",
+  "path": "stems/enemy107/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy107_st.webp",
+      "bytes": 87990,
+      "n": 12,
+      "d": 8,
+      "w": 34,
+      "h": 50,
+      "ax": 17,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy107_run.webp",
+      "bytes": 98600,
+      "n": 15,
+      "d": 8,
+      "w": 30,
+      "h": 49,
+      "ax": 15,
+      "ay": 46,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy107_at.webp",
+      "bytes": 50454,
+      "n": 6,
+      "d": 8,
+      "w": 47,
+      "h": 56,
+      "ax": 23,
+      "ay": 50,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy107_hurt.webp",
+      "bytes": 31592,
+      "n": 4,
+      "d": 8,
+      "w": 53,
+      "h": 56,
+      "ax": 26,
+      "ay": 50,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy107_die.webp",
+      "bytes": 44250,
+      "n": 6,
+      "d": 8,
+      "w": 127,
+      "h": 73,
+      "ax": 64,
+      "ay": 50,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy107.png",
+  "mons": [
+    {
+      "id": 592,
+      "n": "Xích Chưởng"
+    },
+    {
+      "id": 851,
+      "n": "Tiểu Boss cấp 20"
+    }
+  ],
+  "zones": [
+    {
+      "id": 3,
+      "n": "Thiên Trường",
+      "lo": 10,
+      "hi": 20
+    },
+    {
+      "id": 320,
+      "n": "Tam Đảo",
+      "lo": 140,
+      "hi": 150
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

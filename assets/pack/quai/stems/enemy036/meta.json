@@ -1,0 +1,97 @@
+{
+  "stem": "enemy036",
+  "type": "enemy",
+  "path": "stems/enemy036/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy036_st.webp",
+      "bytes": 108094,
+      "n": 10,
+      "d": 8,
+      "w": 82,
+      "h": 54,
+      "ax": 41,
+      "ay": 51,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy036_run.webp",
+      "bytes": 77758,
+      "n": 7,
+      "d": 8,
+      "w": 68,
+      "h": 72,
+      "ax": 34,
+      "ay": 71,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy036_at.webp",
+      "bytes": 91830,
+      "n": 8,
+      "d": 8,
+      "w": 120,
+      "h": 102,
+      "ax": 60,
+      "ay": 80,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy036_hurt.webp",
+      "bytes": 36924,
+      "n": 3,
+      "d": 8,
+      "w": 79,
+      "h": 89,
+      "ax": 40,
+      "ay": 86,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy036_die.webp",
+      "bytes": 89222,
+      "n": 8,
+      "d": 8,
+      "w": 96,
+      "h": 92,
+      "ax": 48,
+      "ay": 73,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy036.png",
+  "mons": [
+    {
+      "id": 596,
+      "n": "Hàn Thương"
+    },
+    {
+      "id": 708,
+      "n": "Lãnh Thương"
+    }
+  ],
+  "zones": [
+    {
+      "id": 322,
+      "n": "Ba Vì Sơn",
+      "lo": 150,
+      "hi": 160
+    },
+    {
+      "id": 336,
+      "n": "Bến Phong Lăng",
+      "lo": 160,
+      "hi": 170
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

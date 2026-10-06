@@ -1,0 +1,80 @@
+{
+  "stem": "ani045",
+  "type": "ani",
+  "path": "stems/ani045/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani045_st.webp",
+      "bytes": 24924,
+      "n": 10,
+      "d": 8,
+      "w": 25,
+      "h": 22,
+      "ax": 13,
+      "ay": 21,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani045_run.webp",
+      "bytes": 12560,
+      "n": 5,
+      "d": 8,
+      "w": 28,
+      "h": 23,
+      "ax": 14,
+      "ay": 20,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani045_at.webp",
+      "bytes": 15990,
+      "n": 6,
+      "d": 8,
+      "w": 35,
+      "h": 28,
+      "ax": 17,
+      "ay": 21,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani045_hurt.webp",
+      "bytes": 8004,
+      "n": 3,
+      "d": 8,
+      "w": 32,
+      "h": 25,
+      "ax": 16,
+      "ay": 20,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani045_die.webp",
+      "bytes": 15790,
+      "n": 6,
+      "d": 8,
+      "w": 24,
+      "h": 61,
+      "ax": 12,
+      "ay": 20,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani045.png",
+  "mons": [
+    {
+      "id": 27,
+      "n": "Dơi chúa"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

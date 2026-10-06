@@ -1,0 +1,87 @@
+{
+  "stem": "enemy050",
+  "type": "enemy",
+  "path": "stems/enemy050/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy050_st.webp",
+      "bytes": 128166,
+      "n": 15,
+      "d": 8,
+      "w": 52,
+      "h": 48,
+      "ax": 26,
+      "ay": 46,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy050_run.webp",
+      "bytes": 62464,
+      "n": 7,
+      "d": 8,
+      "w": 67,
+      "h": 47,
+      "ax": 34,
+      "ay": 46,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy050_at.webp",
+      "bytes": 75332,
+      "n": 8,
+      "d": 8,
+      "w": 86,
+      "h": 53,
+      "ax": 43,
+      "ay": 51,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy050_hurt.webp",
+      "bytes": 28650,
+      "n": 3,
+      "d": 8,
+      "w": 59,
+      "h": 50,
+      "ax": 29,
+      "ay": 46,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy050_die.webp",
+      "bytes": 59438,
+      "n": 6,
+      "d": 8,
+      "w": 83,
+      "h": 80,
+      "ax": 41,
+      "ay": 66,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy050.png",
+  "mons": [
+    {
+      "id": 716,
+      "n": "Hạ Hầu Phục"
+    }
+  ],
+  "zones": [
+    {
+      "id": 320,
+      "n": "Tam Đảo",
+      "lo": 140,
+      "hi": 150
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

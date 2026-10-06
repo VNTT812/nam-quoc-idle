@@ -1,0 +1,84 @@
+{
+  "stem": "enemy205",
+  "type": "enemy",
+  "path": "stems/enemy205/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy205_st.webp",
+      "bytes": 154832,
+      "n": 10,
+      "d": 8,
+      "w": 70,
+      "h": 53,
+      "ax": -69,
+      "ay": -73.2,
+      "ms": 170
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy205_run.webp",
+      "bytes": 108740,
+      "n": 8,
+      "d": 8,
+      "w": 57,
+      "h": 61,
+      "ax": -67.2,
+      "ay": -63.6,
+      "ms": 75
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy205_at.webp",
+      "bytes": 100406,
+      "n": 6,
+      "d": 8,
+      "w": 83,
+      "h": 62,
+      "ax": -61.8,
+      "ay": -67.8,
+      "ms": 70
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy205_hurt.webp",
+      "bytes": 69188,
+      "n": 4,
+      "d": 8,
+      "w": 72,
+      "h": 61,
+      "ax": -67.2,
+      "ay": -67.2,
+      "ms": 82
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy205_die.webp",
+      "bytes": 99140,
+      "n": 5,
+      "d": 8,
+      "w": 154,
+      "h": 96,
+      "ax": -22.8,
+      "ay": -55.8,
+      "ms": 104
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy205.png",
+  "mons": [
+    {
+      "id": 674,
+      "n": "Thủy Tặc"
+    },
+    {
+      "id": 711,
+      "n": "Phục Ba Kim sơn đảo"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

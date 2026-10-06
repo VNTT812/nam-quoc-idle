@@ -1,0 +1,87 @@
+{
+  "stem": "enemy070",
+  "type": "enemy",
+  "path": "stems/enemy070/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy070_st.webp",
+      "bytes": 108414,
+      "n": 12,
+      "d": 8,
+      "w": 52,
+      "h": 47,
+      "ax": 26,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy070_run.webp",
+      "bytes": 60678,
+      "n": 7,
+      "d": 8,
+      "w": 46,
+      "h": 48,
+      "ax": 23,
+      "ay": 47,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy070_at.webp",
+      "bytes": 83034,
+      "n": 8,
+      "d": 8,
+      "w": 85,
+      "h": 71,
+      "ax": 43,
+      "ay": 65,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy070_hurt.webp",
+      "bytes": 28002,
+      "n": 3,
+      "d": 8,
+      "w": 52,
+      "h": 47,
+      "ax": 26,
+      "ay": 45,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy070_die.webp",
+      "bytes": 76442,
+      "n": 8,
+      "d": 8,
+      "w": 100,
+      "h": 67,
+      "ax": 50,
+      "ay": 47,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy070.png",
+  "mons": [
+    {
+      "id": 856,
+      "n": "Tiểu Boss cấp 70"
+    }
+  ],
+  "zones": [
+    {
+      "id": 56,
+      "n": "Vân Đồn",
+      "lo": 90,
+      "hi": 100
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

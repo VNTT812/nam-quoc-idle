@@ -1,0 +1,97 @@
+{
+  "stem": "enemy147",
+  "type": "enemy",
+  "path": "stems/enemy147/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy147_st.webp",
+      "bytes": 103826,
+      "n": 12,
+      "d": 8,
+      "w": 48,
+      "h": 46,
+      "ax": 24,
+      "ay": 44,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy147_run.webp",
+      "bytes": 86268,
+      "n": 8,
+      "d": 8,
+      "w": 41,
+      "h": 53,
+      "ax": 21,
+      "ay": 50,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy147_at.webp",
+      "bytes": 68470,
+      "n": 7,
+      "d": 8,
+      "w": 78,
+      "h": 53,
+      "ax": 39,
+      "ay": 52,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy147_hurt.webp",
+      "bytes": 45492,
+      "n": 3,
+      "d": 8,
+      "w": 50,
+      "h": 48,
+      "ax": 25,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy147_die.webp",
+      "bytes": 54258,
+      "n": 8,
+      "d": 8,
+      "w": 138,
+      "h": 85,
+      "ax": 69,
+      "ay": 55,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy147.png",
+  "mons": [
+    {
+      "id": 701,
+      "n": "Nguyễn Minh Viễn"
+    },
+    {
+      "id": 709,
+      "n": "Liệt Không Mạc Bắc Thảo Nguyên"
+    }
+  ],
+  "zones": [
+    {
+      "id": 336,
+      "n": "Bến Phong Lăng",
+      "lo": 160,
+      "hi": 170
+    },
+    {
+      "id": 340,
+      "n": "Mạc Cao Quật",
+      "lo": 170,
+      "hi": 180
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

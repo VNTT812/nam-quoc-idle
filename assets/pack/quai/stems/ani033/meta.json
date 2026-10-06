@@ -1,0 +1,80 @@
+{
+  "stem": "ani033",
+  "type": "ani",
+  "path": "stems/ani033/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani033_st.webp",
+      "bytes": 145742,
+      "n": 12,
+      "d": 8,
+      "w": 115,
+      "h": 58,
+      "ax": 58,
+      "ay": 55,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani033_run.webp",
+      "bytes": 66812,
+      "n": 5,
+      "d": 8,
+      "w": 114,
+      "h": 57,
+      "ax": 57,
+      "ay": 54,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani033_at.webp",
+      "bytes": 95406,
+      "n": 7,
+      "d": 8,
+      "w": 116,
+      "h": 76,
+      "ax": 58,
+      "ay": 72,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani033_hurt.webp",
+      "bytes": 39618,
+      "n": 3,
+      "d": 8,
+      "w": 119,
+      "h": 59,
+      "ax": 59,
+      "ay": 55,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani033_die.webp",
+      "bytes": 83092,
+      "n": 6,
+      "d": 8,
+      "w": 116,
+      "h": 80,
+      "ax": 58,
+      "ay": 77,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani033.png",
+  "mons": [
+    {
+      "id": 18,
+      "n": "Cá sấu"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "ani025",
+  "type": "ani",
+  "path": "stems/ani025/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani025_st.webp",
+      "bytes": 59562,
+      "n": 6,
+      "d": 8,
+      "w": 73,
+      "h": 47,
+      "ax": 37,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani025_run.webp",
+      "bytes": 80768,
+      "n": 8,
+      "d": 8,
+      "w": 74,
+      "h": 50,
+      "ax": 37,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani025_at.webp",
+      "bytes": 62340,
+      "n": 6,
+      "d": 8,
+      "w": 98,
+      "h": 75,
+      "ax": 49,
+      "ay": 68,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani025_hurt.webp",
+      "bytes": 29942,
+      "n": 3,
+      "d": 8,
+      "w": 73,
+      "h": 47,
+      "ax": 37,
+      "ay": 45,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani025_die.webp",
+      "bytes": 57888,
+      "n": 6,
+      "d": 8,
+      "w": 72,
+      "h": 50,
+      "ax": 36,
+      "ay": 43,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani025.png",
+  "mons": [
+    {
+      "id": 15,
+      "n": "Gấu nâu"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

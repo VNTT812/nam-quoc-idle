@@ -1,0 +1,87 @@
+{
+  "stem": "boss006",
+  "type": "boss",
+  "path": "stems/boss006/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/boss006_st.webp",
+      "bytes": 86060,
+      "n": 8,
+      "d": 8,
+      "w": 46,
+      "h": 53,
+      "ax": 15,
+      "ay": 50,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/boss006_run.webp",
+      "bytes": 40332,
+      "n": 4,
+      "d": 8,
+      "w": 42,
+      "h": 51,
+      "ax": 14,
+      "ay": 50,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/boss006_at.webp",
+      "bytes": 96728,
+      "n": 8,
+      "d": 8,
+      "w": 65,
+      "h": 56,
+      "ax": 25,
+      "ay": 50,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/boss006_hurt.webp",
+      "bytes": 45196,
+      "n": 4,
+      "d": 8,
+      "w": 54,
+      "h": 55,
+      "ax": 19,
+      "ay": 50,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/boss006_die.webp",
+      "bytes": 87438,
+      "n": 8,
+      "d": 8,
+      "w": 95,
+      "h": 70,
+      "ax": 47,
+      "ay": 50,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/boss006.png",
+  "mons": [
+    {
+      "id": 602,
+      "n": "Phiến Khách"
+    }
+  ],
+  "zones": [
+    {
+      "id": 336,
+      "n": "Bến Phong Lăng",
+      "lo": 160,
+      "hi": 170
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

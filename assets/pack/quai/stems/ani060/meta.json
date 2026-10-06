@@ -1,0 +1,80 @@
+{
+  "stem": "ani060",
+  "type": "ani",
+  "path": "stems/ani060/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani060_st.webp",
+      "bytes": 30520,
+      "n": 12,
+      "d": 8,
+      "w": 16,
+      "h": 17,
+      "ax": 8,
+      "ay": 16,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani060_run.webp",
+      "bytes": 23584,
+      "n": 6,
+      "d": 8,
+      "w": 32,
+      "h": 31,
+      "ax": 16,
+      "ay": 29,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani060_at.webp",
+      "bytes": 23996,
+      "n": 6,
+      "d": 8,
+      "w": 58,
+      "h": 35,
+      "ax": 29,
+      "ay": 33,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani060_hurt.webp",
+      "bytes": 12974,
+      "n": 4,
+      "d": 8,
+      "w": 20,
+      "h": 17,
+      "ax": 10,
+      "ay": 17,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani060_die.webp",
+      "bytes": 27566,
+      "n": 7,
+      "d": 8,
+      "w": 36,
+      "h": 22,
+      "ax": 18,
+      "ay": 16,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani060.png",
+  "mons": [
+    {
+      "id": 41,
+      "n": "Cóc"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "enemy083",
+  "type": "enemy",
+  "path": "stems/enemy083/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy083_st.webp",
+      "bytes": 111934,
+      "n": 12,
+      "d": 8,
+      "w": 53,
+      "h": 55,
+      "ax": 26,
+      "ay": 52,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy083_run.webp",
+      "bytes": 68364,
+      "n": 7,
+      "d": 8,
+      "w": 50,
+      "h": 54,
+      "ax": 25,
+      "ay": 52,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy083_at.webp",
+      "bytes": 92122,
+      "n": 8,
+      "d": 8,
+      "w": 101,
+      "h": 82,
+      "ax": 50,
+      "ay": 76,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy083_hurt.webp",
+      "bytes": 27252,
+      "n": 3,
+      "d": 8,
+      "w": 54,
+      "h": 55,
+      "ax": 27,
+      "ay": 52,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy083_die.webp",
+      "bytes": 71328,
+      "n": 8,
+      "d": 8,
+      "w": 124,
+      "h": 76,
+      "ax": 62,
+      "ay": 58,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy083.png",
+  "mons": [
+    {
+      "id": 703,
+      "n": "Phi Sa"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "ani037",
+  "type": "ani",
+  "path": "stems/ani037/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani037_st.webp",
+      "bytes": 59740,
+      "n": 10,
+      "d": 8,
+      "w": 60,
+      "h": 41,
+      "ax": 30,
+      "ay": 39,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani037_run.webp",
+      "bytes": 53856,
+      "n": 7,
+      "d": 8,
+      "w": 112,
+      "h": 54,
+      "ax": 56,
+      "ay": 39,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani037_at.webp",
+      "bytes": 51670,
+      "n": 7,
+      "d": 8,
+      "w": 61,
+      "h": 49,
+      "ax": 31,
+      "ay": 46,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani037_hurt.webp",
+      "bytes": 26356,
+      "n": 4,
+      "d": 8,
+      "w": 60,
+      "h": 41,
+      "ax": 30,
+      "ay": 38,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani037_die.webp",
+      "bytes": 45172,
+      "n": 6,
+      "d": 8,
+      "w": 60,
+      "h": 47,
+      "ax": 30,
+      "ay": 45,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani037.png",
+  "mons": [
+    {
+      "id": 20,
+      "n": "Nhãn Kính Mãng xà"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,87 @@
+{
+  "stem": "enemy124",
+  "type": "enemy",
+  "path": "stems/enemy124/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy124_st.webp",
+      "bytes": 46674,
+      "n": 6,
+      "d": 8,
+      "w": 25,
+      "h": 49,
+      "ax": 13,
+      "ay": 47,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy124_run.webp",
+      "bytes": 112724,
+      "n": 15,
+      "d": 8,
+      "w": 23,
+      "h": 47,
+      "ax": 11,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy124_at.webp",
+      "bytes": 66250,
+      "n": 8,
+      "d": 8,
+      "w": 35,
+      "h": 55,
+      "ax": 17,
+      "ay": 53,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy124_hurt.webp",
+      "bytes": 33860,
+      "n": 4,
+      "d": 8,
+      "w": 36,
+      "h": 51,
+      "ax": 18,
+      "ay": 50,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy124_die.webp",
+      "bytes": 68848,
+      "n": 9,
+      "d": 8,
+      "w": 86,
+      "h": 65,
+      "ax": 43,
+      "ay": 49,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy124.png",
+  "mons": [
+    {
+      "id": 143,
+      "n": "Đông Bắc sơn tặc đầu lĩnh"
+    }
+  ],
+  "zones": [
+    {
+      "id": 90,
+      "n": "Phả Lại",
+      "lo": 60,
+      "hi": 70
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "enemy139",
+  "type": "enemy",
+  "path": "stems/enemy139/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy139_st.webp",
+      "bytes": 33210,
+      "n": 6,
+      "d": 8,
+      "w": 18,
+      "h": 43,
+      "ax": 9,
+      "ay": 41,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy139_run.webp",
+      "bytes": 57360,
+      "n": 8,
+      "d": 8,
+      "w": 28,
+      "h": 44,
+      "ax": 14,
+      "ay": 41,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy139_at.webp",
+      "bytes": 71912,
+      "n": 10,
+      "d": 8,
+      "w": 60,
+      "h": 50,
+      "ax": 30,
+      "ay": 41,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy139_hurt.webp",
+      "bytes": 54506,
+      "n": 7,
+      "d": 8,
+      "w": 36,
+      "h": 44,
+      "ax": 18,
+      "ay": 41,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy139_die.webp",
+      "bytes": 57826,
+      "n": 8,
+      "d": 8,
+      "w": 59,
+      "h": 59,
+      "ax": 29,
+      "ay": 48,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy139.png",
+  "mons": [
+    {
+      "id": 158,
+      "n": "Đông Bắc sơn tặc 2"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

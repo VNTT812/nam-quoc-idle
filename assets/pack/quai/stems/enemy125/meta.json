@@ -1,0 +1,87 @@
+{
+  "stem": "enemy125",
+  "type": "enemy",
+  "path": "stems/enemy125/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy125_st.webp",
+      "bytes": 207660,
+      "n": 12,
+      "d": 8,
+      "w": 95,
+      "h": 66,
+      "ax": 41,
+      "ay": 63,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy125_run.webp",
+      "bytes": 134674,
+      "n": 8,
+      "d": 8,
+      "w": 92,
+      "h": 67,
+      "ax": 38,
+      "ay": 66,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy125_at.webp",
+      "bytes": 115920,
+      "n": 6,
+      "d": 8,
+      "w": 119,
+      "h": 99,
+      "ax": 42,
+      "ay": 94,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy125_hurt.webp",
+      "bytes": 70730,
+      "n": 4,
+      "d": 8,
+      "w": 94,
+      "h": 65,
+      "ax": 40,
+      "ay": 63,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy125_die.webp",
+      "bytes": 133932,
+      "n": 8,
+      "d": 8,
+      "w": 118,
+      "h": 79,
+      "ax": 57,
+      "ay": 64,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy125.png",
+  "mons": [
+    {
+      "id": 144,
+      "n": "Hoa Bắc sơn tặc đầu lĩnh"
+    }
+  ],
+  "zones": [
+    {
+      "id": 92,
+      "n": "An Bang",
+      "lo": 80,
+      "hi": 90
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

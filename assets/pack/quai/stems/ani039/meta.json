@@ -1,0 +1,91 @@
+{
+  "stem": "ani039",
+  "type": "ani",
+  "path": "stems/ani039/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani039_st.webp",
+      "bytes": 83622,
+      "n": 13,
+      "d": 8,
+      "w": 60,
+      "h": 33,
+      "ax": 30,
+      "ay": 31,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani039_run.webp",
+      "bytes": 47556,
+      "n": 7,
+      "d": 8,
+      "w": 82,
+      "h": 44,
+      "ax": 41,
+      "ay": 37,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani039_at.webp",
+      "bytes": 51358,
+      "n": 7,
+      "d": 8,
+      "w": 76,
+      "h": 49,
+      "ax": 38,
+      "ay": 44,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani039_hurt.webp",
+      "bytes": 26624,
+      "n": 4,
+      "d": 8,
+      "w": 60,
+      "h": 36,
+      "ax": 30,
+      "ay": 34,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani039_die.webp",
+      "bytes": 39960,
+      "n": 6,
+      "d": 8,
+      "w": 60,
+      "h": 41,
+      "ax": 30,
+      "ay": 39,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani039.png",
+  "mons": [
+    {
+      "id": 22,
+      "n": "Kim Hoàn Mãng Xà"
+    },
+    {
+      "id": 556,
+      "n": "Xích Luyện Xà"
+    }
+  ],
+  "zones": [
+    {
+      "id": 224,
+      "n": "Trường Yên",
+      "lo": 120,
+      "hi": 130
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

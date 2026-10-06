@@ -1,0 +1,103 @@
+{
+  "stem": "ani041",
+  "type": "ani",
+  "path": "stems/ani041/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani041_st.webp",
+      "bytes": 71948,
+      "n": 12,
+      "d": 8,
+      "w": 49,
+      "h": 29,
+      "ax": 25,
+      "ay": 28,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani041_run.webp",
+      "bytes": 24040,
+      "n": 4,
+      "d": 8,
+      "w": 49,
+      "h": 32,
+      "ax": 25,
+      "ay": 33,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani041_at.webp",
+      "bytes": 42656,
+      "n": 7,
+      "d": 8,
+      "w": 56,
+      "h": 62,
+      "ax": 28,
+      "ay": 42,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani041_hurt.webp",
+      "bytes": 24540,
+      "n": 4,
+      "d": 8,
+      "w": 58,
+      "h": 45,
+      "ax": 29,
+      "ay": 42,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani041_die.webp",
+      "bytes": 42536,
+      "n": 7,
+      "d": 8,
+      "w": 60,
+      "h": 126,
+      "ax": 30,
+      "ay": 47,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani041.png",
+  "mons": [
+    {
+      "id": 24,
+      "n": "Kim Điêu"
+    },
+    {
+      "id": 557,
+      "n": "Kên đất"
+    }
+  ],
+  "zones": [
+    {
+      "id": 21,
+      "n": "Côn Sơn",
+      "lo": 40,
+      "hi": 50
+    },
+    {
+      "id": 56,
+      "n": "Vân Đồn",
+      "lo": 90,
+      "hi": 100
+    },
+    {
+      "id": 224,
+      "n": "Trường Yên",
+      "lo": 120,
+      "hi": 130
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "ani002",
+  "type": "ani",
+  "path": "stems/ani002/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani002_st.webp",
+      "bytes": 133126,
+      "n": 12,
+      "d": 8,
+      "w": 74,
+      "h": 50,
+      "ax": 37,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani002_run.webp",
+      "bytes": 92246,
+      "n": 8,
+      "d": 8,
+      "w": 77,
+      "h": 50,
+      "ax": 38,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani002_at.webp",
+      "bytes": 83560,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 76,
+      "ax": 47,
+      "ay": 70,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani002_hurt.webp",
+      "bytes": 34358,
+      "n": 3,
+      "d": 8,
+      "w": 85,
+      "h": 50,
+      "ax": 43,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani002_die.webp",
+      "bytes": 77376,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 59,
+      "ax": 47,
+      "ay": 48,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani002.png",
+  "mons": [
+    {
+      "id": 1,
+      "n": "Hoa Nam hổ"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "enemy143",
+  "type": "enemy",
+  "path": "stems/enemy143/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy143_st.webp",
+      "bytes": 69482,
+      "n": 8,
+      "d": 8,
+      "w": 58,
+      "h": 47,
+      "ax": 29,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy143_run.webp",
+      "bytes": 73256,
+      "n": 8,
+      "d": 8,
+      "w": 61,
+      "h": 53,
+      "ax": 31,
+      "ay": 50,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy143_at.webp",
+      "bytes": 97444,
+      "n": 10,
+      "d": 8,
+      "w": 107,
+      "h": 62,
+      "ax": 53,
+      "ay": 56,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy143_hurt.webp",
+      "bytes": 26488,
+      "n": 3,
+      "d": 8,
+      "w": 56,
+      "h": 49,
+      "ax": 28,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy143_die.webp",
+      "bytes": 64670,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 73,
+      "ax": 47,
+      "ay": 54,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy143.png",
+  "mons": [
+    {
+      "id": 162,
+      "n": "Đoản Kích"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

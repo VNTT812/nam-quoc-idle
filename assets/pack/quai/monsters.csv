@@ -1,0 +1,120 @@
+id,name,stem,type,zones,pack,complete
+0,Đông Bắc hổ,ani001,ani,,stems/ani001/,True
+1,Hoa Nam hổ,ani002,ani,,stems/ani002/,True
+2,Bạch Hổ,ani003,ani,Bạch Đằng Giang,stems/ani003/,True
+3,Kim Tiền báo,ani005,ani,,stems/ani005/,True
+4,Báo trắng,ani006,ani,Bạch Đằng Giang,stems/ani006/,True
+5,Sói xám,ani009,ani,Thiên Trường,stems/ani009/,True
+6,Sói đỏ,ani010,ani,Thiên Trường,stems/ani010/,True
+7,Sói xanh,ani011,ani,Thiên Trường; Chí Linh; Phả Lại,stems/ani011/,True
+8,Sói tuyết,ani012,ani,Chí Linh; Phả Lại,stems/ani012/,True
+9,Hồ ly,ani013,ani,,stems/ani013/,True
+10,Hỏa Hồ,ani015,ani,Chí Linh; Phả Lại; Đông Triều,stems/ani015/,True
+11,Heo rừng,ani018,ani,Yên Tử Sơn; Long Hưng; Tức Mặc,stems/ani018/,True
+12,Nhím,ani019,ani,Yên Tử Sơn; Long Hưng; Tức Mặc,stems/ani019/,True
+13,Đại Tượng,ani021,ani,,stems/ani021/,True
+14,Voi Hoàng hà,ani024,ani,,stems/ani024/,True
+15,Gấu nâu,ani025,ani,,stems/ani025/,True
+16,Gấu đen,ani026,ani,,stems/ani026/,True
+17,Trâu rừng,ani029,ani,An Bang,stems/ani029/,True
+18,Cá sấu,ani033,ani,,stems/ani033/,True
+19,Thằn lằn đỏ,ani036,ani,,stems/ani036/,True
+20,Nhãn Kính Mãng xà,ani037,ani,,stems/ani037/,True
+21,Rắn xanh,ani038,ani,,stems/ani038/,True
+22,Kim Hoàn Mãng Xà,ani039,ani,,stems/ani039/,True
+23,Xích Luyện Xà,ani040,ani,,stems/ani040/,True
+24,Kim Điêu,ani041,ani,Côn Sơn; Vân Đồn,stems/ani041/,True
+25,Thương ưng,ani042,ani,Côn Sơn; Đông Triều,stems/ani042/,True
+26,Kền Kền,ani043,ani,Côn Sơn; Đông Triều; Vân Đồn; Bạch Đằng Giang,stems/ani043/,True
+27,Dơi chúa,ani045,ani,,stems/ani045/,True
+28,Dơi chúa đỏ,ani046,ani,,stems/ani046/,True
+29,Dơi Dong,ani047,ani,,stems/ani047/,True
+30,Dơi hút máu,ani048,ani,,stems/ani048/,True
+31,Kim Miêu,ani049,ani,,stems/ani049/,True
+32,Xá Lị,ani050,ani,,stems/ani050/,True
+33,Hoán hùng,ani051,ani,Yên Tử Sơn; Long Hưng,stems/ani051/,True
+34,Linh Miêu,ani052,ani,Yên Tử Sơn; Đạm Thủy Cốc,stems/ani052/,True
+35,Tàng Vực hầu,ani053,ani,,stems/ani053/,True
+36,Khỉ xám,ani054,ani,An Bang,stems/ani054/,True
+37,Hắc Diệp Hầu,ani055,ani,An Bang; Vân Đồn,stems/ani055/,True
+38,Kim Tơ Hầu,ani056,ani,Đạm Thủy Cốc,stems/ani056/,True
+39,Sài,ani058,ani,,stems/ani058/,True
+40,Tuyết Quái,ani059,ani,,stems/ani059/,True
+41,Cóc,ani060,ani,,stems/ani060/,True
+42,Hươu đốm,ani061,ani,Đạm Thủy Cốc,stems/ani061/,True
+43,Heo trắng,ani063,ani,,stems/ani063/,True
+45,Nhện,ani066,ani,,stems/ani066/,True
+46,Rết,ani067,ani,,stems/ani067/,True
+140,Khoái Thối,enemy121,enemy,,stems/enemy121/,True
+141,Tây Nam sơn tặc đầu lĩnh,enemy122,enemy,Yên Tử Sơn,stems/enemy122/,True
+142,Giang Nam sơn tặc đầu lĩnh,enemy123,enemy,Tức Mặc,stems/enemy123/,True
+143,Đông Bắc sơn tặc đầu lĩnh,enemy124,enemy,Phả Lại,stems/enemy124/,True
+144,Hoa Bắc sơn tặc đầu lĩnh,enemy125,enemy,An Bang,stems/enemy125/,True
+145,Nam bộ sơn tặc đầu lĩnh,enemy126,enemy,Trường Yên,stems/enemy126/,True
+146,Đoạt Mệnh Liêm,enemy127,enemy,,stems/enemy127/,True
+147,Đao khách,enemy128,enemy,,stems/enemy128/,True
+148,Báo đốm,enemy129,enemy,,stems/enemy129/,True
+149,Trường Thương,enemy130,enemy,Động Băng Hà; Động Dương Trung,stems/enemy130/,True
+150,Thanh Mi,enemy131,enemy,,stems/enemy131/,True
+151,Mãng Hán,enemy132,enemy,,stems/enemy132/,True
+152,Tây Nam sơn tặc 2,enemy133,enemy,,stems/enemy133/,True
+153,Giang Nam sơn tặc 1,enemy134,enemy,,stems/enemy134/,True
+154,Lưu Lương,enemy135,enemy,,stems/enemy135/,True
+155,Hắc Cân,enemy136,enemy,,stems/enemy136/,True
+156,Ảnh Côn,enemy137,enemy,,stems/enemy137/,True
+157,Đông Bắc sơn tặc 1,enemy138,enemy,,stems/enemy138/,True
+158,Đông Bắc sơn tặc 2,enemy139,enemy,,stems/enemy139/,True
+159,Hoa Bắc sơn tặc 1,enemy140,enemy,Động Băng Hà; Động Dương Trung,stems/enemy140/,True
+160,Hoa Bắc sơn tặc 2,enemy141,enemy,,stems/enemy141/,True
+161,Thiết Trảo,enemy142,enemy,,stems/enemy142/,True
+162,Đoản Kích,enemy143,enemy,,stems/enemy143/,True
+163,sơn tặc 01,enemy144,enemy,,stems/enemy144/,True
+165,sơn tặc 03,enemy146,enemy,,stems/enemy146/,True
+167,sơn tặc 05,enemy148,enemy,,stems/enemy148/,True
+168,sơn tặc 06,enemy149,enemy,,stems/enemy149/,True
+169,sơn tặc 07,enemy150,enemy,Động Băng Hà; Động Dương Trung,stems/enemy150/,True
+556,Xích Luyện Xà,ani039,ani,Trường Yên,stems/ani039/,True
+557,Kên đất,ani041,ani,Trường Yên,stems/ani041/,True
+558,Bọ cạp,ani065,ani,Trường Yên,stems/ani065/,True
+588,Bôn Lôi,enemy067,enemy,Ải Chi Lăng,stems/enemy067/,True
+589,Ngân Nha,enemy023,enemy,Ải Chi Lăng,stems/enemy023/,True
+590,Đông Bắc hổ,ani001,ani,Tam Đảo,stems/ani001/,True
+591,Độc Bộ,enemy082,enemy,Tam Đảo,stems/enemy082/,True
+592,Xích Chưởng,enemy107,enemy,Tam Đảo,stems/enemy107/,True
+593,Tuyết ảnh,enemy141,enemy,Tam Đảo,stems/enemy141/,True
+594,Đao Trảm,enemy128,enemy,Ba Vì Sơn,stems/enemy128/,True
+595,Lạc Quang,enemy021,enemy,Ba Vì Sơn,stems/enemy021/,True
+596,Hàn Thương,enemy036,enemy,Ba Vì Sơn,stems/enemy036/,True
+597,Đoạt Phách,enemy029,enemy,Ba Vì Sơn,stems/enemy029/,True
+598,Sương Đao,enemy024,enemy,,stems/enemy024/,True
+599,Lãnh Cung,enemy028,enemy,,stems/enemy028/,True
+600,Giáng Chùy,enemy086,enemy,,stems/enemy086/,True
+601,Sãn Vũ,enemy040,enemy,,stems/enemy040/,True
+602,Phiến Khách,boss006,boss,Bến Phong Lăng,stems/boss006/,True
+674,Thủy Tặc,enemy205,enemy,,stems/enemy205/,True
+675,Hà Hoa Đạo,enemy059,enemy,Bến Phong Lăng,stems/enemy059/,True
+699,Thi Nghi Sinh,enemy003,enemy,Động Dương Trung,stems/enemy003/,True
+700,Chính Võ Sĩ,enemy076,enemy,Động Băng Hà,stems/enemy076/,True
+701,Nguyễn Minh Viễn,enemy147,enemy,Mạc Cao Quật,stems/enemy147/,True
+703,Phi Sa,enemy083,enemy,,stems/enemy083/,True
+704,Tẩu Thạch,enemy078,enemy,Bến Phong Lăng; Mạc Cao Quật,stems/enemy078/,True
+705,Sa Đạo,enemy134,enemy,Mạc Cao Quật,stems/enemy134/,True
+706,Mạc Tặc,enemy129,enemy,Bến Phong Lăng; Mạc Cao Quật,stems/enemy129/,True
+707,Thần Tý,enemy028,enemy,Bến Phong Lăng; Mạc Cao Quật,stems/enemy028/,True
+708,Lãnh Thương,enemy036,enemy,Bến Phong Lăng,stems/enemy036/,True
+709,Liệt Không Mạc Bắc Thảo Nguyên,enemy147,enemy,Bến Phong Lăng,stems/enemy147/,True
+710,Kinh Phong Mạc Bắc Thảo Nguyên,enemy024,enemy,,stems/enemy024/,True
+711,Phục Ba Kim sơn đảo,enemy205,enemy,,stems/enemy205/,True
+712,Phá Lang Kim sơn đảo,enemy048,enemy,,stems/enemy048/,True
+713,Thừa Phong Kim sơn đảo,enemy069,enemy,,stems/enemy069/,True
+716,Hạ Hầu Phục,enemy050,enemy,Tam Đảo,stems/enemy050/,True
+717,Tiếu Vô Thường,enemy051,enemy,Ba Vì Sơn,stems/enemy051/,True
+720,Lục Phi,enemy089,enemy,Ải Chi Lăng,stems/enemy089/,True
+851,Tiểu Boss cấp 20,enemy107,enemy,Thiên Trường,stems/enemy107/,True
+852,Tiểu Boss cấp 30,enemy081,enemy,Long Hưng,stems/enemy081/,True
+853,Tiểu Boss cấp 40,enemy109,enemy,Côn Sơn,stems/enemy109/,True
+854,Tiểu Boss cấp 50,enemy126,enemy,Chí Linh,stems/enemy126/,True
+855,Tiểu Boss cấp 60,enemy089,enemy,Đông Triều,stems/enemy089/,True
+856,Tiểu Boss cấp 70,enemy070,enemy,Vân Đồn,stems/enemy070/,True
+857,Tiểu Boss cấp 80,enemy048,enemy,Bạch Đằng Giang,stems/enemy048/,True
+858,Tiểu Boss cấp 90,enemy082,enemy,Đạm Thủy Cốc,stems/enemy082/,True

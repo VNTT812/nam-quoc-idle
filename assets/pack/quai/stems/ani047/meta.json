@@ -1,0 +1,80 @@
+{
+  "stem": "ani047",
+  "type": "ani",
+  "path": "stems/ani047/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani047_st.webp",
+      "bytes": 29438,
+      "n": 10,
+      "d": 8,
+      "w": 29,
+      "h": 25,
+      "ax": 14,
+      "ay": 24,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani047_run.webp",
+      "bytes": 14242,
+      "n": 5,
+      "d": 8,
+      "w": 31,
+      "h": 26,
+      "ax": 16,
+      "ay": 23,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani047_at.webp",
+      "bytes": 18162,
+      "n": 6,
+      "d": 8,
+      "w": 40,
+      "h": 33,
+      "ax": 20,
+      "ay": 25,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani047_hurt.webp",
+      "bytes": 9058,
+      "n": 3,
+      "d": 8,
+      "w": 37,
+      "h": 29,
+      "ax": 19,
+      "ay": 23,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani047_die.webp",
+      "bytes": 18084,
+      "n": 6,
+      "d": 8,
+      "w": 28,
+      "h": 69,
+      "ax": 14,
+      "ay": 22,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani047.png",
+  "mons": [
+    {
+      "id": 29,
+      "n": "Dơi Dong"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

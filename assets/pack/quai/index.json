@@ -1,0 +1,2465 @@
+{
+  "stems": {
+    "ani001": {
+      "type": "ani",
+      "mons": [
+        "Đông Bắc hổ",
+        "Đông Bắc hổ"
+      ],
+      "zones": [
+        "Tam Đảo"
+      ],
+      "complete": true,
+      "path": "stems/ani001/"
+    },
+    "ani002": {
+      "type": "ani",
+      "mons": [
+        "Hoa Nam hổ"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani002/"
+    },
+    "ani003": {
+      "type": "ani",
+      "mons": [
+        "Bạch Hổ"
+      ],
+      "zones": [
+        "Bạch Đằng Giang"
+      ],
+      "complete": true,
+      "path": "stems/ani003/"
+    },
+    "ani005": {
+      "type": "ani",
+      "mons": [
+        "Kim Tiền báo"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani005/"
+    },
+    "ani006": {
+      "type": "ani",
+      "mons": [
+        "Báo trắng"
+      ],
+      "zones": [
+        "Bạch Đằng Giang"
+      ],
+      "complete": true,
+      "path": "stems/ani006/"
+    },
+    "ani009": {
+      "type": "ani",
+      "mons": [
+        "Sói xám"
+      ],
+      "zones": [
+        "Thiên Trường"
+      ],
+      "complete": true,
+      "path": "stems/ani009/"
+    },
+    "ani010": {
+      "type": "ani",
+      "mons": [
+        "Sói đỏ"
+      ],
+      "zones": [
+        "Thiên Trường"
+      ],
+      "complete": true,
+      "path": "stems/ani010/"
+    },
+    "ani011": {
+      "type": "ani",
+      "mons": [
+        "Sói xanh"
+      ],
+      "zones": [
+        "Thiên Trường",
+        "Chí Linh",
+        "Phả Lại"
+      ],
+      "complete": true,
+      "path": "stems/ani011/"
+    },
+    "ani012": {
+      "type": "ani",
+      "mons": [
+        "Sói tuyết"
+      ],
+      "zones": [
+        "Chí Linh",
+        "Phả Lại"
+      ],
+      "complete": true,
+      "path": "stems/ani012/"
+    },
+    "ani013": {
+      "type": "ani",
+      "mons": [
+        "Hồ ly"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani013/"
+    },
+    "ani015": {
+      "type": "ani",
+      "mons": [
+        "Hỏa Hồ"
+      ],
+      "zones": [
+        "Chí Linh",
+        "Phả Lại",
+        "Đông Triều"
+      ],
+      "complete": true,
+      "path": "stems/ani015/"
+    },
+    "ani018": {
+      "type": "ani",
+      "mons": [
+        "Heo rừng"
+      ],
+      "zones": [
+        "Yên Tử Sơn",
+        "Long Hưng",
+        "Tức Mặc"
+      ],
+      "complete": true,
+      "path": "stems/ani018/"
+    },
+    "ani019": {
+      "type": "ani",
+      "mons": [
+        "Nhím"
+      ],
+      "zones": [
+        "Yên Tử Sơn",
+        "Long Hưng",
+        "Tức Mặc"
+      ],
+      "complete": true,
+      "path": "stems/ani019/"
+    },
+    "ani021": {
+      "type": "ani",
+      "mons": [
+        "Đại Tượng"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani021/"
+    },
+    "ani024": {
+      "type": "ani",
+      "mons": [
+        "Voi Hoàng hà"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani024/"
+    },
+    "ani025": {
+      "type": "ani",
+      "mons": [
+        "Gấu nâu"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani025/"
+    },
+    "ani026": {
+      "type": "ani",
+      "mons": [
+        "Gấu đen"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani026/"
+    },
+    "ani029": {
+      "type": "ani",
+      "mons": [
+        "Trâu rừng"
+      ],
+      "zones": [
+        "An Bang"
+      ],
+      "complete": true,
+      "path": "stems/ani029/"
+    },
+    "ani033": {
+      "type": "ani",
+      "mons": [
+        "Cá sấu"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani033/"
+    },
+    "ani036": {
+      "type": "ani",
+      "mons": [
+        "Thằn lằn đỏ"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani036/"
+    },
+    "ani037": {
+      "type": "ani",
+      "mons": [
+        "Nhãn Kính Mãng xà"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani037/"
+    },
+    "ani038": {
+      "type": "ani",
+      "mons": [
+        "Rắn xanh"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani038/"
+    },
+    "ani039": {
+      "type": "ani",
+      "mons": [
+        "Kim Hoàn Mãng Xà",
+        "Xích Luyện Xà"
+      ],
+      "zones": [
+        "Trường Yên"
+      ],
+      "complete": true,
+      "path": "stems/ani039/"
+    },
+    "ani040": {
+      "type": "ani",
+      "mons": [
+        "Xích Luyện Xà"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani040/"
+    },
+    "ani041": {
+      "type": "ani",
+      "mons": [
+        "Kim Điêu",
+        "Kên đất"
+      ],
+      "zones": [
+        "Côn Sơn",
+        "Vân Đồn",
+        "Trường Yên"
+      ],
+      "complete": true,
+      "path": "stems/ani041/"
+    },
+    "ani042": {
+      "type": "ani",
+      "mons": [
+        "Thương ưng"
+      ],
+      "zones": [
+        "Côn Sơn",
+        "Đông Triều"
+      ],
+      "complete": true,
+      "path": "stems/ani042/"
+    },
+    "ani043": {
+      "type": "ani",
+      "mons": [
+        "Kền Kền"
+      ],
+      "zones": [
+        "Côn Sơn",
+        "Đông Triều",
+        "Vân Đồn",
+        "Bạch Đằng Giang"
+      ],
+      "complete": true,
+      "path": "stems/ani043/"
+    },
+    "ani045": {
+      "type": "ani",
+      "mons": [
+        "Dơi chúa"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani045/"
+    },
+    "ani046": {
+      "type": "ani",
+      "mons": [
+        "Dơi chúa đỏ"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani046/"
+    },
+    "ani047": {
+      "type": "ani",
+      "mons": [
+        "Dơi Dong"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani047/"
+    },
+    "ani048": {
+      "type": "ani",
+      "mons": [
+        "Dơi hút máu"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani048/"
+    },
+    "ani049": {
+      "type": "ani",
+      "mons": [
+        "Kim Miêu"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani049/"
+    },
+    "ani050": {
+      "type": "ani",
+      "mons": [
+        "Xá Lị"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani050/"
+    },
+    "ani051": {
+      "type": "ani",
+      "mons": [
+        "Hoán hùng"
+      ],
+      "zones": [
+        "Yên Tử Sơn",
+        "Long Hưng"
+      ],
+      "complete": true,
+      "path": "stems/ani051/"
+    },
+    "ani052": {
+      "type": "ani",
+      "mons": [
+        "Linh Miêu"
+      ],
+      "zones": [
+        "Yên Tử Sơn",
+        "Đạm Thủy Cốc"
+      ],
+      "complete": true,
+      "path": "stems/ani052/"
+    },
+    "ani053": {
+      "type": "ani",
+      "mons": [
+        "Tàng Vực hầu"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani053/"
+    },
+    "ani054": {
+      "type": "ani",
+      "mons": [
+        "Khỉ xám"
+      ],
+      "zones": [
+        "An Bang"
+      ],
+      "complete": true,
+      "path": "stems/ani054/"
+    },
+    "ani055": {
+      "type": "ani",
+      "mons": [
+        "Hắc Diệp Hầu"
+      ],
+      "zones": [
+        "An Bang",
+        "Vân Đồn"
+      ],
+      "complete": true,
+      "path": "stems/ani055/"
+    },
+    "ani056": {
+      "type": "ani",
+      "mons": [
+        "Kim Tơ Hầu"
+      ],
+      "zones": [
+        "Đạm Thủy Cốc"
+      ],
+      "complete": true,
+      "path": "stems/ani056/"
+    },
+    "ani058": {
+      "type": "ani",
+      "mons": [
+        "Sài"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani058/"
+    },
+    "ani059": {
+      "type": "ani",
+      "mons": [
+        "Tuyết Quái"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani059/"
+    },
+    "ani060": {
+      "type": "ani",
+      "mons": [
+        "Cóc"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani060/"
+    },
+    "ani061": {
+      "type": "ani",
+      "mons": [
+        "Hươu đốm"
+      ],
+      "zones": [
+        "Đạm Thủy Cốc"
+      ],
+      "complete": true,
+      "path": "stems/ani061/"
+    },
+    "ani063": {
+      "type": "ani",
+      "mons": [
+        "Heo trắng"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani063/"
+    },
+    "ani065": {
+      "type": "ani",
+      "mons": [
+        "Bọ cạp"
+      ],
+      "zones": [
+        "Trường Yên"
+      ],
+      "complete": true,
+      "path": "stems/ani065/"
+    },
+    "ani066": {
+      "type": "ani",
+      "mons": [
+        "Nhện"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani066/"
+    },
+    "ani067": {
+      "type": "ani",
+      "mons": [
+        "Rết"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/ani067/"
+    },
+    "boss002": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss002/"
+    },
+    "boss003": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss003/"
+    },
+    "boss005": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss005/"
+    },
+    "boss006": {
+      "type": "boss",
+      "mons": [
+        "Phiến Khách"
+      ],
+      "zones": [
+        "Bến Phong Lăng"
+      ],
+      "complete": true,
+      "path": "stems/boss006/"
+    },
+    "boss008": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss008/"
+    },
+    "boss013": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss013/"
+    },
+    "boss015": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss015/"
+    },
+    "boss017": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss017/"
+    },
+    "boss019": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss019/"
+    },
+    "boss022": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss022/"
+    },
+    "boss024": {
+      "type": "boss",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/boss024/"
+    },
+    "enemy003": {
+      "type": "enemy",
+      "mons": [
+        "Thi Nghi Sinh"
+      ],
+      "zones": [
+        "Động Dương Trung"
+      ],
+      "complete": true,
+      "path": "stems/enemy003/"
+    },
+    "enemy021": {
+      "type": "enemy",
+      "mons": [
+        "Lạc Quang"
+      ],
+      "zones": [
+        "Ba Vì Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy021/"
+    },
+    "enemy023": {
+      "type": "enemy",
+      "mons": [
+        "Ngân Nha"
+      ],
+      "zones": [
+        "Ải Chi Lăng"
+      ],
+      "complete": true,
+      "path": "stems/enemy023/"
+    },
+    "enemy024": {
+      "type": "enemy",
+      "mons": [
+        "Sương Đao",
+        "Kinh Phong Mạc Bắc Thảo Nguyên"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy024/"
+    },
+    "enemy028": {
+      "type": "enemy",
+      "mons": [
+        "Lãnh Cung",
+        "Thần Tý"
+      ],
+      "zones": [
+        "Bến Phong Lăng",
+        "Mạc Cao Quật"
+      ],
+      "complete": true,
+      "path": "stems/enemy028/"
+    },
+    "enemy029": {
+      "type": "enemy",
+      "mons": [
+        "Đoạt Phách"
+      ],
+      "zones": [
+        "Ba Vì Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy029/"
+    },
+    "enemy036": {
+      "type": "enemy",
+      "mons": [
+        "Hàn Thương",
+        "Lãnh Thương"
+      ],
+      "zones": [
+        "Ba Vì Sơn",
+        "Bến Phong Lăng"
+      ],
+      "complete": true,
+      "path": "stems/enemy036/"
+    },
+    "enemy040": {
+      "type": "enemy",
+      "mons": [
+        "Sãn Vũ"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy040/"
+    },
+    "enemy048": {
+      "type": "enemy",
+      "mons": [
+        "Phá Lang Kim sơn đảo",
+        "Tiểu Boss cấp 80"
+      ],
+      "zones": [
+        "Bạch Đằng Giang"
+      ],
+      "complete": true,
+      "path": "stems/enemy048/"
+    },
+    "enemy050": {
+      "type": "enemy",
+      "mons": [
+        "Hạ Hầu Phục"
+      ],
+      "zones": [
+        "Tam Đảo"
+      ],
+      "complete": true,
+      "path": "stems/enemy050/"
+    },
+    "enemy051": {
+      "type": "enemy",
+      "mons": [
+        "Tiếu Vô Thường"
+      ],
+      "zones": [
+        "Ba Vì Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy051/"
+    },
+    "enemy059": {
+      "type": "enemy",
+      "mons": [
+        "Hà Hoa Đạo"
+      ],
+      "zones": [
+        "Bến Phong Lăng"
+      ],
+      "complete": true,
+      "path": "stems/enemy059/"
+    },
+    "enemy067": {
+      "type": "enemy",
+      "mons": [
+        "Bôn Lôi"
+      ],
+      "zones": [
+        "Ải Chi Lăng"
+      ],
+      "complete": true,
+      "path": "stems/enemy067/"
+    },
+    "enemy069": {
+      "type": "enemy",
+      "mons": [
+        "Thừa Phong Kim sơn đảo"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy069/"
+    },
+    "enemy070": {
+      "type": "enemy",
+      "mons": [
+        "Tiểu Boss cấp 70"
+      ],
+      "zones": [
+        "Vân Đồn"
+      ],
+      "complete": true,
+      "path": "stems/enemy070/"
+    },
+    "enemy076": {
+      "type": "enemy",
+      "mons": [
+        "Chính Võ Sĩ"
+      ],
+      "zones": [
+        "Động Băng Hà"
+      ],
+      "complete": true,
+      "path": "stems/enemy076/"
+    },
+    "enemy078": {
+      "type": "enemy",
+      "mons": [
+        "Tẩu Thạch"
+      ],
+      "zones": [
+        "Bến Phong Lăng",
+        "Mạc Cao Quật"
+      ],
+      "complete": true,
+      "path": "stems/enemy078/"
+    },
+    "enemy079": {
+      "type": "enemy",
+      "mons": [],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy079/"
+    },
+    "enemy081": {
+      "type": "enemy",
+      "mons": [
+        "Tiểu Boss cấp 30"
+      ],
+      "zones": [
+        "Long Hưng"
+      ],
+      "complete": true,
+      "path": "stems/enemy081/"
+    },
+    "enemy082": {
+      "type": "enemy",
+      "mons": [
+        "Độc Bộ",
+        "Tiểu Boss cấp 90"
+      ],
+      "zones": [
+        "Đạm Thủy Cốc",
+        "Tam Đảo"
+      ],
+      "complete": true,
+      "path": "stems/enemy082/"
+    },
+    "enemy083": {
+      "type": "enemy",
+      "mons": [
+        "Phi Sa"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy083/"
+    },
+    "enemy086": {
+      "type": "enemy",
+      "mons": [
+        "Giáng Chùy"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy086/"
+    },
+    "enemy089": {
+      "type": "enemy",
+      "mons": [
+        "Lục Phi",
+        "Tiểu Boss cấp 60"
+      ],
+      "zones": [
+        "Đông Triều",
+        "Ải Chi Lăng"
+      ],
+      "complete": true,
+      "path": "stems/enemy089/"
+    },
+    "enemy107": {
+      "type": "enemy",
+      "mons": [
+        "Xích Chưởng",
+        "Tiểu Boss cấp 20"
+      ],
+      "zones": [
+        "Thiên Trường",
+        "Tam Đảo"
+      ],
+      "complete": true,
+      "path": "stems/enemy107/"
+    },
+    "enemy109": {
+      "type": "enemy",
+      "mons": [
+        "Tiểu Boss cấp 40"
+      ],
+      "zones": [
+        "Côn Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy109/"
+    },
+    "enemy121": {
+      "type": "enemy",
+      "mons": [
+        "Khoái Thối"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy121/"
+    },
+    "enemy122": {
+      "type": "enemy",
+      "mons": [
+        "Tây Nam sơn tặc đầu lĩnh"
+      ],
+      "zones": [
+        "Yên Tử Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy122/"
+    },
+    "enemy123": {
+      "type": "enemy",
+      "mons": [
+        "Giang Nam sơn tặc đầu lĩnh"
+      ],
+      "zones": [
+        "Tức Mặc"
+      ],
+      "complete": true,
+      "path": "stems/enemy123/"
+    },
+    "enemy124": {
+      "type": "enemy",
+      "mons": [
+        "Đông Bắc sơn tặc đầu lĩnh"
+      ],
+      "zones": [
+        "Phả Lại"
+      ],
+      "complete": true,
+      "path": "stems/enemy124/"
+    },
+    "enemy125": {
+      "type": "enemy",
+      "mons": [
+        "Hoa Bắc sơn tặc đầu lĩnh"
+      ],
+      "zones": [
+        "An Bang"
+      ],
+      "complete": true,
+      "path": "stems/enemy125/"
+    },
+    "enemy126": {
+      "type": "enemy",
+      "mons": [
+        "Nam bộ sơn tặc đầu lĩnh",
+        "Tiểu Boss cấp 50"
+      ],
+      "zones": [
+        "Chí Linh",
+        "Trường Yên"
+      ],
+      "complete": true,
+      "path": "stems/enemy126/"
+    },
+    "enemy127": {
+      "type": "enemy",
+      "mons": [
+        "Đoạt Mệnh Liêm"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy127/"
+    },
+    "enemy128": {
+      "type": "enemy",
+      "mons": [
+        "Đao khách",
+        "Đao Trảm"
+      ],
+      "zones": [
+        "Ba Vì Sơn"
+      ],
+      "complete": true,
+      "path": "stems/enemy128/"
+    },
+    "enemy129": {
+      "type": "enemy",
+      "mons": [
+        "Báo đốm",
+        "Mạc Tặc"
+      ],
+      "zones": [
+        "Bến Phong Lăng",
+        "Mạc Cao Quật"
+      ],
+      "complete": true,
+      "path": "stems/enemy129/"
+    },
+    "enemy130": {
+      "type": "enemy",
+      "mons": [
+        "Trường Thương"
+      ],
+      "zones": [
+        "Động Băng Hà",
+        "Động Dương Trung"
+      ],
+      "complete": true,
+      "path": "stems/enemy130/"
+    },
+    "enemy131": {
+      "type": "enemy",
+      "mons": [
+        "Thanh Mi"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy131/"
+    },
+    "enemy132": {
+      "type": "enemy",
+      "mons": [
+        "Mãng Hán"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy132/"
+    },
+    "enemy133": {
+      "type": "enemy",
+      "mons": [
+        "Tây Nam sơn tặc 2"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy133/"
+    },
+    "enemy134": {
+      "type": "enemy",
+      "mons": [
+        "Giang Nam sơn tặc 1",
+        "Sa Đạo"
+      ],
+      "zones": [
+        "Mạc Cao Quật"
+      ],
+      "complete": true,
+      "path": "stems/enemy134/"
+    },
+    "enemy135": {
+      "type": "enemy",
+      "mons": [
+        "Lưu Lương"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy135/"
+    },
+    "enemy136": {
+      "type": "enemy",
+      "mons": [
+        "Hắc Cân"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy136/"
+    },
+    "enemy137": {
+      "type": "enemy",
+      "mons": [
+        "Ảnh Côn"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy137/"
+    },
+    "enemy138": {
+      "type": "enemy",
+      "mons": [
+        "Đông Bắc sơn tặc 1"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy138/"
+    },
+    "enemy139": {
+      "type": "enemy",
+      "mons": [
+        "Đông Bắc sơn tặc 2"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy139/"
+    },
+    "enemy140": {
+      "type": "enemy",
+      "mons": [
+        "Hoa Bắc sơn tặc 1"
+      ],
+      "zones": [
+        "Động Băng Hà",
+        "Động Dương Trung"
+      ],
+      "complete": true,
+      "path": "stems/enemy140/"
+    },
+    "enemy141": {
+      "type": "enemy",
+      "mons": [
+        "Hoa Bắc sơn tặc 2",
+        "Tuyết ảnh"
+      ],
+      "zones": [
+        "Tam Đảo"
+      ],
+      "complete": true,
+      "path": "stems/enemy141/"
+    },
+    "enemy142": {
+      "type": "enemy",
+      "mons": [
+        "Thiết Trảo"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy142/"
+    },
+    "enemy143": {
+      "type": "enemy",
+      "mons": [
+        "Đoản Kích"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy143/"
+    },
+    "enemy144": {
+      "type": "enemy",
+      "mons": [
+        "sơn tặc 01"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy144/"
+    },
+    "enemy146": {
+      "type": "enemy",
+      "mons": [
+        "sơn tặc 03"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy146/"
+    },
+    "enemy147": {
+      "type": "enemy",
+      "mons": [
+        "Nguyễn Minh Viễn",
+        "Liệt Không Mạc Bắc Thảo Nguyên"
+      ],
+      "zones": [
+        "Bến Phong Lăng",
+        "Mạc Cao Quật"
+      ],
+      "complete": true,
+      "path": "stems/enemy147/"
+    },
+    "enemy148": {
+      "type": "enemy",
+      "mons": [
+        "sơn tặc 05"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy148/"
+    },
+    "enemy149": {
+      "type": "enemy",
+      "mons": [
+        "sơn tặc 06"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy149/"
+    },
+    "enemy150": {
+      "type": "enemy",
+      "mons": [
+        "sơn tặc 07"
+      ],
+      "zones": [
+        "Động Băng Hà",
+        "Động Dương Trung"
+      ],
+      "complete": true,
+      "path": "stems/enemy150/"
+    },
+    "enemy205": {
+      "type": "enemy",
+      "mons": [
+        "Thủy Tặc",
+        "Phục Ba Kim sơn đảo"
+      ],
+      "zones": [],
+      "complete": true,
+      "path": "stems/enemy205/"
+    }
+  },
+  "by_mon_id": {
+    "0": {
+      "n": "Đông Bắc hổ",
+      "stem": "ani001",
+      "path": "stems/ani001/"
+    },
+    "1": {
+      "n": "Hoa Nam hổ",
+      "stem": "ani002",
+      "path": "stems/ani002/"
+    },
+    "2": {
+      "n": "Bạch Hổ",
+      "stem": "ani003",
+      "path": "stems/ani003/"
+    },
+    "3": {
+      "n": "Kim Tiền báo",
+      "stem": "ani005",
+      "path": "stems/ani005/"
+    },
+    "4": {
+      "n": "Báo trắng",
+      "stem": "ani006",
+      "path": "stems/ani006/"
+    },
+    "5": {
+      "n": "Sói xám",
+      "stem": "ani009",
+      "path": "stems/ani009/"
+    },
+    "6": {
+      "n": "Sói đỏ",
+      "stem": "ani010",
+      "path": "stems/ani010/"
+    },
+    "7": {
+      "n": "Sói xanh",
+      "stem": "ani011",
+      "path": "stems/ani011/"
+    },
+    "8": {
+      "n": "Sói tuyết",
+      "stem": "ani012",
+      "path": "stems/ani012/"
+    },
+    "9": {
+      "n": "Hồ ly",
+      "stem": "ani013",
+      "path": "stems/ani013/"
+    },
+    "10": {
+      "n": "Hỏa Hồ",
+      "stem": "ani015",
+      "path": "stems/ani015/"
+    },
+    "11": {
+      "n": "Heo rừng",
+      "stem": "ani018",
+      "path": "stems/ani018/"
+    },
+    "12": {
+      "n": "Nhím",
+      "stem": "ani019",
+      "path": "stems/ani019/"
+    },
+    "13": {
+      "n": "Đại Tượng",
+      "stem": "ani021",
+      "path": "stems/ani021/"
+    },
+    "14": {
+      "n": "Voi Hoàng hà",
+      "stem": "ani024",
+      "path": "stems/ani024/"
+    },
+    "15": {
+      "n": "Gấu nâu",
+      "stem": "ani025",
+      "path": "stems/ani025/"
+    },
+    "16": {
+      "n": "Gấu đen",
+      "stem": "ani026",
+      "path": "stems/ani026/"
+    },
+    "17": {
+      "n": "Trâu rừng",
+      "stem": "ani029",
+      "path": "stems/ani029/"
+    },
+    "18": {
+      "n": "Cá sấu",
+      "stem": "ani033",
+      "path": "stems/ani033/"
+    },
+    "19": {
+      "n": "Thằn lằn đỏ",
+      "stem": "ani036",
+      "path": "stems/ani036/"
+    },
+    "20": {
+      "n": "Nhãn Kính Mãng xà",
+      "stem": "ani037",
+      "path": "stems/ani037/"
+    },
+    "21": {
+      "n": "Rắn xanh",
+      "stem": "ani038",
+      "path": "stems/ani038/"
+    },
+    "22": {
+      "n": "Kim Hoàn Mãng Xà",
+      "stem": "ani039",
+      "path": "stems/ani039/"
+    },
+    "23": {
+      "n": "Xích Luyện Xà",
+      "stem": "ani040",
+      "path": "stems/ani040/"
+    },
+    "24": {
+      "n": "Kim Điêu",
+      "stem": "ani041",
+      "path": "stems/ani041/"
+    },
+    "25": {
+      "n": "Thương ưng",
+      "stem": "ani042",
+      "path": "stems/ani042/"
+    },
+    "26": {
+      "n": "Kền Kền",
+      "stem": "ani043",
+      "path": "stems/ani043/"
+    },
+    "27": {
+      "n": "Dơi chúa",
+      "stem": "ani045",
+      "path": "stems/ani045/"
+    },
+    "28": {
+      "n": "Dơi chúa đỏ",
+      "stem": "ani046",
+      "path": "stems/ani046/"
+    },
+    "29": {
+      "n": "Dơi Dong",
+      "stem": "ani047",
+      "path": "stems/ani047/"
+    },
+    "30": {
+      "n": "Dơi hút máu",
+      "stem": "ani048",
+      "path": "stems/ani048/"
+    },
+    "31": {
+      "n": "Kim Miêu",
+      "stem": "ani049",
+      "path": "stems/ani049/"
+    },
+    "32": {
+      "n": "Xá Lị",
+      "stem": "ani050",
+      "path": "stems/ani050/"
+    },
+    "33": {
+      "n": "Hoán hùng",
+      "stem": "ani051",
+      "path": "stems/ani051/"
+    },
+    "34": {
+      "n": "Linh Miêu",
+      "stem": "ani052",
+      "path": "stems/ani052/"
+    },
+    "35": {
+      "n": "Tàng Vực hầu",
+      "stem": "ani053",
+      "path": "stems/ani053/"
+    },
+    "36": {
+      "n": "Khỉ xám",
+      "stem": "ani054",
+      "path": "stems/ani054/"
+    },
+    "37": {
+      "n": "Hắc Diệp Hầu",
+      "stem": "ani055",
+      "path": "stems/ani055/"
+    },
+    "38": {
+      "n": "Kim Tơ Hầu",
+      "stem": "ani056",
+      "path": "stems/ani056/"
+    },
+    "39": {
+      "n": "Sài",
+      "stem": "ani058",
+      "path": "stems/ani058/"
+    },
+    "40": {
+      "n": "Tuyết Quái",
+      "stem": "ani059",
+      "path": "stems/ani059/"
+    },
+    "41": {
+      "n": "Cóc",
+      "stem": "ani060",
+      "path": "stems/ani060/"
+    },
+    "42": {
+      "n": "Hươu đốm",
+      "stem": "ani061",
+      "path": "stems/ani061/"
+    },
+    "43": {
+      "n": "Heo trắng",
+      "stem": "ani063",
+      "path": "stems/ani063/"
+    },
+    "45": {
+      "n": "Nhện",
+      "stem": "ani066",
+      "path": "stems/ani066/"
+    },
+    "46": {
+      "n": "Rết",
+      "stem": "ani067",
+      "path": "stems/ani067/"
+    },
+    "140": {
+      "n": "Khoái Thối",
+      "stem": "enemy121",
+      "path": "stems/enemy121/"
+    },
+    "141": {
+      "n": "Tây Nam sơn tặc đầu lĩnh",
+      "stem": "enemy122",
+      "path": "stems/enemy122/"
+    },
+    "142": {
+      "n": "Giang Nam sơn tặc đầu lĩnh",
+      "stem": "enemy123",
+      "path": "stems/enemy123/"
+    },
+    "143": {
+      "n": "Đông Bắc sơn tặc đầu lĩnh",
+      "stem": "enemy124",
+      "path": "stems/enemy124/"
+    },
+    "144": {
+      "n": "Hoa Bắc sơn tặc đầu lĩnh",
+      "stem": "enemy125",
+      "path": "stems/enemy125/"
+    },
+    "145": {
+      "n": "Nam bộ sơn tặc đầu lĩnh",
+      "stem": "enemy126",
+      "path": "stems/enemy126/"
+    },
+    "146": {
+      "n": "Đoạt Mệnh Liêm",
+      "stem": "enemy127",
+      "path": "stems/enemy127/"
+    },
+    "147": {
+      "n": "Đao khách",
+      "stem": "enemy128",
+      "path": "stems/enemy128/"
+    },
+    "148": {
+      "n": "Báo đốm",
+      "stem": "enemy129",
+      "path": "stems/enemy129/"
+    },
+    "149": {
+      "n": "Trường Thương",
+      "stem": "enemy130",
+      "path": "stems/enemy130/"
+    },
+    "150": {
+      "n": "Thanh Mi",
+      "stem": "enemy131",
+      "path": "stems/enemy131/"
+    },
+    "151": {
+      "n": "Mãng Hán",
+      "stem": "enemy132",
+      "path": "stems/enemy132/"
+    },
+    "152": {
+      "n": "Tây Nam sơn tặc 2",
+      "stem": "enemy133",
+      "path": "stems/enemy133/"
+    },
+    "153": {
+      "n": "Giang Nam sơn tặc 1",
+      "stem": "enemy134",
+      "path": "stems/enemy134/"
+    },
+    "154": {
+      "n": "Lưu Lương",
+      "stem": "enemy135",
+      "path": "stems/enemy135/"
+    },
+    "155": {
+      "n": "Hắc Cân",
+      "stem": "enemy136",
+      "path": "stems/enemy136/"
+    },
+    "156": {
+      "n": "Ảnh Côn",
+      "stem": "enemy137",
+      "path": "stems/enemy137/"
+    },
+    "157": {
+      "n": "Đông Bắc sơn tặc 1",
+      "stem": "enemy138",
+      "path": "stems/enemy138/"
+    },
+    "158": {
+      "n": "Đông Bắc sơn tặc 2",
+      "stem": "enemy139",
+      "path": "stems/enemy139/"
+    },
+    "159": {
+      "n": "Hoa Bắc sơn tặc 1",
+      "stem": "enemy140",
+      "path": "stems/enemy140/"
+    },
+    "160": {
+      "n": "Hoa Bắc sơn tặc 2",
+      "stem": "enemy141",
+      "path": "stems/enemy141/"
+    },
+    "161": {
+      "n": "Thiết Trảo",
+      "stem": "enemy142",
+      "path": "stems/enemy142/"
+    },
+    "162": {
+      "n": "Đoản Kích",
+      "stem": "enemy143",
+      "path": "stems/enemy143/"
+    },
+    "163": {
+      "n": "sơn tặc 01",
+      "stem": "enemy144",
+      "path": "stems/enemy144/"
+    },
+    "165": {
+      "n": "sơn tặc 03",
+      "stem": "enemy146",
+      "path": "stems/enemy146/"
+    },
+    "167": {
+      "n": "sơn tặc 05",
+      "stem": "enemy148",
+      "path": "stems/enemy148/"
+    },
+    "168": {
+      "n": "sơn tặc 06",
+      "stem": "enemy149",
+      "path": "stems/enemy149/"
+    },
+    "169": {
+      "n": "sơn tặc 07",
+      "stem": "enemy150",
+      "path": "stems/enemy150/"
+    },
+    "556": {
+      "n": "Xích Luyện Xà",
+      "stem": "ani039",
+      "path": "stems/ani039/"
+    },
+    "557": {
+      "n": "Kên đất",
+      "stem": "ani041",
+      "path": "stems/ani041/"
+    },
+    "558": {
+      "n": "Bọ cạp",
+      "stem": "ani065",
+      "path": "stems/ani065/"
+    },
+    "588": {
+      "n": "Bôn Lôi",
+      "stem": "enemy067",
+      "path": "stems/enemy067/"
+    },
+    "589": {
+      "n": "Ngân Nha",
+      "stem": "enemy023",
+      "path": "stems/enemy023/"
+    },
+    "590": {
+      "n": "Đông Bắc hổ",
+      "stem": "ani001",
+      "path": "stems/ani001/"
+    },
+    "591": {
+      "n": "Độc Bộ",
+      "stem": "enemy082",
+      "path": "stems/enemy082/"
+    },
+    "592": {
+      "n": "Xích Chưởng",
+      "stem": "enemy107",
+      "path": "stems/enemy107/"
+    },
+    "593": {
+      "n": "Tuyết ảnh",
+      "stem": "enemy141",
+      "path": "stems/enemy141/"
+    },
+    "594": {
+      "n": "Đao Trảm",
+      "stem": "enemy128",
+      "path": "stems/enemy128/"
+    },
+    "595": {
+      "n": "Lạc Quang",
+      "stem": "enemy021",
+      "path": "stems/enemy021/"
+    },
+    "596": {
+      "n": "Hàn Thương",
+      "stem": "enemy036",
+      "path": "stems/enemy036/"
+    },
+    "597": {
+      "n": "Đoạt Phách",
+      "stem": "enemy029",
+      "path": "stems/enemy029/"
+    },
+    "598": {
+      "n": "Sương Đao",
+      "stem": "enemy024",
+      "path": "stems/enemy024/"
+    },
+    "599": {
+      "n": "Lãnh Cung",
+      "stem": "enemy028",
+      "path": "stems/enemy028/"
+    },
+    "600": {
+      "n": "Giáng Chùy",
+      "stem": "enemy086",
+      "path": "stems/enemy086/"
+    },
+    "601": {
+      "n": "Sãn Vũ",
+      "stem": "enemy040",
+      "path": "stems/enemy040/"
+    },
+    "602": {
+      "n": "Phiến Khách",
+      "stem": "boss006",
+      "path": "stems/boss006/"
+    },
+    "674": {
+      "n": "Thủy Tặc",
+      "stem": "enemy205",
+      "path": "stems/enemy205/"
+    },
+    "675": {
+      "n": "Hà Hoa Đạo",
+      "stem": "enemy059",
+      "path": "stems/enemy059/"
+    },
+    "699": {
+      "n": "Thi Nghi Sinh",
+      "stem": "enemy003",
+      "path": "stems/enemy003/"
+    },
+    "700": {
+      "n": "Chính Võ Sĩ",
+      "stem": "enemy076",
+      "path": "stems/enemy076/"
+    },
+    "701": {
+      "n": "Nguyễn Minh Viễn",
+      "stem": "enemy147",
+      "path": "stems/enemy147/"
+    },
+    "703": {
+      "n": "Phi Sa",
+      "stem": "enemy083",
+      "path": "stems/enemy083/"
+    },
+    "704": {
+      "n": "Tẩu Thạch",
+      "stem": "enemy078",
+      "path": "stems/enemy078/"
+    },
+    "705": {
+      "n": "Sa Đạo",
+      "stem": "enemy134",
+      "path": "stems/enemy134/"
+    },
+    "706": {
+      "n": "Mạc Tặc",
+      "stem": "enemy129",
+      "path": "stems/enemy129/"
+    },
+    "707": {
+      "n": "Thần Tý",
+      "stem": "enemy028",
+      "path": "stems/enemy028/"
+    },
+    "708": {
+      "n": "Lãnh Thương",
+      "stem": "enemy036",
+      "path": "stems/enemy036/"
+    },
+    "709": {
+      "n": "Liệt Không Mạc Bắc Thảo Nguyên",
+      "stem": "enemy147",
+      "path": "stems/enemy147/"
+    },
+    "710": {
+      "n": "Kinh Phong Mạc Bắc Thảo Nguyên",
+      "stem": "enemy024",
+      "path": "stems/enemy024/"
+    },
+    "711": {
+      "n": "Phục Ba Kim sơn đảo",
+      "stem": "enemy205",
+      "path": "stems/enemy205/"
+    },
+    "712": {
+      "n": "Phá Lang Kim sơn đảo",
+      "stem": "enemy048",
+      "path": "stems/enemy048/"
+    },
+    "713": {
+      "n": "Thừa Phong Kim sơn đảo",
+      "stem": "enemy069",
+      "path": "stems/enemy069/"
+    },
+    "716": {
+      "n": "Hạ Hầu Phục",
+      "stem": "enemy050",
+      "path": "stems/enemy050/"
+    },
+    "717": {
+      "n": "Tiếu Vô Thường",
+      "stem": "enemy051",
+      "path": "stems/enemy051/"
+    },
+    "720": {
+      "n": "Lục Phi",
+      "stem": "enemy089",
+      "path": "stems/enemy089/"
+    },
+    "851": {
+      "n": "Tiểu Boss cấp 20",
+      "stem": "enemy107",
+      "path": "stems/enemy107/"
+    },
+    "852": {
+      "n": "Tiểu Boss cấp 30",
+      "stem": "enemy081",
+      "path": "stems/enemy081/"
+    },
+    "853": {
+      "n": "Tiểu Boss cấp 40",
+      "stem": "enemy109",
+      "path": "stems/enemy109/"
+    },
+    "854": {
+      "n": "Tiểu Boss cấp 50",
+      "stem": "enemy126",
+      "path": "stems/enemy126/"
+    },
+    "855": {
+      "n": "Tiểu Boss cấp 60",
+      "stem": "enemy089",
+      "path": "stems/enemy089/"
+    },
+    "856": {
+      "n": "Tiểu Boss cấp 70",
+      "stem": "enemy070",
+      "path": "stems/enemy070/"
+    },
+    "857": {
+      "n": "Tiểu Boss cấp 80",
+      "stem": "enemy048",
+      "path": "stems/enemy048/"
+    },
+    "858": {
+      "n": "Tiểu Boss cấp 90",
+      "stem": "enemy082",
+      "path": "stems/enemy082/"
+    }
+  },
+  "by_name": {
+    "Đông Bắc hổ": [
+      {
+        "id": 0,
+        "stem": "ani001"
+      },
+      {
+        "id": 590,
+        "stem": "ani001"
+      }
+    ],
+    "Hoa Nam hổ": [
+      {
+        "id": 1,
+        "stem": "ani002"
+      }
+    ],
+    "Bạch Hổ": [
+      {
+        "id": 2,
+        "stem": "ani003"
+      }
+    ],
+    "Kim Tiền báo": [
+      {
+        "id": 3,
+        "stem": "ani005"
+      }
+    ],
+    "Báo trắng": [
+      {
+        "id": 4,
+        "stem": "ani006"
+      }
+    ],
+    "Sói xám": [
+      {
+        "id": 5,
+        "stem": "ani009"
+      }
+    ],
+    "Sói đỏ": [
+      {
+        "id": 6,
+        "stem": "ani010"
+      }
+    ],
+    "Sói xanh": [
+      {
+        "id": 7,
+        "stem": "ani011"
+      }
+    ],
+    "Sói tuyết": [
+      {
+        "id": 8,
+        "stem": "ani012"
+      }
+    ],
+    "Hồ ly": [
+      {
+        "id": 9,
+        "stem": "ani013"
+      }
+    ],
+    "Hỏa Hồ": [
+      {
+        "id": 10,
+        "stem": "ani015"
+      }
+    ],
+    "Heo rừng": [
+      {
+        "id": 11,
+        "stem": "ani018"
+      }
+    ],
+    "Nhím": [
+      {
+        "id": 12,
+        "stem": "ani019"
+      }
+    ],
+    "Đại Tượng": [
+      {
+        "id": 13,
+        "stem": "ani021"
+      }
+    ],
+    "Voi Hoàng hà": [
+      {
+        "id": 14,
+        "stem": "ani024"
+      }
+    ],
+    "Gấu nâu": [
+      {
+        "id": 15,
+        "stem": "ani025"
+      }
+    ],
+    "Gấu đen": [
+      {
+        "id": 16,
+        "stem": "ani026"
+      }
+    ],
+    "Trâu rừng": [
+      {
+        "id": 17,
+        "stem": "ani029"
+      }
+    ],
+    "Cá sấu": [
+      {
+        "id": 18,
+        "stem": "ani033"
+      }
+    ],
+    "Thằn lằn đỏ": [
+      {
+        "id": 19,
+        "stem": "ani036"
+      }
+    ],
+    "Nhãn Kính Mãng xà": [
+      {
+        "id": 20,
+        "stem": "ani037"
+      }
+    ],
+    "Rắn xanh": [
+      {
+        "id": 21,
+        "stem": "ani038"
+      }
+    ],
+    "Kim Hoàn Mãng Xà": [
+      {
+        "id": 22,
+        "stem": "ani039"
+      }
+    ],
+    "Xích Luyện Xà": [
+      {
+        "id": 23,
+        "stem": "ani040"
+      },
+      {
+        "id": 556,
+        "stem": "ani039"
+      }
+    ],
+    "Kim Điêu": [
+      {
+        "id": 24,
+        "stem": "ani041"
+      }
+    ],
+    "Thương ưng": [
+      {
+        "id": 25,
+        "stem": "ani042"
+      }
+    ],
+    "Kền Kền": [
+      {
+        "id": 26,
+        "stem": "ani043"
+      }
+    ],
+    "Dơi chúa": [
+      {
+        "id": 27,
+        "stem": "ani045"
+      }
+    ],
+    "Dơi chúa đỏ": [
+      {
+        "id": 28,
+        "stem": "ani046"
+      }
+    ],
+    "Dơi Dong": [
+      {
+        "id": 29,
+        "stem": "ani047"
+      }
+    ],
+    "Dơi hút máu": [
+      {
+        "id": 30,
+        "stem": "ani048"
+      }
+    ],
+    "Kim Miêu": [
+      {
+        "id": 31,
+        "stem": "ani049"
+      }
+    ],
+    "Xá Lị": [
+      {
+        "id": 32,
+        "stem": "ani050"
+      }
+    ],
+    "Hoán hùng": [
+      {
+        "id": 33,
+        "stem": "ani051"
+      }
+    ],
+    "Linh Miêu": [
+      {
+        "id": 34,
+        "stem": "ani052"
+      }
+    ],
+    "Tàng Vực hầu": [
+      {
+        "id": 35,
+        "stem": "ani053"
+      }
+    ],
+    "Khỉ xám": [
+      {
+        "id": 36,
+        "stem": "ani054"
+      }
+    ],
+    "Hắc Diệp Hầu": [
+      {
+        "id": 37,
+        "stem": "ani055"
+      }
+    ],
+    "Kim Tơ Hầu": [
+      {
+        "id": 38,
+        "stem": "ani056"
+      }
+    ],
+    "Sài": [
+      {
+        "id": 39,
+        "stem": "ani058"
+      }
+    ],
+    "Tuyết Quái": [
+      {
+        "id": 40,
+        "stem": "ani059"
+      }
+    ],
+    "Cóc": [
+      {
+        "id": 41,
+        "stem": "ani060"
+      }
+    ],
+    "Hươu đốm": [
+      {
+        "id": 42,
+        "stem": "ani061"
+      }
+    ],
+    "Heo trắng": [
+      {
+        "id": 43,
+        "stem": "ani063"
+      }
+    ],
+    "Nhện": [
+      {
+        "id": 45,
+        "stem": "ani066"
+      }
+    ],
+    "Rết": [
+      {
+        "id": 46,
+        "stem": "ani067"
+      }
+    ],
+    "Khoái Thối": [
+      {
+        "id": 140,
+        "stem": "enemy121"
+      }
+    ],
+    "Tây Nam sơn tặc đầu lĩnh": [
+      {
+        "id": 141,
+        "stem": "enemy122"
+      }
+    ],
+    "Giang Nam sơn tặc đầu lĩnh": [
+      {
+        "id": 142,
+        "stem": "enemy123"
+      }
+    ],
+    "Đông Bắc sơn tặc đầu lĩnh": [
+      {
+        "id": 143,
+        "stem": "enemy124"
+      }
+    ],
+    "Hoa Bắc sơn tặc đầu lĩnh": [
+      {
+        "id": 144,
+        "stem": "enemy125"
+      }
+    ],
+    "Nam bộ sơn tặc đầu lĩnh": [
+      {
+        "id": 145,
+        "stem": "enemy126"
+      }
+    ],
+    "Đoạt Mệnh Liêm": [
+      {
+        "id": 146,
+        "stem": "enemy127"
+      }
+    ],
+    "Đao khách": [
+      {
+        "id": 147,
+        "stem": "enemy128"
+      }
+    ],
+    "Báo đốm": [
+      {
+        "id": 148,
+        "stem": "enemy129"
+      }
+    ],
+    "Trường Thương": [
+      {
+        "id": 149,
+        "stem": "enemy130"
+      }
+    ],
+    "Thanh Mi": [
+      {
+        "id": 150,
+        "stem": "enemy131"
+      }
+    ],
+    "Mãng Hán": [
+      {
+        "id": 151,
+        "stem": "enemy132"
+      }
+    ],
+    "Tây Nam sơn tặc 2": [
+      {
+        "id": 152,
+        "stem": "enemy133"
+      }
+    ],
+    "Giang Nam sơn tặc 1": [
+      {
+        "id": 153,
+        "stem": "enemy134"
+      }
+    ],
+    "Lưu Lương": [
+      {
+        "id": 154,
+        "stem": "enemy135"
+      }
+    ],
+    "Hắc Cân": [
+      {
+        "id": 155,
+        "stem": "enemy136"
+      }
+    ],
+    "Ảnh Côn": [
+      {
+        "id": 156,
+        "stem": "enemy137"
+      }
+    ],
+    "Đông Bắc sơn tặc 1": [
+      {
+        "id": 157,
+        "stem": "enemy138"
+      }
+    ],
+    "Đông Bắc sơn tặc 2": [
+      {
+        "id": 158,
+        "stem": "enemy139"
+      }
+    ],
+    "Hoa Bắc sơn tặc 1": [
+      {
+        "id": 159,
+        "stem": "enemy140"
+      }
+    ],
+    "Hoa Bắc sơn tặc 2": [
+      {
+        "id": 160,
+        "stem": "enemy141"
+      }
+    ],
+    "Thiết Trảo": [
+      {
+        "id": 161,
+        "stem": "enemy142"
+      }
+    ],
+    "Đoản Kích": [
+      {
+        "id": 162,
+        "stem": "enemy143"
+      }
+    ],
+    "sơn tặc 01": [
+      {
+        "id": 163,
+        "stem": "enemy144"
+      }
+    ],
+    "sơn tặc 03": [
+      {
+        "id": 165,
+        "stem": "enemy146"
+      }
+    ],
+    "sơn tặc 05": [
+      {
+        "id": 167,
+        "stem": "enemy148"
+      }
+    ],
+    "sơn tặc 06": [
+      {
+        "id": 168,
+        "stem": "enemy149"
+      }
+    ],
+    "sơn tặc 07": [
+      {
+        "id": 169,
+        "stem": "enemy150"
+      }
+    ],
+    "Kên đất": [
+      {
+        "id": 557,
+        "stem": "ani041"
+      }
+    ],
+    "Bọ cạp": [
+      {
+        "id": 558,
+        "stem": "ani065"
+      }
+    ],
+    "Bôn Lôi": [
+      {
+        "id": 588,
+        "stem": "enemy067"
+      }
+    ],
+    "Ngân Nha": [
+      {
+        "id": 589,
+        "stem": "enemy023"
+      }
+    ],
+    "Độc Bộ": [
+      {
+        "id": 591,
+        "stem": "enemy082"
+      }
+    ],
+    "Xích Chưởng": [
+      {
+        "id": 592,
+        "stem": "enemy107"
+      }
+    ],
+    "Tuyết ảnh": [
+      {
+        "id": 593,
+        "stem": "enemy141"
+      }
+    ],
+    "Đao Trảm": [
+      {
+        "id": 594,
+        "stem": "enemy128"
+      }
+    ],
+    "Lạc Quang": [
+      {
+        "id": 595,
+        "stem": "enemy021"
+      }
+    ],
+    "Hàn Thương": [
+      {
+        "id": 596,
+        "stem": "enemy036"
+      }
+    ],
+    "Đoạt Phách": [
+      {
+        "id": 597,
+        "stem": "enemy029"
+      }
+    ],
+    "Sương Đao": [
+      {
+        "id": 598,
+        "stem": "enemy024"
+      }
+    ],
+    "Lãnh Cung": [
+      {
+        "id": 599,
+        "stem": "enemy028"
+      }
+    ],
+    "Giáng Chùy": [
+      {
+        "id": 600,
+        "stem": "enemy086"
+      }
+    ],
+    "Sãn Vũ": [
+      {
+        "id": 601,
+        "stem": "enemy040"
+      }
+    ],
+    "Phiến Khách": [
+      {
+        "id": 602,
+        "stem": "boss006"
+      }
+    ],
+    "Thủy Tặc": [
+      {
+        "id": 674,
+        "stem": "enemy205"
+      }
+    ],
+    "Hà Hoa Đạo": [
+      {
+        "id": 675,
+        "stem": "enemy059"
+      }
+    ],
+    "Thi Nghi Sinh": [
+      {
+        "id": 699,
+        "stem": "enemy003"
+      }
+    ],
+    "Chính Võ Sĩ": [
+      {
+        "id": 700,
+        "stem": "enemy076"
+      }
+    ],
+    "Nguyễn Minh Viễn": [
+      {
+        "id": 701,
+        "stem": "enemy147"
+      }
+    ],
+    "Phi Sa": [
+      {
+        "id": 703,
+        "stem": "enemy083"
+      }
+    ],
+    "Tẩu Thạch": [
+      {
+        "id": 704,
+        "stem": "enemy078"
+      }
+    ],
+    "Sa Đạo": [
+      {
+        "id": 705,
+        "stem": "enemy134"
+      }
+    ],
+    "Mạc Tặc": [
+      {
+        "id": 706,
+        "stem": "enemy129"
+      }
+    ],
+    "Thần Tý": [
+      {
+        "id": 707,
+        "stem": "enemy028"
+      }
+    ],
+    "Lãnh Thương": [
+      {
+        "id": 708,
+        "stem": "enemy036"
+      }
+    ],
+    "Liệt Không Mạc Bắc Thảo Nguyên": [
+      {
+        "id": 709,
+        "stem": "enemy147"
+      }
+    ],
+    "Kinh Phong Mạc Bắc Thảo Nguyên": [
+      {
+        "id": 710,
+        "stem": "enemy024"
+      }
+    ],
+    "Phục Ba Kim sơn đảo": [
+      {
+        "id": 711,
+        "stem": "enemy205"
+      }
+    ],
+    "Phá Lang Kim sơn đảo": [
+      {
+        "id": 712,
+        "stem": "enemy048"
+      }
+    ],
+    "Thừa Phong Kim sơn đảo": [
+      {
+        "id": 713,
+        "stem": "enemy069"
+      }
+    ],
+    "Hạ Hầu Phục": [
+      {
+        "id": 716,
+        "stem": "enemy050"
+      }
+    ],
+    "Tiếu Vô Thường": [
+      {
+        "id": 717,
+        "stem": "enemy051"
+      }
+    ],
+    "Lục Phi": [
+      {
+        "id": 720,
+        "stem": "enemy089"
+      }
+    ],
+    "Tiểu Boss cấp 20": [
+      {
+        "id": 851,
+        "stem": "enemy107"
+      }
+    ],
+    "Tiểu Boss cấp 30": [
+      {
+        "id": 852,
+        "stem": "enemy081"
+      }
+    ],
+    "Tiểu Boss cấp 40": [
+      {
+        "id": 853,
+        "stem": "enemy109"
+      }
+    ],
+    "Tiểu Boss cấp 50": [
+      {
+        "id": 854,
+        "stem": "enemy126"
+      }
+    ],
+    "Tiểu Boss cấp 60": [
+      {
+        "id": 855,
+        "stem": "enemy089"
+      }
+    ],
+    "Tiểu Boss cấp 70": [
+      {
+        "id": 856,
+        "stem": "enemy070"
+      }
+    ],
+    "Tiểu Boss cấp 80": [
+      {
+        "id": 857,
+        "stem": "enemy048"
+      }
+    ],
+    "Tiểu Boss cấp 90": [
+      {
+        "id": 858,
+        "stem": "enemy082"
+      }
+    ]
+  }
+}

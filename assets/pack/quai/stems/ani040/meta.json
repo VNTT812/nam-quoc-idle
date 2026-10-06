@@ -1,0 +1,80 @@
+{
+  "stem": "ani040",
+  "type": "ani",
+  "path": "stems/ani040/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani040_st.webp",
+      "bytes": 112202,
+      "n": 10,
+      "d": 8,
+      "w": 88,
+      "h": 60,
+      "ax": 44,
+      "ay": 57,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani040_run.webp",
+      "bytes": 92432,
+      "n": 7,
+      "d": 8,
+      "w": 163,
+      "h": 79,
+      "ax": 82,
+      "ay": 58,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani040_at.webp",
+      "bytes": 88706,
+      "n": 7,
+      "d": 8,
+      "w": 89,
+      "h": 70,
+      "ax": 44,
+      "ay": 67,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani040_hurt.webp",
+      "bytes": 47650,
+      "n": 4,
+      "d": 8,
+      "w": 88,
+      "h": 59,
+      "ax": 44,
+      "ay": 56,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani040_die.webp",
+      "bytes": 79460,
+      "n": 6,
+      "d": 8,
+      "w": 89,
+      "h": 68,
+      "ax": 44,
+      "ay": 65,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani040.png",
+  "mons": [
+    {
+      "id": 23,
+      "n": "Xích Luyện Xà"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

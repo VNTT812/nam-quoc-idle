@@ -1,0 +1,87 @@
+{
+  "stem": "enemy059",
+  "type": "enemy",
+  "path": "stems/enemy059/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy059_st.webp",
+      "bytes": 82222,
+      "n": 12,
+      "d": 8,
+      "w": 43,
+      "h": 41,
+      "ax": 21.6,
+      "ay": 36,
+      "ms": 142
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy059_run.webp",
+      "bytes": 70280,
+      "n": 8,
+      "d": 8,
+      "w": 49,
+      "h": 43,
+      "ax": 24.6,
+      "ay": 36,
+      "ms": 75
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy059_at.webp",
+      "bytes": 57162,
+      "n": 6,
+      "d": 8,
+      "w": 64,
+      "h": 67,
+      "ax": 31.8,
+      "ay": 60.6,
+      "ms": 70
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy059_hurt.webp",
+      "bytes": 39388,
+      "n": 4,
+      "d": 8,
+      "w": 47,
+      "h": 44,
+      "ax": 23.4,
+      "ay": 38.4,
+      "ms": 82
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy059_die.webp",
+      "bytes": 49956,
+      "n": 5,
+      "d": 8,
+      "w": 91,
+      "h": 79,
+      "ax": 45.6,
+      "ay": 55.2,
+      "ms": 104
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy059.png",
+  "mons": [
+    {
+      "id": 675,
+      "n": "Hà Hoa Đạo"
+    }
+  ],
+  "zones": [
+    {
+      "id": 336,
+      "n": "Bến Phong Lăng",
+      "lo": 160,
+      "hi": 170
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "enemy121",
+  "type": "enemy",
+  "path": "stems/enemy121/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy121_st.webp",
+      "bytes": 47452,
+      "n": 6,
+      "d": 8,
+      "w": 22,
+      "h": 47,
+      "ax": 11,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy121_run.webp",
+      "bytes": 68088,
+      "n": 8,
+      "d": 8,
+      "w": 31,
+      "h": 47,
+      "ax": 16,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy121_at.webp",
+      "bytes": 105074,
+      "n": 10,
+      "d": 8,
+      "w": 75,
+      "h": 57,
+      "ax": 28,
+      "ay": 51,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy121_hurt.webp",
+      "bytes": 38232,
+      "n": 4,
+      "d": 8,
+      "w": 49,
+      "h": 53,
+      "ax": 25,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy121_die.webp",
+      "bytes": 69352,
+      "n": 8,
+      "d": 8,
+      "w": 101,
+      "h": 71,
+      "ax": 50,
+      "ay": 48,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy121.png",
+  "mons": [
+    {
+      "id": 140,
+      "n": "Khoái Thối"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

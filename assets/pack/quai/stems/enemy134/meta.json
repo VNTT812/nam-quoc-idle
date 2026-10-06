@@ -1,0 +1,91 @@
+{
+  "stem": "enemy134",
+  "type": "enemy",
+  "path": "stems/enemy134/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy134_st.webp",
+      "bytes": 103016,
+      "n": 14,
+      "d": 8,
+      "w": 31,
+      "h": 44,
+      "ax": 16,
+      "ay": 42,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy134_run.webp",
+      "bytes": 52930,
+      "n": 7,
+      "d": 8,
+      "w": 37,
+      "h": 44,
+      "ax": 19,
+      "ay": 42,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy134_at.webp",
+      "bytes": 63136,
+      "n": 8,
+      "d": 8,
+      "w": 61,
+      "h": 57,
+      "ax": 31,
+      "ay": 54,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy134_hurt.webp",
+      "bytes": 38360,
+      "n": 5,
+      "d": 8,
+      "w": 32,
+      "h": 43,
+      "ax": 16,
+      "ay": 42,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy134_die.webp",
+      "bytes": 54470,
+      "n": 7,
+      "d": 8,
+      "w": 123,
+      "h": 83,
+      "ax": 61,
+      "ay": 58,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy134.png",
+  "mons": [
+    {
+      "id": 153,
+      "n": "Giang Nam sơn tặc 1"
+    },
+    {
+      "id": 705,
+      "n": "Sa Đạo"
+    }
+  ],
+  "zones": [
+    {
+      "id": 340,
+      "n": "Mạc Cao Quật",
+      "lo": 170,
+      "hi": 180
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,87 @@
+{
+  "stem": "enemy029",
+  "type": "enemy",
+  "path": "stems/enemy029/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy029_st.webp",
+      "bytes": 132882,
+      "n": 15,
+      "d": 8,
+      "w": 55,
+      "h": 48,
+      "ax": 28,
+      "ay": 46,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy029_run.webp",
+      "bytes": 77906,
+      "n": 8,
+      "d": 8,
+      "w": 59,
+      "h": 53,
+      "ax": 29,
+      "ay": 49,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy029_at.webp",
+      "bytes": 63426,
+      "n": 6,
+      "d": 8,
+      "w": 95,
+      "h": 65,
+      "ax": 47,
+      "ay": 60,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy029_hurt.webp",
+      "bytes": 30256,
+      "n": 3,
+      "d": 8,
+      "w": 54,
+      "h": 56,
+      "ax": 27,
+      "ay": 49,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy029_die.webp",
+      "bytes": 59500,
+      "n": 6,
+      "d": 8,
+      "w": 82,
+      "h": 70,
+      "ax": 41,
+      "ay": 53,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy029.png",
+  "mons": [
+    {
+      "id": 597,
+      "n": "Đoạt Phách"
+    }
+  ],
+  "zones": [
+    {
+      "id": 322,
+      "n": "Ba Vì Sơn",
+      "lo": 150,
+      "hi": 160
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

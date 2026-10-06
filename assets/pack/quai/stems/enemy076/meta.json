@@ -1,0 +1,87 @@
+{
+  "stem": "enemy076",
+  "type": "enemy",
+  "path": "stems/enemy076/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy076_st.webp",
+      "bytes": 123494,
+      "n": 15,
+      "d": 8,
+      "w": 56,
+      "h": 52,
+      "ax": 28,
+      "ay": 49,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy076_run.webp",
+      "bytes": 61650,
+      "n": 7,
+      "d": 8,
+      "w": 68,
+      "h": 53,
+      "ax": 34,
+      "ay": 52,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy076_at.webp",
+      "bytes": 72544,
+      "n": 8,
+      "d": 8,
+      "w": 89,
+      "h": 56,
+      "ax": 44,
+      "ay": 54,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy076_hurt.webp",
+      "bytes": 27258,
+      "n": 3,
+      "d": 8,
+      "w": 54,
+      "h": 52,
+      "ax": 27,
+      "ay": 49,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy076_die.webp",
+      "bytes": 53908,
+      "n": 6,
+      "d": 8,
+      "w": 61,
+      "h": 64,
+      "ax": 31,
+      "ay": 55,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy076.png",
+  "mons": [
+    {
+      "id": 700,
+      "n": "Chính Võ Sĩ"
+    }
+  ],
+  "zones": [
+    {
+      "id": 201,
+      "n": "Động Băng Hà",
+      "lo": 180,
+      "hi": 190
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

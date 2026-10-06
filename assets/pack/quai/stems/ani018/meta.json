@@ -1,0 +1,99 @@
+{
+  "stem": "ani018",
+  "type": "ani",
+  "path": "stems/ani018/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani018_st.webp",
+      "bytes": 53966,
+      "n": 6,
+      "d": 8,
+      "w": 54,
+      "h": 43,
+      "ax": 27,
+      "ay": 41,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani018_run.webp",
+      "bytes": 92516,
+      "n": 8,
+      "d": 8,
+      "w": 59,
+      "h": 46,
+      "ax": 29,
+      "ay": 44,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani018_at.webp",
+      "bytes": 76968,
+      "n": 7,
+      "d": 8,
+      "w": 79,
+      "h": 52,
+      "ax": 40,
+      "ay": 44,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani018_hurt.webp",
+      "bytes": 33922,
+      "n": 3,
+      "d": 8,
+      "w": 71,
+      "h": 49,
+      "ax": 35,
+      "ay": 44,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani018_die.webp",
+      "bytes": 62802,
+      "n": 6,
+      "d": 8,
+      "w": 68,
+      "h": 52,
+      "ax": 34,
+      "ay": 43,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani018.png",
+  "mons": [
+    {
+      "id": 11,
+      "n": "Heo rừng"
+    }
+  ],
+  "zones": [
+    {
+      "id": 2,
+      "n": "Yên Tử Sơn",
+      "lo": 1,
+      "hi": 10
+    },
+    {
+      "id": 7,
+      "n": "Long Hưng",
+      "lo": 20,
+      "hi": 30
+    },
+    {
+      "id": 19,
+      "n": "Tức Mặc",
+      "lo": 30,
+      "hi": 40
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

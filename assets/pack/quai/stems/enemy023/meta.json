@@ -1,0 +1,87 @@
+{
+  "stem": "enemy023",
+  "type": "enemy",
+  "path": "stems/enemy023/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy023_st.webp",
+      "bytes": 159990,
+      "n": 10,
+      "d": 8,
+      "w": 66,
+      "h": 58,
+      "ax": 33,
+      "ay": 55,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy023_run.webp",
+      "bytes": 123464,
+      "n": 7,
+      "d": 8,
+      "w": 79,
+      "h": 59,
+      "ax": 40,
+      "ay": 55,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy023_at.webp",
+      "bytes": 215604,
+      "n": 11,
+      "d": 8,
+      "w": 106,
+      "h": 97,
+      "ax": 53,
+      "ay": 89,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy023_hurt.webp",
+      "bytes": 59276,
+      "n": 3,
+      "d": 8,
+      "w": 103,
+      "h": 70,
+      "ax": 52,
+      "ay": 67,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy023_die.webp",
+      "bytes": 205568,
+      "n": 10,
+      "d": 8,
+      "w": 168,
+      "h": 110,
+      "ax": 84,
+      "ay": 74,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy023.png",
+  "mons": [
+    {
+      "id": 589,
+      "n": "Ngân Nha"
+    }
+  ],
+  "zones": [
+    {
+      "id": 319,
+      "n": "Ải Chi Lăng",
+      "lo": 130,
+      "hi": 140
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

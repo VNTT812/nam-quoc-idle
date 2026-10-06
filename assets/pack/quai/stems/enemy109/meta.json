@@ -1,0 +1,87 @@
+{
+  "stem": "enemy109",
+  "type": "enemy",
+  "path": "stems/enemy109/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy109_st.webp",
+      "bytes": 67856,
+      "n": 12,
+      "d": 8,
+      "w": 23,
+      "h": 47,
+      "ax": 11,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy109_run.webp",
+      "bytes": 59872,
+      "n": 8,
+      "d": 8,
+      "w": 32,
+      "h": 48,
+      "ax": 16,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy109_at.webp",
+      "bytes": 51158,
+      "n": 6,
+      "d": 8,
+      "w": 62,
+      "h": 59,
+      "ax": 31,
+      "ay": 50,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy109_hurt.webp",
+      "bytes": 27074,
+      "n": 4,
+      "d": 8,
+      "w": 29,
+      "h": 49,
+      "ax": 14,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy109_die.webp",
+      "bytes": 38856,
+      "n": 6,
+      "d": 8,
+      "w": 86,
+      "h": 64,
+      "ax": 43,
+      "ay": 47,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy109.png",
+  "mons": [
+    {
+      "id": 853,
+      "n": "Tiểu Boss cấp 40"
+    }
+  ],
+  "zones": [
+    {
+      "id": 21,
+      "n": "Côn Sơn",
+      "lo": 40,
+      "hi": 50
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

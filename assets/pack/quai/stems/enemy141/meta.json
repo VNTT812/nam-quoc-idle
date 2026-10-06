@@ -1,0 +1,91 @@
+{
+  "stem": "enemy141",
+  "type": "enemy",
+  "path": "stems/enemy141/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy141_st.webp",
+      "bytes": 69202,
+      "n": 7,
+      "d": 8,
+      "w": 43,
+      "h": 49,
+      "ax": 18,
+      "ay": 47,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy141_run.webp",
+      "bytes": 122220,
+      "n": 12,
+      "d": 8,
+      "w": 52,
+      "h": 50,
+      "ax": 21,
+      "ay": 47,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy141_at.webp",
+      "bytes": 107972,
+      "n": 10,
+      "d": 8,
+      "w": 127,
+      "h": 89,
+      "ax": 57,
+      "ay": 68,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy141_hurt.webp",
+      "bytes": 48794,
+      "n": 5,
+      "d": 8,
+      "w": 47,
+      "h": 50,
+      "ax": 19,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy141_die.webp",
+      "bytes": 97068,
+      "n": 8,
+      "d": 8,
+      "w": 129,
+      "h": 93,
+      "ax": 61,
+      "ay": 68,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy141.png",
+  "mons": [
+    {
+      "id": 160,
+      "n": "Hoa Bắc sơn tặc 2"
+    },
+    {
+      "id": 593,
+      "n": "Tuyết ảnh"
+    }
+  ],
+  "zones": [
+    {
+      "id": 320,
+      "n": "Tam Đảo",
+      "lo": 140,
+      "hi": 150
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

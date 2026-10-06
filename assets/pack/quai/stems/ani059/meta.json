@@ -1,0 +1,80 @@
+{
+  "stem": "ani059",
+  "type": "ani",
+  "path": "stems/ani059/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani059_st.webp",
+      "bytes": 65228,
+      "n": 10,
+      "d": 8,
+      "w": 28,
+      "h": 46,
+      "ax": 14,
+      "ay": 44,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani059_run.webp",
+      "bytes": 65342,
+      "n": 8,
+      "d": 8,
+      "w": 37,
+      "h": 46,
+      "ax": 19,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani059_at.webp",
+      "bytes": 41554,
+      "n": 5,
+      "d": 8,
+      "w": 53,
+      "h": 46,
+      "ax": 26,
+      "ay": 45,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani059_hurt.webp",
+      "bytes": 23716,
+      "n": 3,
+      "d": 8,
+      "w": 45,
+      "h": 46,
+      "ax": 23,
+      "ay": 44,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani059_die.webp",
+      "bytes": 52378,
+      "n": 7,
+      "d": 8,
+      "w": 79,
+      "h": 58,
+      "ax": 40,
+      "ay": 44,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani059.png",
+  "mons": [
+    {
+      "id": 40,
+      "n": "Tuyết Quái"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

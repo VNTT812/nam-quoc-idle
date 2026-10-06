@@ -1,0 +1,80 @@
+{
+  "stem": "ani067",
+  "type": "ani",
+  "path": "stems/ani067/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani067_st.webp",
+      "bytes": 35048,
+      "n": 6,
+      "d": 8,
+      "w": 77,
+      "h": 38,
+      "ax": 38,
+      "ay": 36,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani067_run.webp",
+      "bytes": 17854,
+      "n": 3,
+      "d": 8,
+      "w": 77,
+      "h": 38,
+      "ax": 38,
+      "ay": 36,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani067_at.webp",
+      "bytes": 35618,
+      "n": 6,
+      "d": 8,
+      "w": 77,
+      "h": 50,
+      "ax": 38,
+      "ay": 47,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani067_hurt.webp",
+      "bytes": 17712,
+      "n": 3,
+      "d": 8,
+      "w": 76,
+      "h": 38,
+      "ax": 38,
+      "ay": 36,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani067_die.webp",
+      "bytes": 38108,
+      "n": 6,
+      "d": 8,
+      "w": 77,
+      "h": 46,
+      "ax": 38,
+      "ay": 43,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani067.png",
+  "mons": [
+    {
+      "id": 46,
+      "n": "Rết"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

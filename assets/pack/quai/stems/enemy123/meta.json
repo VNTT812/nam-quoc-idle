@@ -1,0 +1,87 @@
+{
+  "stem": "enemy123",
+  "type": "enemy",
+  "path": "stems/enemy123/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy123_st.webp",
+      "bytes": 126048,
+      "n": 12,
+      "d": 8,
+      "w": 62,
+      "h": 49,
+      "ax": 31,
+      "ay": 47,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy123_run.webp",
+      "bytes": 87580,
+      "n": 8,
+      "d": 8,
+      "w": 54,
+      "h": 59,
+      "ax": 27,
+      "ay": 57,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy123_at.webp",
+      "bytes": 80534,
+      "n": 7,
+      "d": 8,
+      "w": 85,
+      "h": 79,
+      "ax": 43,
+      "ay": 70,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy123_hurt.webp",
+      "bytes": 32138,
+      "n": 3,
+      "d": 8,
+      "w": 62,
+      "h": 53,
+      "ax": 31,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy123_die.webp",
+      "bytes": 85066,
+      "n": 8,
+      "d": 8,
+      "w": 102,
+      "h": 76,
+      "ax": 51,
+      "ay": 57,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy123.png",
+  "mons": [
+    {
+      "id": 142,
+      "n": "Giang Nam sơn tặc đầu lĩnh"
+    }
+  ],
+  "zones": [
+    {
+      "id": 19,
+      "n": "Tức Mặc",
+      "lo": 30,
+      "hi": 40
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

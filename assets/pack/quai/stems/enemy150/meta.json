@@ -1,0 +1,93 @@
+{
+  "stem": "enemy150",
+  "type": "enemy",
+  "path": "stems/enemy150/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy150_st.webp",
+      "bytes": 93798,
+      "n": 12,
+      "d": 8,
+      "w": 26,
+      "h": 45,
+      "ax": -82.8,
+      "ay": -75.6,
+      "ms": 142
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy150_run.webp",
+      "bytes": 72918,
+      "n": 8,
+      "d": 8,
+      "w": 40,
+      "h": 49,
+      "ax": -76.2,
+      "ay": -71.4,
+      "ms": 75
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy150_at.webp",
+      "bytes": 60006,
+      "n": 6,
+      "d": 8,
+      "w": 65,
+      "h": 56,
+      "ax": -63.6,
+      "ay": -64.2,
+      "ms": 70
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy150_hurt.webp",
+      "bytes": 43164,
+      "n": 4,
+      "d": 8,
+      "w": 37,
+      "h": 52,
+      "ax": -77.4,
+      "ay": -68.4,
+      "ms": 82
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy150_die.webp",
+      "bytes": 51998,
+      "n": 5,
+      "d": 8,
+      "w": 128,
+      "h": 85,
+      "ax": -31.8,
+      "ay": -63.6,
+      "ms": 104
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy150.png",
+  "mons": [
+    {
+      "id": 169,
+      "n": "sơn tặc 07"
+    }
+  ],
+  "zones": [
+    {
+      "id": 201,
+      "n": "Động Băng Hà",
+      "lo": 180,
+      "hi": 190
+    },
+    {
+      "id": 205,
+      "n": "Động Dương Trung",
+      "lo": 190,
+      "hi": 200
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

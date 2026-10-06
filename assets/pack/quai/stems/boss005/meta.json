@@ -1,0 +1,75 @@
+{
+  "stem": "boss005",
+  "type": "boss",
+  "path": "stems/boss005/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/boss005_st.webp",
+      "bytes": 114978,
+      "n": 8,
+      "d": 8,
+      "w": 82,
+      "h": 60,
+      "ax": 31,
+      "ay": 57,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/boss005_run.webp",
+      "bytes": 53182,
+      "n": 4,
+      "d": 8,
+      "w": 76,
+      "h": 59,
+      "ax": 29,
+      "ay": 56,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/boss005_at.webp",
+      "bytes": 138726,
+      "n": 8,
+      "d": 8,
+      "w": 113,
+      "h": 92,
+      "ax": 45,
+      "ay": 80,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/boss005_hurt.webp",
+      "bytes": 58300,
+      "n": 4,
+      "d": 8,
+      "w": 82,
+      "h": 60,
+      "ax": 31,
+      "ay": 57,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/boss005_die.webp",
+      "bytes": 94796,
+      "n": 7,
+      "d": 8,
+      "w": 114,
+      "h": 78,
+      "ax": 50,
+      "ay": 62,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": null,
+  "mons": [],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": false
+}

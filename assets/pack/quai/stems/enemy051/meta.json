@@ -1,0 +1,87 @@
+{
+  "stem": "enemy051",
+  "type": "enemy",
+  "path": "stems/enemy051/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy051_st.webp",
+      "bytes": 84366,
+      "n": 10,
+      "d": 8,
+      "w": 29,
+      "h": 52,
+      "ax": 14,
+      "ay": 49,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy051_run.webp",
+      "bytes": 63446,
+      "n": 8,
+      "d": 8,
+      "w": 54,
+      "h": 45,
+      "ax": 27,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy051_at.webp",
+      "bytes": 61906,
+      "n": 7,
+      "d": 8,
+      "w": 76,
+      "h": 53,
+      "ax": 38,
+      "ay": 49,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy051_hurt.webp",
+      "bytes": 35632,
+      "n": 4,
+      "d": 8,
+      "w": 39,
+      "h": 52,
+      "ax": 19,
+      "ay": 49,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy051_die.webp",
+      "bytes": 74112,
+      "n": 8,
+      "d": 8,
+      "w": 68,
+      "h": 62,
+      "ax": 34,
+      "ay": 48,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy051.png",
+  "mons": [
+    {
+      "id": 717,
+      "n": "Tiếu Vô Thường"
+    }
+  ],
+  "zones": [
+    {
+      "id": 322,
+      "n": "Ba Vì Sơn",
+      "lo": 150,
+      "hi": 160
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

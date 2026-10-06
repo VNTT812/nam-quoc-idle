@@ -1,0 +1,91 @@
+{
+  "stem": "ani001",
+  "type": "ani",
+  "path": "stems/ani001/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani001_st.webp",
+      "bytes": 160702,
+      "n": 12,
+      "d": 8,
+      "w": 76,
+      "h": 55,
+      "ax": 38,
+      "ay": 52,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani001_run.webp",
+      "bytes": 112010,
+      "n": 8,
+      "d": 8,
+      "w": 83,
+      "h": 58,
+      "ax": 41,
+      "ay": 54,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani001_at.webp",
+      "bytes": 85286,
+      "n": 6,
+      "d": 8,
+      "w": 122,
+      "h": 83,
+      "ax": 61,
+      "ay": 76,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani001_hurt.webp",
+      "bytes": 55796,
+      "n": 4,
+      "d": 8,
+      "w": 84,
+      "h": 60,
+      "ax": 42,
+      "ay": 54,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani001_die.webp",
+      "bytes": 65320,
+      "n": 5,
+      "d": 8,
+      "w": 107,
+      "h": 65,
+      "ax": 53,
+      "ay": 52,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani001.png",
+  "mons": [
+    {
+      "id": 0,
+      "n": "Đông Bắc hổ"
+    },
+    {
+      "id": 590,
+      "n": "Đông Bắc hổ"
+    }
+  ],
+  "zones": [
+    {
+      "id": 320,
+      "n": "Tam Đảo",
+      "lo": 140,
+      "hi": 150
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

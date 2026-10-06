@@ -1,0 +1,93 @@
+{
+  "stem": "ani055",
+  "type": "ani",
+  "path": "stems/ani055/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani055_st.webp",
+      "bytes": 59554,
+      "n": 15,
+      "d": 8,
+      "w": 40,
+      "h": 31,
+      "ax": 20,
+      "ay": 29,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani055_run.webp",
+      "bytes": 33318,
+      "n": 7,
+      "d": 8,
+      "w": 46,
+      "h": 35,
+      "ax": 23,
+      "ay": 32,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani055_at.webp",
+      "bytes": 53790,
+      "n": 11,
+      "d": 8,
+      "w": 47,
+      "h": 44,
+      "ax": 23,
+      "ay": 43,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani055_hurt.webp",
+      "bytes": 12552,
+      "n": 3,
+      "d": 8,
+      "w": 43,
+      "h": 31,
+      "ax": 22,
+      "ay": 29,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani055_die.webp",
+      "bytes": 28932,
+      "n": 6,
+      "d": 8,
+      "w": 74,
+      "h": 48,
+      "ax": 37,
+      "ay": 37,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani055.png",
+  "mons": [
+    {
+      "id": 37,
+      "n": "Hắc Diệp Hầu"
+    }
+  ],
+  "zones": [
+    {
+      "id": 92,
+      "n": "An Bang",
+      "lo": 80,
+      "hi": 90
+    },
+    {
+      "id": 56,
+      "n": "Vân Đồn",
+      "lo": 90,
+      "hi": 100
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

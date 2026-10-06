@@ -1,0 +1,80 @@
+{
+  "stem": "enemy136",
+  "type": "enemy",
+  "path": "stems/enemy136/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy136_st.webp",
+      "bytes": 96882,
+      "n": 10,
+      "d": 8,
+      "w": 59,
+      "h": 46,
+      "ax": 29,
+      "ay": 44,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy136_run.webp",
+      "bytes": 103352,
+      "n": 10,
+      "d": 8,
+      "w": 66,
+      "h": 59,
+      "ax": 33,
+      "ay": 56,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy136_at.webp",
+      "bytes": 71800,
+      "n": 7,
+      "d": 8,
+      "w": 109,
+      "h": 77,
+      "ax": 55,
+      "ay": 71,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy136_hurt.webp",
+      "bytes": 29866,
+      "n": 3,
+      "d": 8,
+      "w": 58,
+      "h": 51,
+      "ax": 29,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy136_die.webp",
+      "bytes": 73998,
+      "n": 7,
+      "d": 8,
+      "w": 79,
+      "h": 74,
+      "ax": 40,
+      "ay": 59,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy136.png",
+  "mons": [
+    {
+      "id": 155,
+      "n": "Hắc Cân"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "enemy086",
+  "type": "enemy",
+  "path": "stems/enemy086/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy086_st.webp",
+      "bytes": 95094,
+      "n": 10,
+      "d": 8,
+      "w": 48,
+      "h": 50,
+      "ax": 24,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy086_run.webp",
+      "bytes": 82864,
+      "n": 7,
+      "d": 8,
+      "w": 60,
+      "h": 49,
+      "ax": 30,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy086_at.webp",
+      "bytes": 131808,
+      "n": 10,
+      "d": 8,
+      "w": 82,
+      "h": 76,
+      "ax": 41,
+      "ay": 72,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy086_hurt.webp",
+      "bytes": 35284,
+      "n": 3,
+      "d": 8,
+      "w": 54,
+      "h": 51,
+      "ax": 27,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy086_die.webp",
+      "bytes": 117742,
+      "n": 8,
+      "d": 8,
+      "w": 169,
+      "h": 104,
+      "ax": 85,
+      "ay": 68,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy086.png",
+  "mons": [
+    {
+      "id": 600,
+      "n": "Giáng Chùy"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

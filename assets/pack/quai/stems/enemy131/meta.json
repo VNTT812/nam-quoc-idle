@@ -1,0 +1,80 @@
+{
+  "stem": "enemy131",
+  "type": "enemy",
+  "path": "stems/enemy131/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy131_st.webp",
+      "bytes": 87748,
+      "n": 10,
+      "d": 8,
+      "w": 61,
+      "h": 44,
+      "ax": 31,
+      "ay": 42,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy131_run.webp",
+      "bytes": 72440,
+      "n": 8,
+      "d": 8,
+      "w": 77,
+      "h": 48,
+      "ax": 38,
+      "ay": 44,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy131_at.webp",
+      "bytes": 56946,
+      "n": 6,
+      "d": 8,
+      "w": 109,
+      "h": 80,
+      "ax": 55,
+      "ay": 71,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy131_hurt.webp",
+      "bytes": 36732,
+      "n": 4,
+      "d": 8,
+      "w": 61,
+      "h": 47,
+      "ax": 31,
+      "ay": 45,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy131_die.webp",
+      "bytes": 67942,
+      "n": 7,
+      "d": 8,
+      "w": 103,
+      "h": 63,
+      "ax": 52,
+      "ay": 53,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy131.png",
+  "mons": [
+    {
+      "id": 150,
+      "n": "Thanh Mi"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,97 @@
+{
+  "stem": "enemy089",
+  "type": "enemy",
+  "path": "stems/enemy089/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy089_st.webp",
+      "bytes": 93578,
+      "n": 10,
+      "d": 8,
+      "w": 52,
+      "h": 50,
+      "ax": 26,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy089_run.webp",
+      "bytes": 71844,
+      "n": 7,
+      "d": 8,
+      "w": 34,
+      "h": 58,
+      "ax": 17,
+      "ay": 56,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy089_at.webp",
+      "bytes": 84254,
+      "n": 8,
+      "d": 8,
+      "w": 84,
+      "h": 79,
+      "ax": 42,
+      "ay": 66,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy089_hurt.webp",
+      "bytes": 39360,
+      "n": 4,
+      "d": 8,
+      "w": 49,
+      "h": 53,
+      "ax": 25,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy089_die.webp",
+      "bytes": 86784,
+      "n": 8,
+      "d": 8,
+      "w": 76,
+      "h": 69,
+      "ax": 38,
+      "ay": 54,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy089.png",
+  "mons": [
+    {
+      "id": 720,
+      "n": "Lục Phi"
+    },
+    {
+      "id": 855,
+      "n": "Tiểu Boss cấp 60"
+    }
+  ],
+  "zones": [
+    {
+      "id": 70,
+      "n": "Đông Triều",
+      "lo": 70,
+      "hi": 80
+    },
+    {
+      "id": 319,
+      "n": "Ải Chi Lăng",
+      "lo": 130,
+      "hi": 140
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

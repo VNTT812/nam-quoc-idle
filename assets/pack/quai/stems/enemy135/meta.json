@@ -1,0 +1,80 @@
+{
+  "stem": "enemy135",
+  "type": "enemy",
+  "path": "stems/enemy135/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy135_st.webp",
+      "bytes": 72938,
+      "n": 10,
+      "d": 8,
+      "w": 25,
+      "h": 43,
+      "ax": 13,
+      "ay": 41,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy135_run.webp",
+      "bytes": 60030,
+      "n": 8,
+      "d": 8,
+      "w": 30,
+      "h": 45,
+      "ax": 15,
+      "ay": 43,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy135_at.webp",
+      "bytes": 56624,
+      "n": 7,
+      "d": 8,
+      "w": 53,
+      "h": 46,
+      "ax": 26,
+      "ay": 44,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy135_hurt.webp",
+      "bytes": 23242,
+      "n": 3,
+      "d": 8,
+      "w": 37,
+      "h": 44,
+      "ax": 19,
+      "ay": 42,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy135_die.webp",
+      "bytes": 60434,
+      "n": 8,
+      "d": 8,
+      "w": 92,
+      "h": 59,
+      "ax": 46,
+      "ay": 41,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy135.png",
+  "mons": [
+    {
+      "id": 154,
+      "n": "Lưu Lương"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

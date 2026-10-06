@@ -1,0 +1,99 @@
+{
+  "stem": "ani015",
+  "type": "ani",
+  "path": "stems/ani015/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani015_st.webp",
+      "bytes": 55354,
+      "n": 8,
+      "d": 8,
+      "w": 68,
+      "h": 41,
+      "ax": 34,
+      "ay": 39,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani015_run.webp",
+      "bytes": 57894,
+      "n": 8,
+      "d": 8,
+      "w": 72,
+      "h": 43,
+      "ax": 36,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani015_at.webp",
+      "bytes": 48782,
+      "n": 7,
+      "d": 8,
+      "w": 67,
+      "h": 62,
+      "ax": 34,
+      "ay": 60,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani015_hurt.webp",
+      "bytes": 20262,
+      "n": 3,
+      "d": 8,
+      "w": 67,
+      "h": 40,
+      "ax": 34,
+      "ay": 39,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani015_die.webp",
+      "bytes": 34268,
+      "n": 5,
+      "d": 8,
+      "w": 74,
+      "h": 43,
+      "ax": 37,
+      "ay": 42,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani015.png",
+  "mons": [
+    {
+      "id": 10,
+      "n": "Hỏa Hồ"
+    }
+  ],
+  "zones": [
+    {
+      "id": 41,
+      "n": "Chí Linh",
+      "lo": 50,
+      "hi": 60
+    },
+    {
+      "id": 90,
+      "n": "Phả Lại",
+      "lo": 60,
+      "hi": 70
+    },
+    {
+      "id": 70,
+      "n": "Đông Triều",
+      "lo": 70,
+      "hi": 80
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

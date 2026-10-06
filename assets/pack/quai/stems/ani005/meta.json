@@ -1,0 +1,80 @@
+{
+  "stem": "ani005",
+  "type": "ani",
+  "path": "stems/ani005/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani005_st.webp",
+      "bytes": 157946,
+      "n": 15,
+      "d": 8,
+      "w": 74,
+      "h": 51,
+      "ax": 37,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani005_run.webp",
+      "bytes": 94176,
+      "n": 8,
+      "d": 8,
+      "w": 76,
+      "h": 50,
+      "ax": 38,
+      "ay": 49,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani005_at.webp",
+      "bytes": 84118,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 75,
+      "ax": 47,
+      "ay": 71,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani005_hurt.webp",
+      "bytes": 34176,
+      "n": 3,
+      "d": 8,
+      "w": 84,
+      "h": 50,
+      "ax": 42,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani005_die.webp",
+      "bytes": 78064,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 59,
+      "ax": 47,
+      "ay": 49,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani005.png",
+  "mons": [
+    {
+      "id": 3,
+      "n": "Kim Tiền báo"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,80 @@
+{
+  "stem": "ani058",
+  "type": "ani",
+  "path": "stems/ani058/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani058_st.webp",
+      "bytes": 76492,
+      "n": 8,
+      "d": 8,
+      "w": 66,
+      "h": 47,
+      "ax": 28,
+      "ay": 45,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani058_run.webp",
+      "bytes": 69498,
+      "n": 7,
+      "d": 8,
+      "w": 53,
+      "h": 43,
+      "ax": 22,
+      "ay": 42,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani058_at.webp",
+      "bytes": 57204,
+      "n": 6,
+      "d": 8,
+      "w": 69,
+      "h": 48,
+      "ax": 29,
+      "ay": 46,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani058_hurt.webp",
+      "bytes": 39948,
+      "n": 4,
+      "d": 8,
+      "w": 64,
+      "h": 46,
+      "ax": 26,
+      "ay": 45,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani058_die.webp",
+      "bytes": 56198,
+      "n": 6,
+      "d": 8,
+      "w": 73,
+      "h": 52,
+      "ax": 35,
+      "ay": 45,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani058.png",
+  "mons": [
+    {
+      "id": 39,
+      "n": "Sài"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

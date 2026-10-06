@@ -1,0 +1,80 @@
+{
+  "stem": "ani038",
+  "type": "ani",
+  "path": "stems/ani038/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani038_st.webp",
+      "bytes": 144324,
+      "n": 13,
+      "d": 8,
+      "w": 86,
+      "h": 50,
+      "ax": 43,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani038_run.webp",
+      "bytes": 77964,
+      "n": 7,
+      "d": 8,
+      "w": 118,
+      "h": 64,
+      "ax": 59,
+      "ay": 56,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani038_at.webp",
+      "bytes": 83164,
+      "n": 7,
+      "d": 8,
+      "w": 115,
+      "h": 74,
+      "ax": 58,
+      "ay": 68,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani038_hurt.webp",
+      "bytes": 42856,
+      "n": 4,
+      "d": 8,
+      "w": 86,
+      "h": 53,
+      "ax": 43,
+      "ay": 52,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani038_die.webp",
+      "bytes": 67870,
+      "n": 6,
+      "d": 8,
+      "w": 86,
+      "h": 61,
+      "ax": 43,
+      "ay": 60,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani038.png",
+  "mons": [
+    {
+      "id": 21,
+      "n": "Rắn xanh"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

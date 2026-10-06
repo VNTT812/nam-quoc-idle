@@ -1,0 +1,97 @@
+{
+  "stem": "enemy028",
+  "type": "enemy",
+  "path": "stems/enemy028/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy028_st.webp",
+      "bytes": 87142,
+      "n": 10,
+      "d": 8,
+      "w": 34,
+      "h": 48,
+      "ax": 17,
+      "ay": 46,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy028_run.webp",
+      "bytes": 72012,
+      "n": 8,
+      "d": 8,
+      "w": 35,
+      "h": 49,
+      "ax": 17,
+      "ay": 46,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy028_at.webp",
+      "bytes": 98704,
+      "n": 10,
+      "d": 8,
+      "w": 58,
+      "h": 55,
+      "ax": 29,
+      "ay": 53,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy028_hurt.webp",
+      "bytes": 29866,
+      "n": 3,
+      "d": 8,
+      "w": 49,
+      "h": 57,
+      "ax": 25,
+      "ay": 55,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy028_die.webp",
+      "bytes": 78990,
+      "n": 8,
+      "d": 8,
+      "w": 163,
+      "h": 92,
+      "ax": 82,
+      "ay": 60,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy028.png",
+  "mons": [
+    {
+      "id": 599,
+      "n": "Lãnh Cung"
+    },
+    {
+      "id": 707,
+      "n": "Thần Tý"
+    }
+  ],
+  "zones": [
+    {
+      "id": 336,
+      "n": "Bến Phong Lăng",
+      "lo": 160,
+      "hi": 170
+    },
+    {
+      "id": 340,
+      "n": "Mạc Cao Quật",
+      "lo": 170,
+      "hi": 180
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

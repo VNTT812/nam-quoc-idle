@@ -1,0 +1,93 @@
+{
+  "stem": "ani052",
+  "type": "ani",
+  "path": "stems/ani052/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani052_st.webp",
+      "bytes": 40610,
+      "n": 8,
+      "d": 8,
+      "w": 47,
+      "h": 29,
+      "ax": 23,
+      "ay": 28,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani052_run.webp",
+      "bytes": 29068,
+      "n": 5,
+      "d": 8,
+      "w": 47,
+      "h": 29,
+      "ax": 23,
+      "ay": 26,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani052_at.webp",
+      "bytes": 27176,
+      "n": 5,
+      "d": 8,
+      "w": 59,
+      "h": 47,
+      "ax": 29,
+      "ay": 41,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani052_hurt.webp",
+      "bytes": 20280,
+      "n": 4,
+      "d": 8,
+      "w": 48,
+      "h": 32,
+      "ax": 24,
+      "ay": 31,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani052_die.webp",
+      "bytes": 37824,
+      "n": 7,
+      "d": 8,
+      "w": 46,
+      "h": 33,
+      "ax": 23,
+      "ay": 28,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani052.png",
+  "mons": [
+    {
+      "id": 34,
+      "n": "Linh Miêu"
+    }
+  ],
+  "zones": [
+    {
+      "id": 2,
+      "n": "Yên Tử Sơn",
+      "lo": 1,
+      "hi": 10
+    },
+    {
+      "id": 140,
+      "n": "Đạm Thủy Cốc",
+      "lo": 110,
+      "hi": 120
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,87 @@
+{
+  "stem": "ani065",
+  "type": "ani",
+  "path": "stems/ani065/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani065_st.webp",
+      "bytes": 36940,
+      "n": 6,
+      "d": 8,
+      "w": 35,
+      "h": 31,
+      "ax": 17,
+      "ay": 29,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani065_run.webp",
+      "bytes": 24338,
+      "n": 4,
+      "d": 8,
+      "w": 36,
+      "h": 32,
+      "ax": 18,
+      "ay": 30,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani065_at.webp",
+      "bytes": 25658,
+      "n": 4,
+      "d": 8,
+      "w": 55,
+      "h": 40,
+      "ax": 28,
+      "ay": 37,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani065_hurt.webp",
+      "bytes": 19494,
+      "n": 3,
+      "d": 8,
+      "w": 48,
+      "h": 39,
+      "ax": 24,
+      "ay": 36,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani065_die.webp",
+      "bytes": 24676,
+      "n": 4,
+      "d": 8,
+      "w": 48,
+      "h": 40,
+      "ax": 24,
+      "ay": 36,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani065.png",
+  "mons": [
+    {
+      "id": 558,
+      "n": "Bọ cạp"
+    }
+  ],
+  "zones": [
+    {
+      "id": 224,
+      "n": "Trường Yên",
+      "lo": 120,
+      "hi": 130
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

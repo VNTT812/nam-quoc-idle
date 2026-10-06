@@ -1,0 +1,93 @@
+{
+  "stem": "enemy140",
+  "type": "enemy",
+  "path": "stems/enemy140/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy140_st.webp",
+      "bytes": 61770,
+      "n": 8,
+      "d": 8,
+      "w": 36,
+      "h": 44,
+      "ax": 18,
+      "ay": 42,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy140_run.webp",
+      "bytes": 66710,
+      "n": 8,
+      "d": 8,
+      "w": 34,
+      "h": 45,
+      "ax": 17,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy140_at.webp",
+      "bytes": 79304,
+      "n": 8,
+      "d": 8,
+      "w": 64,
+      "h": 62,
+      "ax": 32,
+      "ay": 60,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy140_hurt.webp",
+      "bytes": 26972,
+      "n": 3,
+      "d": 8,
+      "w": 41,
+      "h": 46,
+      "ax": 20,
+      "ay": 44,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy140_die.webp",
+      "bytes": 70024,
+      "n": 8,
+      "d": 8,
+      "w": 88,
+      "h": 61,
+      "ax": 44,
+      "ay": 45,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy140.png",
+  "mons": [
+    {
+      "id": 159,
+      "n": "Hoa Bắc sơn tặc 1"
+    }
+  ],
+  "zones": [
+    {
+      "id": 201,
+      "n": "Động Băng Hà",
+      "lo": 180,
+      "hi": 190
+    },
+    {
+      "id": 205,
+      "n": "Động Dương Trung",
+      "lo": 190,
+      "hi": 200
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

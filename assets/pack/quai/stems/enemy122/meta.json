@@ -1,0 +1,87 @@
+{
+  "stem": "enemy122",
+  "type": "enemy",
+  "path": "stems/enemy122/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy122_st.webp",
+      "bytes": 151682,
+      "n": 13,
+      "d": 8,
+      "w": 59,
+      "h": 49,
+      "ax": 29,
+      "ay": 47,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy122_run.webp",
+      "bytes": 105756,
+      "n": 9,
+      "d": 8,
+      "w": 64,
+      "h": 55,
+      "ax": 32,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy122_at.webp",
+      "bytes": 99196,
+      "n": 7,
+      "d": 8,
+      "w": 82,
+      "h": 70,
+      "ax": 41,
+      "ay": 64,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy122_hurt.webp",
+      "bytes": 36640,
+      "n": 3,
+      "d": 8,
+      "w": 60,
+      "h": 52,
+      "ax": 30,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy122_die.webp",
+      "bytes": 91028,
+      "n": 7,
+      "d": 8,
+      "w": 96,
+      "h": 84,
+      "ax": 48,
+      "ay": 62,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy122.png",
+  "mons": [
+    {
+      "id": 141,
+      "n": "Tây Nam sơn tặc đầu lĩnh"
+    }
+  ],
+  "zones": [
+    {
+      "id": 2,
+      "n": "Yên Tử Sơn",
+      "lo": 1,
+      "hi": 10
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

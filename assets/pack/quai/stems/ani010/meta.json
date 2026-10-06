@@ -1,0 +1,87 @@
+{
+  "stem": "ani010",
+  "type": "ani",
+  "path": "stems/ani010/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani010_st.webp",
+      "bytes": 46280,
+      "n": 6,
+      "d": 8,
+      "w": 48,
+      "h": 41,
+      "ax": 24,
+      "ay": 39,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani010_run.webp",
+      "bytes": 75792,
+      "n": 8,
+      "d": 8,
+      "w": 52,
+      "h": 44,
+      "ax": 26,
+      "ay": 42,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani010_at.webp",
+      "bytes": 66194,
+      "n": 7,
+      "d": 8,
+      "w": 71,
+      "h": 53,
+      "ax": 35,
+      "ay": 51,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani010_hurt.webp",
+      "bytes": 29324,
+      "n": 3,
+      "d": 8,
+      "w": 71,
+      "h": 44,
+      "ax": 35,
+      "ay": 40,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani010_die.webp",
+      "bytes": 43648,
+      "n": 5,
+      "d": 8,
+      "w": 72,
+      "h": 50,
+      "ax": 36,
+      "ay": 39,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani010.png",
+  "mons": [
+    {
+      "id": 6,
+      "n": "Sói đỏ"
+    }
+  ],
+  "zones": [
+    {
+      "id": 3,
+      "n": "Thiên Trường",
+      "lo": 10,
+      "hi": 20
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

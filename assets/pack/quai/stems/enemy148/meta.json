@@ -1,0 +1,80 @@
+{
+  "stem": "enemy148",
+  "type": "enemy",
+  "path": "stems/enemy148/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy148_st.webp",
+      "bytes": 87442,
+      "n": 10,
+      "d": 8,
+      "w": 53,
+      "h": 57,
+      "ax": 26,
+      "ay": 54,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy148_run.webp",
+      "bytes": 62472,
+      "n": 7,
+      "d": 8,
+      "w": 54,
+      "h": 58,
+      "ax": 27,
+      "ay": 55,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy148_at.webp",
+      "bytes": 53676,
+      "n": 6,
+      "d": 8,
+      "w": 99,
+      "h": 60,
+      "ax": 50,
+      "ay": 53,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy148_hurt.webp",
+      "bytes": 26980,
+      "n": 3,
+      "d": 8,
+      "w": 53,
+      "h": 62,
+      "ax": 26,
+      "ay": 60,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy148_die.webp",
+      "bytes": 68528,
+      "n": 7,
+      "d": 8,
+      "w": 123,
+      "h": 80,
+      "ax": 61,
+      "ay": 61,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy148.png",
+  "mons": [
+    {
+      "id": 167,
+      "n": "sơn tặc 05"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

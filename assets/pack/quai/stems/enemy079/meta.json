@@ -1,0 +1,75 @@
+{
+  "stem": "enemy079",
+  "type": "enemy",
+  "path": "stems/enemy079/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy079_st.webp",
+      "bytes": 116180,
+      "n": 12,
+      "d": 8,
+      "w": 32,
+      "h": 48,
+      "ax": 16.2,
+      "ay": 40.2,
+      "ms": 142
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy079_run.webp",
+      "bytes": 87972,
+      "n": 8,
+      "d": 8,
+      "w": 36,
+      "h": 50,
+      "ax": 18,
+      "ay": 40.8,
+      "ms": 75
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy079_at.webp",
+      "bytes": 67292,
+      "n": 6,
+      "d": 8,
+      "w": 47,
+      "h": 57,
+      "ax": 23.4,
+      "ay": 49.2,
+      "ms": 70
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy079_hurt.webp",
+      "bytes": 42456,
+      "n": 4,
+      "d": 8,
+      "w": 32,
+      "h": 48,
+      "ax": 16.2,
+      "ay": 40.2,
+      "ms": 82
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy079_die.webp",
+      "bytes": 61802,
+      "n": 5,
+      "d": 8,
+      "w": 145,
+      "h": 93,
+      "ax": 72.6,
+      "ay": 55.2,
+      "ms": 104
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": null,
+  "mons": [],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": false
+}

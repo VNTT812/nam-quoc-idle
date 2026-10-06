@@ -1,0 +1,87 @@
+{
+  "stem": "enemy021",
+  "type": "enemy",
+  "path": "stems/enemy021/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy021_st.webp",
+      "bytes": 91558,
+      "n": 8,
+      "d": 8,
+      "w": 72,
+      "h": 67,
+      "ax": 36,
+      "ay": 64,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy021_run.webp",
+      "bytes": 81076,
+      "n": 7,
+      "d": 8,
+      "w": 70,
+      "h": 68,
+      "ax": 35,
+      "ay": 67,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy021_at.webp",
+      "bytes": 103402,
+      "n": 8,
+      "d": 8,
+      "w": 110,
+      "h": 95,
+      "ax": 55,
+      "ay": 91,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy021_hurt.webp",
+      "bytes": 35120,
+      "n": 3,
+      "d": 8,
+      "w": 88,
+      "h": 61,
+      "ax": 44,
+      "ay": 61,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy021_die.webp",
+      "bytes": 100102,
+      "n": 8,
+      "d": 8,
+      "w": 172,
+      "h": 106,
+      "ax": 86,
+      "ay": 72,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy021.png",
+  "mons": [
+    {
+      "id": 595,
+      "n": "Lạc Quang"
+    }
+  ],
+  "zones": [
+    {
+      "id": 322,
+      "n": "Ba Vì Sơn",
+      "lo": 150,
+      "hi": 160
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

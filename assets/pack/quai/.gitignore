@@ -1,0 +1,5 @@
+# binary hardlink — tạo lại bằng tools/quai_pack.py
+stems/**/*.webp
+stems/**/portrait.png
+portraits/*.png
+by_type/**

@@ -1,0 +1,87 @@
+{
+  "stem": "ani056",
+  "type": "ani",
+  "path": "stems/ani056/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani056_st.webp",
+      "bytes": 80036,
+      "n": 12,
+      "d": 8,
+      "w": 35,
+      "h": 30,
+      "ax": -78.6,
+      "ay": -93.6,
+      "ms": 142
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani056_run.webp",
+      "bytes": 68006,
+      "n": 8,
+      "d": 8,
+      "w": 47,
+      "h": 35,
+      "ax": -73.2,
+      "ay": -91.2,
+      "ms": 75
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani056_at.webp",
+      "bytes": 55972,
+      "n": 6,
+      "d": 8,
+      "w": 56,
+      "h": 45,
+      "ax": -73.2,
+      "ay": -80.4,
+      "ms": 70
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani056_hurt.webp",
+      "bytes": 32060,
+      "n": 4,
+      "d": 8,
+      "w": 42,
+      "h": 30,
+      "ax": -76.8,
+      "ay": -93.6,
+      "ms": 82
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani056_die.webp",
+      "bytes": 45458,
+      "n": 5,
+      "d": 8,
+      "w": 66,
+      "h": 44,
+      "ax": -63.6,
+      "ay": -87,
+      "ms": 104
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani056.png",
+  "mons": [
+    {
+      "id": 38,
+      "n": "Kim Tơ Hầu"
+    }
+  ],
+  "zones": [
+    {
+      "id": 140,
+      "n": "Đạm Thủy Cốc",
+      "lo": 110,
+      "hi": 120
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

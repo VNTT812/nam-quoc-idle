@@ -1,0 +1,80 @@
+{
+  "stem": "ani036",
+  "type": "ani",
+  "path": "stems/ani036/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani036_st.webp",
+      "bytes": 125502,
+      "n": 12,
+      "d": 8,
+      "w": 115,
+      "h": 58,
+      "ax": 58,
+      "ay": 55,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani036_run.webp",
+      "bytes": 58280,
+      "n": 5,
+      "d": 8,
+      "w": 114,
+      "h": 57,
+      "ax": 57,
+      "ay": 54,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani036_at.webp",
+      "bytes": 83912,
+      "n": 7,
+      "d": 8,
+      "w": 116,
+      "h": 76,
+      "ax": 58,
+      "ay": 72,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani036_hurt.webp",
+      "bytes": 34626,
+      "n": 3,
+      "d": 8,
+      "w": 119,
+      "h": 59,
+      "ax": 59,
+      "ay": 55,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani036_die.webp",
+      "bytes": 72652,
+      "n": 6,
+      "d": 8,
+      "w": 116,
+      "h": 80,
+      "ax": 58,
+      "ay": 77,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani036.png",
+  "mons": [
+    {
+      "id": 19,
+      "n": "Thằn lằn đỏ"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

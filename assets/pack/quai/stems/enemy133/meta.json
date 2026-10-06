@@ -1,0 +1,80 @@
+{
+  "stem": "enemy133",
+  "type": "enemy",
+  "path": "stems/enemy133/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy133_st.webp",
+      "bytes": 68684,
+      "n": 10,
+      "d": 8,
+      "w": 36,
+      "h": 46,
+      "ax": 18,
+      "ay": 44,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy133_run.webp",
+      "bytes": 67678,
+      "n": 8,
+      "d": 8,
+      "w": 42,
+      "h": 47,
+      "ax": 21,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy133_at.webp",
+      "bytes": 68160,
+      "n": 7,
+      "d": 8,
+      "w": 79,
+      "h": 59,
+      "ax": 40,
+      "ay": 55,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy133_hurt.webp",
+      "bytes": 26156,
+      "n": 3,
+      "d": 8,
+      "w": 36,
+      "h": 47,
+      "ax": 18,
+      "ay": 45,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy133_die.webp",
+      "bytes": 73220,
+      "n": 8,
+      "d": 8,
+      "w": 101,
+      "h": 65,
+      "ax": 50,
+      "ay": 44,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy133.png",
+  "mons": [
+    {
+      "id": 152,
+      "n": "Tây Nam sơn tặc 2"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

@@ -1,0 +1,97 @@
+{
+  "stem": "enemy082",
+  "type": "enemy",
+  "path": "stems/enemy082/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy082_st.webp",
+      "bytes": 105638,
+      "n": 14,
+      "d": 8,
+      "w": 78,
+      "h": 48,
+      "ax": 39,
+      "ay": 46,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy082_run.webp",
+      "bytes": 74018,
+      "n": 8,
+      "d": 8,
+      "w": 47,
+      "h": 53,
+      "ax": 23,
+      "ay": 50,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy082_at.webp",
+      "bytes": 72826,
+      "n": 7,
+      "d": 8,
+      "w": 101,
+      "h": 78,
+      "ax": 50,
+      "ay": 70,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy082_hurt.webp",
+      "bytes": 39456,
+      "n": 4,
+      "d": 8,
+      "w": 78,
+      "h": 49,
+      "ax": 39,
+      "ay": 47,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy082_die.webp",
+      "bytes": 48888,
+      "n": 5,
+      "d": 8,
+      "w": 78,
+      "h": 71,
+      "ax": 39,
+      "ay": 46,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy082.png",
+  "mons": [
+    {
+      "id": 591,
+      "n": "Độc Bộ"
+    },
+    {
+      "id": 858,
+      "n": "Tiểu Boss cấp 90"
+    }
+  ],
+  "zones": [
+    {
+      "id": 140,
+      "n": "Đạm Thủy Cốc",
+      "lo": 110,
+      "hi": 120
+    },
+    {
+      "id": 320,
+      "n": "Tam Đảo",
+      "lo": 140,
+      "hi": 150
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

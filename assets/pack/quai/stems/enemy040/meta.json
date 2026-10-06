@@ -1,0 +1,80 @@
+{
+  "stem": "enemy040",
+  "type": "enemy",
+  "path": "stems/enemy040/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy040_st.webp",
+      "bytes": 153818,
+      "n": 14,
+      "d": 8,
+      "w": 58,
+      "h": 50,
+      "ax": 29,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy040_run.webp",
+      "bytes": 92380,
+      "n": 8,
+      "d": 8,
+      "w": 64,
+      "h": 49,
+      "ax": 32,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy040_at.webp",
+      "bytes": 114172,
+      "n": 9,
+      "d": 8,
+      "w": 92,
+      "h": 67,
+      "ax": 46,
+      "ay": 62,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy040_hurt.webp",
+      "bytes": 35952,
+      "n": 3,
+      "d": 8,
+      "w": 56,
+      "h": 55,
+      "ax": 28,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy040_die.webp",
+      "bytes": 87524,
+      "n": 7,
+      "d": 8,
+      "w": 94,
+      "h": 71,
+      "ax": 47,
+      "ay": 54,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy040.png",
+  "mons": [
+    {
+      "id": 601,
+      "n": "Sãn Vũ"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

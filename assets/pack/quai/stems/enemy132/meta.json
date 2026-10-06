@@ -1,0 +1,80 @@
+{
+  "stem": "enemy132",
+  "type": "enemy",
+  "path": "stems/enemy132/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy132_st.webp",
+      "bytes": 90834,
+      "n": 10,
+      "d": 8,
+      "w": 37,
+      "h": 44,
+      "ax": 19,
+      "ay": 42,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy132_run.webp",
+      "bytes": 76952,
+      "n": 8,
+      "d": 8,
+      "w": 40,
+      "h": 51,
+      "ax": 20,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy132_at.webp",
+      "bytes": 100614,
+      "n": 10,
+      "d": 8,
+      "w": 59,
+      "h": 61,
+      "ax": 30,
+      "ay": 58,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy132_hurt.webp",
+      "bytes": 27514,
+      "n": 3,
+      "d": 8,
+      "w": 37,
+      "h": 45,
+      "ax": 19,
+      "ay": 43,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy132_die.webp",
+      "bytes": 61240,
+      "n": 7,
+      "d": 8,
+      "w": 120,
+      "h": 69,
+      "ax": 60,
+      "ay": 43,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy132.png",
+  "mons": [
+    {
+      "id": 151,
+      "n": "Mãng Hán"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

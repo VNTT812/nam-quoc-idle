@@ -1,0 +1,80 @@
+{
+  "stem": "enemy127",
+  "type": "enemy",
+  "path": "stems/enemy127/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy127_st.webp",
+      "bytes": 98890,
+      "n": 12,
+      "d": 8,
+      "w": 40,
+      "h": 48,
+      "ax": 20,
+      "ay": 46,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy127_run.webp",
+      "bytes": 73274,
+      "n": 8,
+      "d": 8,
+      "w": 37,
+      "h": 58,
+      "ax": 19,
+      "ay": 52,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy127_at.webp",
+      "bytes": 71084,
+      "n": 7,
+      "d": 8,
+      "w": 96,
+      "h": 94,
+      "ax": 48,
+      "ay": 73,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy127_hurt.webp",
+      "bytes": 34740,
+      "n": 4,
+      "d": 8,
+      "w": 42,
+      "h": 50,
+      "ax": 21,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy127_die.webp",
+      "bytes": 101056,
+      "n": 11,
+      "d": 8,
+      "w": 161,
+      "h": 92,
+      "ax": 81,
+      "ay": 54,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy127.png",
+  "mons": [
+    {
+      "id": 146,
+      "n": "Đoạt Mệnh Liêm"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

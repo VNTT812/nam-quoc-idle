@@ -1,0 +1,80 @@
+{
+  "stem": "ani046",
+  "type": "ani",
+  "path": "stems/ani046/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani046_st.webp",
+      "bytes": 28106,
+      "n": 10,
+      "d": 8,
+      "w": 24,
+      "h": 21,
+      "ax": 12,
+      "ay": 20,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani046_run.webp",
+      "bytes": 14500,
+      "n": 5,
+      "d": 8,
+      "w": 28,
+      "h": 22,
+      "ax": 14,
+      "ay": 19,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani046_at.webp",
+      "bytes": 19158,
+      "n": 6,
+      "d": 8,
+      "w": 35,
+      "h": 28,
+      "ax": 17,
+      "ay": 21,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani046_hurt.webp",
+      "bytes": 9254,
+      "n": 3,
+      "d": 8,
+      "w": 32,
+      "h": 25,
+      "ax": 16,
+      "ay": 20,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani046_die.webp",
+      "bytes": 18774,
+      "n": 6,
+      "d": 8,
+      "w": 24,
+      "h": 59,
+      "ax": 12,
+      "ay": 19,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani046.png",
+  "mons": [
+    {
+      "id": 28,
+      "n": "Dơi chúa đỏ"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

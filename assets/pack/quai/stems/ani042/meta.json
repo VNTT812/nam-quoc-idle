@@ -1,0 +1,93 @@
+{
+  "stem": "ani042",
+  "type": "ani",
+  "path": "stems/ani042/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani042_st.webp",
+      "bytes": 62076,
+      "n": 12,
+      "d": 8,
+      "w": 44,
+      "h": 30,
+      "ax": 22,
+      "ay": 28,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani042_run.webp",
+      "bytes": 31676,
+      "n": 6,
+      "d": 8,
+      "w": 43,
+      "h": 29,
+      "ax": 22,
+      "ay": 32,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani042_at.webp",
+      "bytes": 21212,
+      "n": 4,
+      "d": 8,
+      "w": 46,
+      "h": 32,
+      "ax": 23,
+      "ay": 32,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani042_hurt.webp",
+      "bytes": 21804,
+      "n": 4,
+      "d": 8,
+      "w": 43,
+      "h": 40,
+      "ax": 22,
+      "ay": 38,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani042_die.webp",
+      "bytes": 38506,
+      "n": 7,
+      "d": 8,
+      "w": 46,
+      "h": 77,
+      "ax": 23,
+      "ay": 42,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani042.png",
+  "mons": [
+    {
+      "id": 25,
+      "n": "Thương ưng"
+    }
+  ],
+  "zones": [
+    {
+      "id": 21,
+      "n": "Côn Sơn",
+      "lo": 40,
+      "hi": 50
+    },
+    {
+      "id": 70,
+      "n": "Đông Triều",
+      "lo": 70,
+      "hi": 80
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

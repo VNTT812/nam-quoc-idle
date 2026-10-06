@@ -1,0 +1,87 @@
+{
+  "stem": "ani003",
+  "type": "ani",
+  "path": "stems/ani003/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani003_st.webp",
+      "bytes": 132022,
+      "n": 12,
+      "d": 8,
+      "w": 74,
+      "h": 50,
+      "ax": 37,
+      "ay": 48,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani003_run.webp",
+      "bytes": 91666,
+      "n": 8,
+      "d": 8,
+      "w": 77,
+      "h": 50,
+      "ax": 38,
+      "ay": 48,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani003_at.webp",
+      "bytes": 68356,
+      "n": 6,
+      "d": 8,
+      "w": 95,
+      "h": 76,
+      "ax": 47,
+      "ay": 70,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani003_hurt.webp",
+      "bytes": 57180,
+      "n": 5,
+      "d": 8,
+      "w": 89,
+      "h": 55,
+      "ax": 44,
+      "ay": 48,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani003_die.webp",
+      "bytes": 77114,
+      "n": 7,
+      "d": 8,
+      "w": 100,
+      "h": 59,
+      "ax": 50,
+      "ay": 48,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani003.png",
+  "mons": [
+    {
+      "id": 2,
+      "n": "Bạch Hổ"
+    }
+  ],
+  "zones": [
+    {
+      "id": 122,
+      "n": "Bạch Đằng Giang",
+      "lo": 100,
+      "hi": 110
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

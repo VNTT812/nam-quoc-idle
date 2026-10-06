@@ -1,0 +1,87 @@
+{
+  "stem": "enemy067",
+  "type": "enemy",
+  "path": "stems/enemy067/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy067_st.webp",
+      "bytes": 122780,
+      "n": 15,
+      "d": 8,
+      "w": 29,
+      "h": 55,
+      "ax": 14,
+      "ay": 52,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy067_run.webp",
+      "bytes": 66632,
+      "n": 7,
+      "d": 8,
+      "w": 66,
+      "h": 49,
+      "ax": 33,
+      "ay": 45,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy067_at.webp",
+      "bytes": 83412,
+      "n": 8,
+      "d": 8,
+      "w": 91,
+      "h": 72,
+      "ax": 46,
+      "ay": 69,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy067_hurt.webp",
+      "bytes": 26454,
+      "n": 3,
+      "d": 8,
+      "w": 42,
+      "h": 54,
+      "ax": 21,
+      "ay": 51,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy067_die.webp",
+      "bytes": 76712,
+      "n": 8,
+      "d": 8,
+      "w": 137,
+      "h": 97,
+      "ax": 68,
+      "ay": 66,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy067.png",
+  "mons": [
+    {
+      "id": 588,
+      "n": "Bôn Lôi"
+    }
+  ],
+  "zones": [
+    {
+      "id": 319,
+      "n": "Ải Chi Lăng",
+      "lo": 130,
+      "hi": 140
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

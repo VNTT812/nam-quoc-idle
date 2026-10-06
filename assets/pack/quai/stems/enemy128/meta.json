@@ -1,0 +1,91 @@
+{
+  "stem": "enemy128",
+  "type": "enemy",
+  "path": "stems/enemy128/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy128_st.webp",
+      "bytes": 110068,
+      "n": 11,
+      "d": 8,
+      "w": 50,
+      "h": 55,
+      "ax": 25,
+      "ay": 52,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy128_run.webp",
+      "bytes": 71060,
+      "n": 7,
+      "d": 8,
+      "w": 66,
+      "h": 54,
+      "ax": 33,
+      "ay": 52,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy128_at.webp",
+      "bytes": 74994,
+      "n": 7,
+      "d": 8,
+      "w": 98,
+      "h": 71,
+      "ax": 49,
+      "ay": 69,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy128_hurt.webp",
+      "bytes": 31268,
+      "n": 3,
+      "d": 8,
+      "w": 64,
+      "h": 58,
+      "ax": 32,
+      "ay": 55,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy128_die.webp",
+      "bytes": 75556,
+      "n": 8,
+      "d": 8,
+      "w": 162,
+      "h": 89,
+      "ax": 81,
+      "ay": 60,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy128.png",
+  "mons": [
+    {
+      "id": 147,
+      "n": "Đao khách"
+    },
+    {
+      "id": 594,
+      "n": "Đao Trảm"
+    }
+  ],
+  "zones": [
+    {
+      "id": 322,
+      "n": "Ba Vì Sơn",
+      "lo": 150,
+      "hi": 160
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

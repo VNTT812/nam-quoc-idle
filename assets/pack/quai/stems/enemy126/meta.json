@@ -1,0 +1,97 @@
+{
+  "stem": "enemy126",
+  "type": "enemy",
+  "path": "stems/enemy126/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy126_st.webp",
+      "bytes": 107192,
+      "n": 12,
+      "d": 8,
+      "w": 30,
+      "h": 61,
+      "ax": 15,
+      "ay": 58,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy126_run.webp",
+      "bytes": 67764,
+      "n": 7,
+      "d": 8,
+      "w": 59,
+      "h": 63,
+      "ax": 29,
+      "ay": 60,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy126_at.webp",
+      "bytes": 98816,
+      "n": 8,
+      "d": 8,
+      "w": 115,
+      "h": 97,
+      "ax": 58,
+      "ay": 72,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy126_hurt.webp",
+      "bytes": 29698,
+      "n": 3,
+      "d": 8,
+      "w": 59,
+      "h": 60,
+      "ax": 29,
+      "ay": 57,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy126_die.webp",
+      "bytes": 85322,
+      "n": 9,
+      "d": 8,
+      "w": 101,
+      "h": 80,
+      "ax": 50,
+      "ay": 57,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy126.png",
+  "mons": [
+    {
+      "id": 145,
+      "n": "Nam bộ sơn tặc đầu lĩnh"
+    },
+    {
+      "id": 854,
+      "n": "Tiểu Boss cấp 50"
+    }
+  ],
+  "zones": [
+    {
+      "id": 41,
+      "n": "Chí Linh",
+      "lo": 50,
+      "hi": 60
+    },
+    {
+      "id": 224,
+      "n": "Trường Yên",
+      "lo": 120,
+      "hi": 130
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

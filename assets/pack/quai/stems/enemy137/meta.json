@@ -1,0 +1,80 @@
+{
+  "stem": "enemy137",
+  "type": "enemy",
+  "path": "stems/enemy137/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/enemy137_st.webp",
+      "bytes": 93158,
+      "n": 10,
+      "d": 8,
+      "w": 68,
+      "h": 57,
+      "ax": 34,
+      "ay": 54,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/enemy137_run.webp",
+      "bytes": 72066,
+      "n": 8,
+      "d": 8,
+      "w": 52,
+      "h": 52,
+      "ax": 26,
+      "ay": 50,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/enemy137_at.webp",
+      "bytes": 102508,
+      "n": 9,
+      "d": 8,
+      "w": 135,
+      "h": 74,
+      "ax": 67,
+      "ay": 66,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/enemy137_hurt.webp",
+      "bytes": 30804,
+      "n": 3,
+      "d": 8,
+      "w": 68,
+      "h": 60,
+      "ax": 34,
+      "ay": 57,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/enemy137_die.webp",
+      "bytes": 70216,
+      "n": 7,
+      "d": 8,
+      "w": 67,
+      "h": 64,
+      "ax": 34,
+      "ay": 49,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/enemy137.png",
+  "mons": [
+    {
+      "id": 156,
+      "n": "Ảnh Côn"
+    }
+  ],
+  "zones": [],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}

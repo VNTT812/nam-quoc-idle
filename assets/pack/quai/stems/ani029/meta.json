@@ -1,0 +1,87 @@
+{
+  "stem": "ani029",
+  "type": "ani",
+  "path": "stems/ani029/",
+  "acts": {
+    "st": {
+      "file": "st.webp",
+      "src": "img/a/ani029_st.webp",
+      "bytes": 88552,
+      "n": 6,
+      "d": 8,
+      "w": 86,
+      "h": 70,
+      "ax": 43,
+      "ay": 66,
+      "ms": 143
+    },
+    "run": {
+      "file": "run.webp",
+      "src": "img/a/ani029_run.webp",
+      "bytes": 109452,
+      "n": 7,
+      "d": 8,
+      "w": 82,
+      "h": 72,
+      "ax": 41,
+      "ay": 66,
+      "ms": 71
+    },
+    "at": {
+      "file": "at.webp",
+      "src": "img/a/ani029_at.webp",
+      "bytes": 106476,
+      "n": 7,
+      "d": 8,
+      "w": 122,
+      "h": 80,
+      "ax": 61,
+      "ay": 66,
+      "ms": 62
+    },
+    "hurt": {
+      "file": "hurt.webp",
+      "src": "img/a/ani029_hurt.webp",
+      "bytes": 48528,
+      "n": 3,
+      "d": 8,
+      "w": 85,
+      "h": 71,
+      "ax": 43,
+      "ay": 68,
+      "ms": 83
+    },
+    "die": {
+      "file": "die.webp",
+      "src": "img/a/ani029_die.webp",
+      "bytes": 106886,
+      "n": 7,
+      "d": 8,
+      "w": 98,
+      "h": 80,
+      "ax": 49,
+      "ay": 66,
+      "ms": 100
+    }
+  },
+  "missing_acts": [],
+  "complete": true,
+  "portrait": "portraits/ani029.png",
+  "mons": [
+    {
+      "id": 17,
+      "n": "Trâu rừng"
+    }
+  ],
+  "zones": [
+    {
+      "id": 92,
+      "n": "An Bang",
+      "lo": 80,
+      "hi": 90
+    }
+  ],
+  "in_game_anim": true,
+  "on_disk": true,
+  "used_by_mon": true
+}
