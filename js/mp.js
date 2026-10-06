@@ -8,9 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~16Hz khi chay / 8Hz dung; noi suy tre 130ms; field soft-merge (khong wipe quai). */
-const MP_MAX = 6, MP_POS = 0.06, MP_POS_IDLE = 0.14, MP_SYNC = 8, MP_WAIT = 1600, MP_PEER_TTL = 30000;
-const MP_SNAP = 420, MP_HARD = 900, MP_DELAY = 130, MP_HIST = 16;
+/* Pos ~20Hz khi chay / ~7Hz dung; noi suy tre 180ms + van toc gui kem; field soft-merge. */
+const MP_MAX = 6, MP_POS = 0.05, MP_POS_IDLE = 0.15, MP_SYNC = 8, MP_WAIT = 1600, MP_PEER_TTL = 45000;
+const MP_SNAP = 280, MP_HARD = 720, MP_DELAY = 180, MP_HIST = 28, MP_EXTRAP = 0.12, MP_MAX_SPD = 220;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -240,7 +240,8 @@ function mpUpsertPeer(row, fromPos) {
     p = MP.peers[k] = {
       cid: k, name: 'Võ lâm', fac: '', sex: 0, lvl: 0, face: 1, dir: 0, act: 'st', actT: 0,
       life: 1, title: '', titleCol: '', jx: null, x: tx, y: ty, tx, ty, rx: tx, ry: ty, vx: 0, vy: 0,
-      seen: now, _t: now, _px: tx, _py: ty, _jo: null, _joCache: '', seq: 0, hist: row.x != null ? [{ t: now, x: tx, y: ty }] : []
+      seen: now, _t: now, _px: tx, _py: ty, _jo: null, _joCache: '', _joReady: null, seq: 0, clockOff: 0,
+      hist: row.x != null ? [{ t: row.t != null ? +row.t : now, x: tx, y: ty, vx: 0, vy: 0 }] : []
     };
     if (typeof toast === 'function') toast('Đồng đội: ' + (row.name || 'Võ lâm') + ' vào map');
   }
@@ -249,26 +250,37 @@ function mpUpsertPeer(row, fromPos) {
     const seq = row.seq != null ? (row.seq | 0) : 0;
     const pt = row.t != null ? (+row.t) : now;
     if (seq && p.seq && seq <= p.seq) { p.seen = now; /* stale */ }
-    else if (p._pt && pt + 40 < p._pt) { p.seen = now; /* out-of-order time */ }
+    else if (p._pt && pt + 80 < p._pt) { p.seen = now; /* out-of-order time */ }
     else {
-      if (seq) p.seq = seq;
-      p._pt = Math.max(p._pt || 0, pt);
-      const dt = Math.max(0.05, (now - (p._t || now)) / 1000);
-      let vx = (tx - p.tx) / dt, vy = (ty - p.ty) / dt;
+      if (seq) p.seq = Math.max(p.seq || 0, seq);
+      // uoc lech dong ho: now ≈ pt + clockOff (EMA) — noi suy dung thoi gian nguon
+      const off = now - pt;
+      p.clockOff = p.clockOff ? p.clockOff * 0.85 + off * 0.15 : off;
+      // van toc: uu tien goi tu nguon (khong phu thuoc nhip nhan goi)
+      let vx, vy;
+      if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
+      else {
+        const dt = Math.max(0.04, ((p._pt ? pt - p._pt : 0) || (now - (p._t || now))) / 1000);
+        vx = (tx - p.tx) / dt; vy = (ty - p.ty) / dt;
+      }
       const spd = Math.hypot(vx, vy);
-      if (spd > 520) { vx *= 520 / spd; vy *= 520 / spd; }
-      // EMA van toc — bot giat khi goi mang lech nhip
-      p.vx = p.vx ? p.vx * 0.55 + vx * 0.45 : vx;
-      p.vy = p.vy ? p.vy * 0.55 + vy * 0.45 : vy;
-      p.tx = tx; p.ty = ty; p._t = now;
+      if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
+      if (spd < 6) { vx = 0; vy = 0; } // dung yen: khong extrapolate
+      p.vx = p.vx != null ? p.vx * 0.35 + vx * 0.65 : vx;
+      p.vy = p.vy != null ? p.vy * 0.35 + vy * 0.65 : vy;
+      p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt);
       if (!p.hist) p.hist = [];
       const last = p.hist[p.hist.length - 1];
-      // dung timestamp goi mang (pt) de noi suy dung tre, khong phai Date.now nhan
-      const ht = Math.min(now, Math.max(pt, (last && last.t) || pt));
-      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.4 || ht - last.t > 35) {
-        p.hist.push({ t: ht, x: tx, y: ty });
+      // lich su theo timestamp NGUON (pt) — dong bo voi clockOff
+      const ht = pt;
+      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 40) {
+        // tele xa: chen diem trung gian de spring khong nhay
+        if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
+          p.hist.push({ t: last.t + Math.max(40, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
+        }
+        p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
         if (p.hist.length > MP_HIST) p.hist.shift();
-      } else { last.t = ht; last.x = tx; last.y = ty; }
+      } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
       if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
     }
   }
@@ -287,8 +299,10 @@ function mpUpsertPeer(row, fromPos) {
   if (row.titleCol != null) p.titleCol = row.titleCol;
   if (row.titleId != null) p.titleId = String(row.titleId).slice(0, 24);
   if (row.jx && typeof row.jx === 'object') {
-    p.jx = { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 };
-    p._jo = null; p._joCache = '';
+    const nj = { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 };
+    const nk = (p.sex | 0) + ':' + nj.h + ',' + nj.a + ',' + nj.w + ',' + nj.o;
+    if (nk !== p._joCache) { p.jx = nj; /* giu _jo cu den khi bo moi san sang — tranh flash do */ }
+    else p.jx = nj;
   }
   p.seen = now;
 }
@@ -346,6 +360,27 @@ function mpJxPack() {
   const r = R.jx.rows;
   return { h: r.helm | 0, a: r.armor | 0, w: r.weapon | 0, o: r.horse | 0 };
 }
+function mpLocalVel() {
+  // van toc tu buoc di chuyen (input) — on dinh hon uoc tu goi mang
+  const now = performance.now();
+  const dt = Math.max(0.016, Math.min(0.1, (now - (MP._lvT || now)) / 1000));
+  MP._lvT = now;
+  let vx = 0, vy = 0;
+  if (typeof inputVec === 'function') {
+    const v = inputVec(), moving = !!(v && (v[0] || v[1]) && (H.moving || (H.act || '') === 'run'));
+    if (moving) {
+      const sp = 150 * (typeof curSpeed === 'function' ? curSpeed() : 1);
+      vx = v[0] * sp; vy = v[1] * sp;
+    }
+  } else if (H.px != null) {
+    vx = (H.x - H.px) / dt; vy = (H.y - H.py) / dt;
+  }
+  const spd = Math.hypot(vx, vy);
+  if (spd > MP_MAX_SPD) { const k = MP_MAX_SPD / spd; vx *= k; vy *= k; }
+  if (spd < 8) { vx = 0; vy = 0; }
+  MP._lvx = vx; MP._lvy = vy;
+  return { vx, vy };
+}
 function mpPosPayload(full) {
   const tw = typeof titleWorn === 'function' && titleWorn();
   const jx = mpJxPack();
@@ -355,11 +390,14 @@ function mpPosPayload(full) {
   const actChanged = act !== MP.lastAct;
   if (changed) MP.lastJx = jxKey;
   if (actChanged) MP.lastAct = act;
-  // goi nhe: chi toa do + huong + act (jx/title khi doi do / full)
+  const vel = mpLocalVel();
+  // goi nhe: toa do + van toc + huong + act (jx/title khi doi do / full)
   MP.posSeq = (MP.posSeq | 0) + 1;
   const o = {
     cid: mpCid(), seq: MP.posSeq,
-    x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10, face: H.face >= 0 ? 1 : -1,
+    x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10,
+    vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
+    face: H.face >= 0 ? 1 : -1,
     dir: H.dir | 0, act, life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
   };
   if (full || changed || actChanged) {
@@ -374,48 +412,64 @@ function mpPosPayload(full) {
   return o;
 }
 function mpTrackNow(forceBcast) {
-  if (!MP.ch || MP.state !== 'ok' || !S || !S.fac) return;
+  if (!MP.ch || (MP.state !== 'ok' && MP.state !== 'retry') || !S || !S.fac) return;
+  if (MP.state !== 'ok') return; // chi gui khi SUBSCRIBED
   const now = Date.now();
-  const moving = !!(H.moving || Math.hypot(H.vx || 0, H.vy || 0) > 8 || (H.act || '') === 'run' || (H.act || '') === 'at');
-  const minGap = forceBcast ? 0 : (moving ? 55 : 120);
+  const vel = mpLocalVel();
+  const moving = !!(H.moving || Math.hypot(vel.vx, vel.vy) > 8 || (H.act || '') === 'run' || (H.act || '') === 'at');
+  const minGap = forceBcast ? 0 : (moving ? 48 : 140);
   if (now - (MP.lastTrack || 0) < minGap) return;
   MP.lastTrack = now;
   const act = H.act || 'st';
   const urgent = forceBcast || act === 'at' || act !== MP.lastAct;
   const p = mpPosPayload(!!forceBcast);
-  // presence track thua hon (meta): ~5 goi pos / 1 track — KHONG dung presence de noi suy
+  // presence track thua hon (meta): ~6 goi pos / 1 track — KHONG dung presence de noi suy
   MP.posN = (MP.posN || 0) + 1;
-  if (urgent || MP.posN % 5 === 0) {
+  if (urgent || MP.posN % 6 === 0) {
     try { MP.ch.track(Object.assign({}, p, { name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, jx: p.jx || mpJxPack() })); } catch (e) { /* bo qua */ }
   }
   mpSend('pos', p);
 }
 
 /* ---------- kenh map ---------- */
-async function mpLeave() {
+async function mpLeave(keepPeers) {
   const ch = MP.ch; MP.leaving = ch; MP.ch = null; MP.zoneId = null; MP.fieldSnap = null; MP.host = ''; MP.online = 0; MP.state = 'off';
-  // giu MP.peers nhe — roi map thi xoa
-  MP.peers = {};
+  if (!keepPeers) MP.peers = {};
   if (ch && MP.sb) { try { await MP.sb.removeChannel(ch); } catch (e) { /* bo qua */ } }
   MP.leaving = null; mpUi();
+}
+
+function mpChAlive(ch) {
+  if (!ch) return false;
+  const st = ch.state;
+  return st === 'joined' || st === 'joining' || st === 'subscribed' || st === 'SUBSCRIBED';
 }
 
 async function mpJoin(z) {
   z = z || (typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null);
   if (!z || !mpCanPlay()) { if (!NET.user || !S || !S.fac) await mpLeave(); else if (!fieldMode() || R.town || R.dg || R.tower) await mpLeave(); return; }
   const rid = mpRoom(z);
-  if (MP.ch && MP.zoneId === z.id && (MP.state === 'ok' || MP.state === 'load') && MP.ch.state === 'joined') { mpTrackNow(true); return; }
+  // kenh cung map con song: KHONG go + tao lai (tranh "nối lại" lap / peer tele)
+  if (MP.ch && MP.zoneId === z.id && mpChAlive(MP.ch)) {
+    if (MP.state !== 'ok') MP.state = 'ok';
+    MP.joinBusy = false; mpTrackNow(true); mpUi(); return;
+  }
   if (MP.joinBusy) return;
+  // backoff: khong spam recreate khi vua loi
+  if (MP._nextJoin && Date.now() < MP._nextJoin && MP.zoneId === z.id) return;
   MP.joinBusy = true;
   mpDom();
-  // KHONG xoa peers khi noi lai — tranh nhan vat phu luc an luc hien
-  MP.state = MP.state === 'ok' ? 'retry' : 'load'; MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; mpUi();
+  // giu peers khi doi kenh / noi lai cung map
+  const sameZone = MP.zoneId === z.id;
+  MP.state = sameZone && Object.keys(MP.peers).length ? 'retry' : 'load';
+  MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; mpUi();
   try {
     if (!MP.sb) MP.sb = await netClient();
-  } catch (e) { MP.state = 'err'; MP.joinBusy = false; mpUi(); return; }
+  } catch (e) { MP.state = 'err'; MP.joinBusy = false; MP._nextJoin = Date.now() + 3000; mpUi(); return; }
   const old = MP.ch; MP.ch = null; MP.leaving = old;
   if (old) { try { await MP.sb.removeChannel(old); } catch (e) { /* bo qua */ } }
   MP.leaving = null;
+  if (!sameZone) MP.peers = {}; // doi map: xoa peer cu
   const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false }, presence: { key: mpCid() } } });
   ch.on('presence', { event: 'sync' }, () => { if (MP.ch === ch) mpPresenceSync(); })
     .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(true); } })
@@ -433,7 +487,7 @@ async function mpJoin(z) {
     .subscribe(async st => {
       if (MP.ch !== ch || MP.leaving === ch) return;
       if (st === 'SUBSCRIBED') {
-        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0;
+        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0; MP._nextJoin = 0;
         try { await ch.track(mpPosPayload(true)); } catch (e) { /* bo qua */ }
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
@@ -442,24 +496,30 @@ async function mpJoin(z) {
         mpUi();
       } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') {
         MP.state = 'retry'; MP.joinBusy = false; MP.retries = (MP.retries || 0) + 1; mpUi();
-        const wait = Math.min(12000, 2000 + MP.retries * 1500);
+        const wait = Math.min(15000, 2500 + MP.retries * 2000);
+        MP._nextJoin = Date.now() + wait;
         clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
       } else if (st === 'CLOSED') {
-        // rot that (khong phai removeChannel chu dong): noi lai em
-        if (MP.ch === ch) {
+        if (MP.ch === ch && MP.leaving !== ch) {
           MP.state = 'retry'; MP.joinBusy = false; mpUi();
-          clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, 2500);
+          const wait = Math.min(12000, 3000 + (MP.retries || 0) * 1500);
+          MP._nextJoin = Date.now() + wait;
+          clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
         }
       }
     });
-  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 5000);
+  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 6000);
 }
 
 function mpEnsure() {
   if (!mpCanPlay()) { mpUi(); return; }
   const zid = zoneOf(Math.min(S.stage, STAGES)).id;
-  if (MP.state === 'ok' && MP.ch && MP.zoneId === zid) return; // othTick da track dinh ky
-  if (MP.state === 'load' || MP.state === 'retry' || MP.joinBusy) return;
+  if (MP.ch && MP.zoneId === zid && mpChAlive(MP.ch)) {
+    if (MP.state !== 'ok') { MP.state = 'ok'; mpUi(); }
+    return;
+  }
+  if (MP.state === 'load' || MP.joinBusy) return;
+  if (MP._nextJoin && Date.now() < MP._nextJoin) return;
   mpJoin(zoneOf(Math.min(S.stage, STAGES)));
 }
 
@@ -473,29 +533,40 @@ function mpInit() {
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
-/* Noi suy tre MP_DELAY ms tren lich su pos — muot theo FPS man hinh (60/120) */
+/* Noi suy tre MP_DELAY ms tren lich su pos (thoi gian NGUON + clockOff) */
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
+  // quy ve dong ho nguon: tSrc ≈ now - clockOff - delay
+  const t = now - (p.clockOff || 0) - MP_DELAY;
   if (h.length === 1) {
-    // extrapolate nhe bang van toc
-    const age = Math.min(0.18, Math.max(0, (now - MP_DELAY - h[0].t) / 1000));
-    return { x: h[0].x + (p.vx || 0) * age, y: h[0].y + (p.vy || 0) * age };
+    const age = Math.min(MP_EXTRAP, Math.max(0, (t - h[0].t) / 1000));
+    const vx = h[0].vx != null ? h[0].vx : (p.vx || 0), vy = h[0].vy != null ? h[0].vy : (p.vy || 0);
+    return { x: h[0].x + vx * age, y: h[0].y + vy * age };
   }
-  const t = now - MP_DELAY;
   if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
-  const last = h[h.length - 1], prev = h[h.length - 2];
+  const last = h[h.length - 1];
   if (t >= last.t) {
-    // extrapolate toi da 180ms theo van toc EMA (muot hon delta 2 diem)
-    const u = Math.min(0.18, (t - last.t) / 1000);
-    return { x: last.x + (p.vx || 0) * u, y: last.y + (p.vy || 0) * u };
+    // chi extrapolate khi dang chay; dung yen thi dung tai last
+    const vx = last.vx != null ? last.vx : (p.vx || 0), vy = last.vy != null ? last.vy : (p.vy || 0);
+    if (Math.hypot(vx, vy) < 10) return { x: last.x, y: last.y };
+    const u = Math.min(MP_EXTRAP, (t - last.t) / 1000);
+    return { x: last.x + vx * u, y: last.y + vy * u };
   }
   for (let i = 1; i < h.length; i++) {
     if (t <= h[i].t) {
       const a = h[i - 1], b = h[i];
       let u = (t - a.t) / Math.max(1, b.t - a.t);
       u = u * u * (3 - 2 * u); // smoothstep
-      return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
+      // Hermite nhe theo van toc diem (bot giat o khuc cua)
+      const dtSec = Math.max(0.04, (b.t - a.t) / 1000);
+      const m0x = (a.vx != null ? a.vx : (b.x - a.x) / dtSec) * dtSec;
+      const m0y = (a.vy != null ? a.vy : (b.y - a.y) / dtSec) * dtSec;
+      const m1x = (b.vx != null ? b.vx : (b.x - a.x) / dtSec) * dtSec;
+      const m1y = (b.vy != null ? b.vy : (b.y - a.y) / dtSec) * dtSec;
+      const u2 = u * u, u3 = u2 * u;
+      const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+      return { x: h00 * a.x + h10 * m0x + h01 * b.x + h11 * m1x, y: h00 * a.y + h10 * m0y + h01 * b.y + h11 * m1y };
     }
   }
   return { x: last.x, y: last.y };
@@ -511,12 +582,10 @@ function othSmoothRender(dt) {
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
     if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; } // tele that (doi map / lag lon)
-    else if (dist > MP_SNAP) {
-      // keo nhanh, khong snap cung
-      const a = 1 - Math.exp(-dt * 18);
-      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
-    } else {
-      const a = 1 - Math.exp(-dt * 22);
+    else {
+      // spring mem: lech lon keo nhanh hon, lech nho muot (tranh rung)
+      const rate = dist > MP_SNAP ? 14 : (dist > 40 ? 18 : 26);
+      const a = 1 - Math.exp(-dt * rate);
       p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     }
     p.x = p.rx; p.y = p.ry;
@@ -583,15 +652,17 @@ function othDraw(c, p) {
   const sc = typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1;
   let h = 0;
   const Jo = mpJxFromPeer(p);
-  if (Jo && typeof drawJxHero === 'function' && mpJxBodyReady(Jo, act)) {
-    h = drawJxHero(act, p.dir || 0, p.actT || 0, px, py, sc, 1, hw && hw.anim, Jo) || 0;
-  }
-  if (!h && hw && hw.anim && typeof drawAnim === 'function') {
+  // uu tien bo JX san sang; neu bo moi chua load — ve bo cu (tranh flash do ao trang <-> ao phai)
+  let drawJo = null;
+  if (Jo && typeof drawJxHero === 'function' && mpJxBodyReady(Jo, act)) { drawJo = Jo; p._joReady = Jo; }
+  else if (p._joReady && typeof drawJxHero === 'function' && mpJxBodyReady(p._joReady, act)) drawJo = p._joReady;
+  if (drawJo) h = drawJxHero(act, p.dir || 0, p.actT || 0, px, py, sc, 1, hw && hw.anim, drawJo) || 0;
+  if (!h && !p._joReady && hw && hw.anim && typeof drawAnim === 'function') {
     h = drawAnim(hw.anim, act, p.dir || 0, p.actT || 0, px, py, sc) || 0;
-  } else if (!h && hw && typeof drawSprite === 'function') {
+  } else if (!h && !p._joReady && hw && typeof drawSprite === 'function') {
     drawSprite(img(hw.img), hw.sz, px, py, 0.85, p.face < 0, 0.92);
     h = 52;
-  } else if (!h) {
+  } else if (!h && !drawJo) {
     c.fillStyle = typeof campCol === 'function' ? campCol(p.fac) : '#c8e6c0';
     c.beginPath(); c.arc(px, py - 18, 12, 0, 7); c.fill();
     h = 40;
