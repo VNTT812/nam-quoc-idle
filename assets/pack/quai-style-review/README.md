@@ -12,3 +12,8 @@ Sprites gốc: `ani019` Nhím · `ani018` Heo rừng · `ani051` Hoán hùng · 
 - `style-J-mythic-night-4mons.jpg` — Mythic / hệ nguyên tố đêm
 
 Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
+
+## Đã áp thử: F · Pixel remaster
+- Tool: `tools/quai_remaster_f.py`
+- Backup gốc: `assets/pack/quai-orig-backup/`
+- Sheets ghi đè `img/a/ani018|019|051|052_*.webp` (giữ n/d/w/h), cache `?v=301` trong `world.js`
