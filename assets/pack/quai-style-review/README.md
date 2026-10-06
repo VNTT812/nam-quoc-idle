@@ -22,3 +22,7 @@ Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
 - Tool: `tools/quai_remaster_j.py`
 - Nhím=Độc · Heo rừng=Hỏa · Hoán hùng=Ám · Linh Miêu=Lôi
 - Sheets từ backup gốc, cache `?v=302`
+
+## Đang áp: F · Pixel remaster (chốt)
+- Từ backup gốc, cache `?v=305`
+- Thay bản J mythic trên 4 stem
