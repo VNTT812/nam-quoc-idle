@@ -37,6 +37,7 @@ function onZoneChange(z) {
   snapCamera();
   loadZoneBg(z);
   playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh();
+  if (typeof mpJoin === 'function') try { mpJoin(z); } catch (e) { /* dong doi beta: loi khong chan game */ }
 }
 function onStageChange() { if (curTab === 'log') refresh(); }
 function onLevelUp() { if (S.lvl === NEWBIE_LV && !rebornN()) log('🌱 Đạt cấp ' + NEWBIE_LV + ': hết <b>Hỗ Trợ Tân Thủ</b>.'); if (typeof autoMapCheck === 'function') autoMapCheck(); if (isNovice() && S.lvl >= NOVICE_LV && !R.quiet) { toast('Đạt cấp ' + NOVICE_LV + ': gia nhập môn phái!'); if ($('#modal').classList.contains('hidden')) joinModal(); } if (S.autoPts === true) { autoSpendAttrs(); autoSpendSkills(); } autoEquipAll(); if (!R.quiet) { checkHints(); updateDots(); renderPad(); dotGift(); if (LV_MS.some(m => m[0] === S.lvl)) toast(`Đạt mốc cấp ${S.lvl}: nhận quà ở nút 🎁`); } }
@@ -156,6 +157,7 @@ function init() {
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')) closeModal(); });   // Esc dong hop thoai (hop thoai khoa thi bo qua)
   if (typeof chatInit === 'function') try { chatInit(); } catch (e) { /* chat loi khong anh huong game */ }
   if (typeof netInit === 'function') try { netInit(); } catch (e) { /* bo qua */ }
+  if (typeof mpInit === 'function') try { mpInit(); } catch (e) { /* dong doi beta */ }
   requestAnimationFrame(frame);
 }
 init();

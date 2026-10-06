@@ -128,7 +128,8 @@ const uiScale = () => document.body.classList.contains('mob') ? UI_SCALE_MOBILE 
 function resizeArena() {
   const b = $('#battle'), box = { width: b.offsetWidth, height: b.offsetHeight };
   // gioi han DPR de bot lag GPU tren man hinh mat do cao
-  DPR = Math.min(uiPrefs && uiPrefs().saver ? 1 : 1.5, window.devicePixelRatio || 1) * uiScale();
+  const saver = typeof uiPrefs === 'function' && uiPrefs().saver;
+  DPR = Math.min(saver ? 1 : 1.5, window.devicePixelRatio || 1) * uiScale();
   CV.width = Math.round(box.width * DPR); CV.height = Math.round(box.height * DPR);
   AR.w = box.width; AR.h = box.height; AR.top = 58; AR.bot = box.height - 12;   // khung nhin (man hinh)
   snapCamera();

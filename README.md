@@ -18,6 +18,16 @@ Mở [http://127.0.0.1:47291/](http://127.0.0.1:47291/).
 
 Đăng nhập bằng tài khoản cũ nếu Supabase vẫn còn. Client vẫn trỏ đúng project đã cấu hình trong `js/chatcfg.js`, nên nhân vật lưu đám mây vẫn vào được khi máy chủ đó còn sống.
 
+### Đồng đội bản đồ (beta)
+
+Sau khi đăng nhập, vào **bãi luyện công** (cùng map): tối đa ~6 người / phòng `map:{zoneId}` qua Supabase Realtime (presence vị trí + broadcast hit/spawn).
+
+- **HP quái chung** — mọi người đánh cùng một máu
+- **Drop / EXP** — chỉ người **last-hit** nhận
+- Host (cid nhỏ nhất) làm trọng tài spawn; chưa có game server riêng
+
+Phó bản / tháp / trong thành vẫn solo. Badge **Đồng đội** góc phải sân đấu hiện số người trên map.
+
 Muốn chơi thử trên máy, không cần đăng nhập:
 
 [http://127.0.0.1:47291/?offline_test=1](http://127.0.0.1:47291/?offline_test=1)
