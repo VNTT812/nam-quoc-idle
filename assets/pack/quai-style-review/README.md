@@ -17,3 +17,8 @@ Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
 - Tool: `tools/quai_remaster_f.py`
 - Backup gốc: `assets/pack/quai-orig-backup/`
 - Sheets ghi đè `img/a/ani018|019|051|052_*.webp` (giữ n/d/w/h), cache `?v=301` trong `world.js`
+
+## Đã áp thử: J · Mythic đêm
+- Tool: `tools/quai_remaster_j.py`
+- Nhím=Độc · Heo rừng=Hỏa · Hoán hùng=Ám · Linh Miêu=Lôi
+- Sheets từ backup gốc, cache `?v=302`
