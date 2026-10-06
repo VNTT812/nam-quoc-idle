@@ -74,6 +74,7 @@ wss.on('connection', (ws) => {
 
       if (msg.t === 'in' || msg.t === 'pos') r.onInput(cid, msg);
       else if (msg.t === 'meta') r.onMeta(cid, msg);
+      else if (msg.t === 'skill') r.onSkill(cid, msg);
       else if (msg.t === 'ping') ws.send(JSON.stringify({ t: 'pong', t0: msg.t0, serverT: Date.now() }));
     } catch (e) {
       try { ws.send(JSON.stringify({ t: 'err', msg: e.message || 'Lỗi' })); } catch (_) {}

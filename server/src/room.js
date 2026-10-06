@@ -128,6 +128,47 @@ export class Room {
     if (msg.titleCol != null) p.titleCol = msg.titleCol;
   }
 
+  /** Relay hieu ung chieu — khong validate damage (client van tu xu ly hit). */
+  onSkill(cid, msg) {
+    const p = this.players.get(cid);
+    if (!p || !msg) return;
+    const now = Date.now();
+    // chong spam: toi da ~12 goi / giay / nguoi
+    if (p._skAt && now - p._skAt < 70) {
+      if ((p._skN | 0) >= 8) return;
+      p._skN = (p._skN | 0) + 1;
+    } else { p._skAt = now; p._skN = 1; }
+    if (msg.act === 'at' || msg.face != null || msg.dir != null) {
+      p.act = 'at';
+      if (msg.face != null) p.face = msg.face >= 0 ? 1 : -1;
+      if (msg.dir != null) p.dir = msg.dir | 0;
+    }
+    const body = JSON.stringify({
+      t: 'skill',
+      cid,
+      id: msg.id | 0,
+      L: msg.L | 0,
+      nMis: msg.nMis | 0,
+      melee: !!msg.melee,
+      around: !!msg.around,
+      cast: msg.cast ? 1 : 0,
+      mid: msg.mid || null,
+      ax: msg.ax != null ? +msg.ax : Math.round(p.x),
+      ay: msg.ay != null ? +msg.ay : Math.round(p.y),
+      bx: msg.bx != null ? +msg.bx : Math.round(p.x),
+      by: msg.by != null ? +msg.by : Math.round(p.y),
+      face: p.face,
+      dir: p.dir,
+      serverT: now
+    });
+    for (const o of this.players.values()) {
+      if (o.cid === cid) continue;
+      if (o.ws.readyState === 1) {
+        try { o.ws.send(body); } catch (_) {}
+      }
+    }
+  }
+
   tick() {
     this.tickN++;
     const dt = TICK_MS / 1000;

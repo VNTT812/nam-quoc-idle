@@ -246,34 +246,53 @@ function mpOnDie(p) {
   } finally { MP.applying = false; }
 }
 
+/** Goi skill payload — uu tien auth WSS (on dinh); fallback Supabase broadcast. */
+function mpSkillNetOk() {
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return true;
+  return mpActive();
+}
+function mpSkillPayload(extra) {
+  return Object.assign({
+    ax: Math.round(H.x), ay: Math.round(H.y),
+    face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: 'at'
+  }, extra);
+}
+function mpEmitSkill(payload) {
+  if (!payload) return;
+  let viaAuth = false;
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok' && typeof mpaSend === 'function') {
+    try { mpaSend(Object.assign({ t: 'skill' }, payload)); viaAuth = true; } catch (e) { /* bo qua */ }
+  }
+  // Supabase backup (khi khong auth / auth lech)
+  if (!viaAuth) mpSend('skill', payload);
+  else if (MP.ch && (MP.state === 'ok' || MP.state === 'retry')) {
+    try { mpSend('skill', payload); } catch (e) { /* bo qua */ }
+  }
+}
 /** Gui hieu ung chieu cho peer — chi khi minh tung (caster === H). */
 function mpNotifySkill(caster, tgt, atk) {
-  if (!mpActive() || MP.applying || !atk || caster !== H) return;
+  if (!mpSkillNetOk() || MP.applying || !atk || caster !== H) return;
   const now = Date.now();
   if (MP._skT && now - MP._skT < 70) {
     if ((MP._skN | 0) >= 8) return;
     MP._skN = (MP._skN | 0) + 1;
   } else { MP._skT = now; MP._skN = 1; }
-  mpSend('skill', {
+  mpEmitSkill(mpSkillPayload({
     id: atk.id | 0, L: atk.L | 0, nMis: atk.nMis | 0,
     melee: !!atk.melee, around: !!atk.around,
     mid: tgt && tgt.mid ? tgt.mid : null,
-    bx: Math.round((tgt || H).x), by: Math.round((tgt || H).y),
-    ax: Math.round(H.x), ay: Math.round(H.y),
-    face: H.face >= 0 ? 1 : -1, dir: H.dir | 0
-  });
+    bx: Math.round((tgt || H).x), by: Math.round((tgt || H).y)
+  }));
 }
 /** Bua hai / buff chi co PreCastSpr — khong di qua skillFx. */
 function mpNotifyCast(id, tgt) {
-  if (!mpActive() || MP.applying || !id) return;
-  mpSend('skill', {
+  if (!mpSkillNetOk() || MP.applying || !id) return;
+  mpEmitSkill(mpSkillPayload({
     id: +id, cast: 1,
     mid: tgt && tgt.mid ? tgt.mid : null,
     bx: tgt ? Math.round(tgt.x) : Math.round(H.x),
-    by: tgt ? Math.round(tgt.y) : Math.round(H.y),
-    ax: Math.round(H.x), ay: Math.round(H.y),
-    face: H.face >= 0 ? 1 : -1, dir: H.dir | 0
-  });
+    by: tgt ? Math.round(tgt.y) : Math.round(H.y)
+  }));
 }
 function mpOnSkill(p) {
   if (!p || p.cid === mpCid() || MP.applying) return;

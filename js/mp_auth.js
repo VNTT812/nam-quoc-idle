@@ -190,7 +190,9 @@ async function mpaJoin() {
   ws.onmessage = (ev) => {
     let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
     if (msg.t === 'snap') mpaApplySnap(msg);
-    else if (msg.t === 'pong' && msg.t0) MPA.rtt = Date.now() - msg.t0;
+    else if (msg.t === 'skill') {
+      if (typeof mpOnSkill === 'function') mpOnSkill(msg);
+    } else if (msg.t === 'pong' && msg.t0) MPA.rtt = Date.now() - msg.t0;
     else if (msg.t === 'err') {
       if (typeof toast === 'function') toast('MP: ' + (msg.msg || 'lỗi'));
       // auth fail / chua join: ha state de thu lai + fallback Supabase pos
