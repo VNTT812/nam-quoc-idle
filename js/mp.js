@@ -406,7 +406,7 @@ function mpPresenceSync() {
     const metas = st[k];
     const raw = Array.isArray(metas) ? (metas[0] || {}) : (metas && metas.metas && metas.metas[0]) || metas || {};
     const peer = MP.peers[k];
-    const needBoot = authPos && (!peer || !peer._recvAt || Date.now() - peer._recvAt > 2000);
+    const needBoot = authPos && (!peer || !peer._recvAt || Date.now() - peer._recvAt > 800);
     // auth: meta only; bootstrap x/y neu chua co snap auth (tranh peer bien mat / dung o 0,0)
     const row = authPos && !needBoot
       ? { cid: k, name: raw.name, fac: raw.fac, sex: raw.sex, lvl: raw.lvl, jx: raw.jx, title: raw.title, titleId: raw.titleId, titleCol: raw.titleCol, face: raw.face, dir: raw.dir, act: raw.act, life: raw.life }
@@ -428,10 +428,10 @@ function mpPresenceSync() {
 
 function mpOnPos(p) {
   if (!p || p.cid === mpCid()) return;
-  // Auth dang ok: chi dung SB pos lam FALLBACK khi peer chua co snap auth (mat noi / join tre)
+  // Auth snap tuoi (<0.8s): bo SB. Snap tre/mat: nhan SB backup (het đứng yên khi auth lech).
   if (mpAuthOn()) {
     const peer = MP.peers[String(p.cid || '')];
-    if (peer && peer._recvAt && Date.now() - peer._recvAt < 2000) return;
+    if (peer && peer._recvAt && Date.now() - peer._recvAt < 800) return;
   }
   mpUpsertPeer(p, true);
   const peer = MP.peers[String(p.cid || '')];
@@ -810,7 +810,7 @@ function othTick(dt) {
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
   const authOk = typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
-  // Auth: bo broadcast pos Supabase — NHUNG VAN phai sync field/epos (bug cu: return som → quai lech → đánh không khí)
+  // Auth: uu tien pos server — VAN gui pos Supabase nhe (backup neu peer mat auth / lech zone)
   MP.trackT = (MP.trackT || 0) + dt;
   if (!authOk) {
     const moving = !!(H.moving || (H.act || '') === 'run' || (H.act || '') === 'at');
@@ -818,8 +818,18 @@ function othTick(dt) {
     if (MP.trackT >= gap) { MP.trackT = 0; mpTrackNow(); }
     if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
   } else {
-    if (MP.trackT >= 1.2) { MP.trackT = 0; mpTrackNow(); }
-    if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
+    // backup pos ~5Hz qua SB + meta; receiver chi dung khi auth snap tre >0.8s
+    if (MP.trackT >= 0.2) {
+      MP.trackT = 0;
+      if (typeof mpSend === 'function') {
+        try { mpSend('pos', mpPosPayload(false)); } catch (e) { /* bo qua */ }
+      }
+      mpTrackNow();
+    }
+    if ((H.act || '') === 'at' && MP.lastAct !== 'at') {
+      try { mpSend('pos', mpPosPayload(true)); } catch (e) { /* bo qua */ }
+      mpTrackNow(true);
+    }
   }
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;

@@ -9,6 +9,8 @@ const MAX_PEERS = 8;
 const SNAP_META_EVERY = 15;   // ~0.5s kem name/fac/jx
 const COAST_AFTER_MS = 55;    // het goi input: coast theo vx
 const STOP_AFTER_MS = 900;    // het tin hieu lau: dung
+/* Map client WORLD = 3072x3072 — TRUOC DAY clamp 2000x1600 → peer dinh mép, nhìn đứng yên */
+const MAP_MIN = 20, MAP_MAX_X = 3200, MAP_MAX_Y = 3200;
 
 export class Room {
   constructor(zoneId) {
@@ -140,8 +142,8 @@ export class Room {
         p.x += p.vx * dt;
         p.y += p.vy * dt;
       }
-      p.x = Math.max(40, Math.min(2000, p.x));
-      p.y = Math.max(40, Math.min(1600, p.y));
+      p.x = Math.max(MAP_MIN, Math.min(MAP_MAX_X, p.x));
+      p.y = Math.max(MAP_MIN, Math.min(MAP_MAX_Y, p.y));
     }
     this.broadcastSnap();
   }

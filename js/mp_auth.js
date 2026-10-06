@@ -118,13 +118,14 @@ function mpaApplySnap(msg) {
       const spd = Math.hypot(vx, vy);
       if (spd > 300) { const k = 300 / spd; vx *= k; vy *= k; }
       if (spd < 6) { vx = 0; vy = 0; }
-      // EMA nhe van toc — bot rung khi auto/obsSteer
       p.vx = p.vx != null ? p.vx * 0.35 + vx * 0.65 : vx;
       p.vy = p.vy != null ? p.vy * 0.35 + vy * 0.65 : vy;
       p.tx = tx; p.ty = ty;
       p._recvAt = now;
       p.seq = tick;
+      // snap render neu lech xa (vd vua thoat clamp 2000 sai) — het đứng frame cu
       if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+      else if (Math.hypot(tx - p.rx, ty - p.ry) > 220) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
     }
     p.seen = now;
   }
@@ -164,15 +165,24 @@ async function mpaJoin() {
       try { join.devCid = localStorage.getItem('mp_dev_cid') || ('dev-' + Math.random().toString(36).slice(2, 10)); localStorage.setItem('mp_dev_cid', join.devCid); } catch (e) { join.devCid = 'dev'; }
     }
     mpaSend(join);
-    MPA.state = 'ok';
-    if (typeof toast === 'function') toast('MP server: đã nối ' + url.replace(/^ws(s)?:\/\//, ''));
+    // KHONG set ok o day — doi welcome (tranh gui in khi chua join → peer đứng yên)
   };
   ws.onmessage = (ev) => {
     let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
     if (msg.t === 'snap') mpaApplySnap(msg);
     else if (msg.t === 'pong' && msg.t0) MPA.rtt = Date.now() - msg.t0;
-    else if (msg.t === 'err' && typeof toast === 'function') toast('MP: ' + (msg.msg || 'lỗi'));
-    else if (msg.t === 'welcome') MPA.state = 'ok';
+    else if (msg.t === 'err') {
+      if (typeof toast === 'function') toast('MP: ' + (msg.msg || 'lỗi'));
+      // auth fail / chua join: ha state de thu lai + fallback Supabase pos
+      if (MPA.state === 'ok' || MPA.state === 'load') {
+        MPA.state = 'bad';
+        MPA._nextJoin = Date.now() + 1500;
+      }
+    } else if (msg.t === 'welcome') {
+      MPA.state = 'ok';
+      MPA._lastTick = null; MPA._histCleared = false;
+      if (typeof toast === 'function') toast('MP server: đã nối ' + url.replace(/^ws(s)?:\/\//, ''));
+    }
   };
   ws.onclose = () => {
     if (MPA.ws === ws) { MPA.ws = null; MPA.state = 'off'; }
