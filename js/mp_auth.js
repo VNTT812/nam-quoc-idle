@@ -7,11 +7,18 @@ const MPA = {
   lastSnap: 0, sendT: 0, metaT: 0, seq: 0, timer: null
 };
 
+function mpaCfg() {
+  return (typeof window !== 'undefined' && window.CHAT_CFG) ? window.CHAT_CFG : {};
+}
 function mpaEnabled() {
   try {
+    if (/[?&]mp_auth=0\b/.test(location.search)) return false;
     if (/[?&]mp_auth=1\b/.test(location.search)) return true;
+    if (localStorage.getItem('mp_auth') === '0') return false;
     if (localStorage.getItem('mp_auth') === '1') return true;
     if (localStorage.getItem('mp_auth_url')) return true;
+    const c = mpaCfg();
+    if (c.mpAuth && c.mpAuthUrl) return true;
   } catch (e) {}
   return false;
 }
@@ -20,6 +27,8 @@ function mpaUrl() {
     const u = localStorage.getItem('mp_auth_url');
     if (u) return u;
   } catch (e) {}
+  const c = mpaCfg();
+  if (c.mpAuthUrl) return String(c.mpAuthUrl);
   // mac dinh local
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   if (location.hostname === '127.0.0.1' || location.hostname === 'localhost')
