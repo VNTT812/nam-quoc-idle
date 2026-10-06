@@ -38,6 +38,22 @@ async function netClient() {
 const netCall = async fn => { try { const sb = await netClient(); const r = await fn(sb); if (r && r.error) throw r.error; return r; } catch (e) { throw new Error(netErr(e)); } };
 
 /* ---------- tai khoan ---------- */
+const NET_REMEMBER_KEY = 'nqi_remember_login';
+function netRememberLoad() {
+  try { const o = JSON.parse(localStorage.getItem(NET_REMEMBER_KEY) || 'null'); return o && o.u && o.p ? o : null; } catch (e) { return null; }
+}
+function netRememberSave(u, p, on) {
+  try {
+    if (on && u && p) localStorage.setItem(NET_REMEMBER_KEY, JSON.stringify({ u: String(u).trim().toLowerCase(), p: String(p) }));
+    else localStorage.removeItem(NET_REMEMBER_KEY);
+  } catch (e) { /* che do rieng tu */ }
+}
+function netRememberFill(uId, pId, cId) {
+  const o = netRememberLoad(), u = $(uId), p = $(pId), c = $(cId);
+  if (o && u && p) { u.value = o.u; p.value = o.p; if (c) c.checked = true; }
+  else if (c) c.checked = false;
+}
+
 async function netAuth(kind, u, p) {
   u = String(u || '').trim().toLowerCase();
   if (!/^[a-z0-9_]{3,16}$/.test(u)) throw new Error('Tên đăng nhập 3–16 ký tự: chữ không dấu, số, _');
@@ -144,19 +160,30 @@ async function netCloudLoad(slot) { await netUseCloud(slot); }
 /* ---------- man dang nhap luc vao game ---------- */
 function netGate(err) {
   const off = err ? `<p class="reqbad">${esc(err)}</p>` : '';
-  modal(`<div class="ngate"><h3>⚔ Võ Lâm Idle</h3><p class="desc">Đăng nhập để chơi: nhân vật lưu trên máy chủ, chơi tiếp ở mọi máy / điện thoại. Chưa có tài khoản thì bấm <b>Đăng ký</b>.</p>
+  const rem = netRememberLoad();
+  modal(`<div class="ngate"><h3>⚔ NamQuoc Idle</h3><p class="desc">Đăng nhập để chơi: nhân vật lưu trên máy chủ, chơi tiếp ở mọi máy / điện thoại. Chưa có tài khoản thì bấm <b>Đăng ký</b>.</p>
     <div class="card"><div class="row">Tên đăng nhập <input id="ngU" maxlength="16" autocomplete="username" placeholder="chữ không dấu, số, _" autocapitalize="off"></div>
       <div class="row">Mật khẩu <input id="ngP" type="password" maxlength="64" autocomplete="current-password" placeholder="ít nhất 6 ký tự"></div>
+      <label class="row small" style="gap:.4em;align-items:center;cursor:pointer"><input type="checkbox" id="ngRem" ${rem ? 'checked' : ''}> Nhớ tài khoản &amp; mật khẩu trên máy này</label>
       <div class="btnrow"><button class="btn" id="ngIn">Đăng nhập</button><button class="btn" id="ngUp">Đăng ký</button></div>
-      <p class="dim small">Một tài khoản dùng cho 3 nhân vật. Nhớ mật khẩu — chưa có cách lấy lại.</p></div>
+      <p class="dim small">Một tài khoản dùng cho 3 nhân vật. Tick nhớ mật khẩu để không phải nhập lại mỗi lần mở game.</p></div>
     ${off}
     <div class="btnrow"><button class="btn sm" id="ngRetry">Thử kết nối lại</button><button class="btn sm" id="ngOff">Chơi offline</button></div>
     <p class="dim small">Offline: lưu trên máy này, không đăng nhập / xếp hạng / chợ / thư.</p></div>`, () => {
-    const go = k => busy($(k === 'up' ? '#ngUp' : '#ngIn'), async () => { await netAuth(k, $('#ngU').value, $('#ngP').value); return netAfterLogin(); }, () => {});
+    netRememberFill('#ngU', '#ngP', '#ngRem');
+    const go = k => busy($(k === 'up' ? '#ngUp' : '#ngIn'), async () => {
+      const u = $('#ngU').value, p = $('#ngP').value;
+      await netAuth(k, u, p);
+      netRememberSave(u, p, $('#ngRem') && $('#ngRem').checked);
+      return netAfterLogin();
+    }, () => {});
     $('#ngIn').onclick = () => go('in'); $('#ngUp').onclick = () => go('up');
     $('#ngP').onkeydown = e => { if (e.key === 'Enter') go('in'); };
+    const rm = $('#ngRem'); if (rm) rm.onchange = () => { if (!rm.checked) netRememberSave('', '', false); };
     const rt = $('#ngRetry'); if (rt) rt.onclick = () => location.reload();
     const of = $('#ngOff'); if (of) of.onclick = () => netGoOffline();
+    // Da luu TK: tu dang nhap khi mo man (vd sau khi rest server / het phien)
+    if (rem && !err) setTimeout(() => { if ($('#ngIn') && !NET.user) go('in'); }, 80);
   }, true);
 }
 async function netAfterLogin() {
@@ -271,13 +298,21 @@ async function netSwitchAccount(btn) {
 
 async function netAccBody(el) {
   if (!NET.user) {
+    const rem = netRememberLoad();
     el.innerHTML = `<div class="card"><b>Đăng nhập / Đăng ký</b><p class="dim small">Một tài khoản dùng cho cả 3 nhân vật: lưu đám mây, bảng xếp hạng, gửi thư, Chợ. Không cần email.</p>
       <div class="row">Tên đăng nhập <input id="naU" maxlength="16" autocomplete="username" placeholder="chữ không dấu, số, _"></div>
       <div class="row">Mật khẩu <input id="naP" type="password" maxlength="64" autocomplete="current-password" placeholder="ít nhất 6 ký tự"></div>
+      <label class="row small" style="gap:.4em;align-items:center;cursor:pointer"><input type="checkbox" id="naRem" ${rem ? 'checked' : ''}> Nhớ tài khoản &amp; mật khẩu trên máy này</label>
       <div class="btnrow"><button class="btn" id="naIn">Đăng nhập</button><button class="btn" id="naUp">Đăng ký mới</button></div>
-      <p class="dim small">Nhớ mật khẩu — hiện chưa có cách lấy lại.</p></div>`;
-    const go = k => busy($(k === 'up' ? '#naUp' : '#naIn'), () => netAuth(k, $('#naU').value, $('#naP').value), () => { toast(k === 'up' ? 'Đã tạo tài khoản' : 'Đã đăng nhập'); netModal('acc'); });
+      <p class="dim small">Tick nhớ mật khẩu để lần sau mở game tự điền / tự đăng nhập.</p></div>`;
+    netRememberFill('#naU', '#naP', '#naRem');
+    const go = k => busy($(k === 'up' ? '#naUp' : '#naIn'), async () => {
+      const u = $('#naU').value, p = $('#naP').value;
+      await netAuth(k, u, p);
+      netRememberSave(u, p, $('#naRem') && $('#naRem').checked);
+    }, () => { toast(k === 'up' ? 'Đã tạo tài khoản' : 'Đã đăng nhập'); netModal('acc'); });
     $('#naIn').onclick = () => go('in'); $('#naUp').onclick = () => go('up');
+    const rm = $('#naRem'); if (rm) rm.onchange = () => { if (!rm.checked) netRememberSave('', '', false); };
     return;
   }
   const list = await netCloudList(), ago = t => t ? new Date(t).toLocaleString('vi-VN') : '—';
