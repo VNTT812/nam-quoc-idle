@@ -297,6 +297,8 @@ function mpNotifyCast(id, tgt) {
 function mpOnSkill(p) {
   if (!p || p.cid === mpCid() || MP.applying) return;
   if (R.quiet) return;
+  MP._pkSkAt = MP._pkSkAt || {};
+  MP._pkSkAt[p.cid] = Date.now();
   const peer = MP.peers[String(p.cid || '')];
   // Uu tien toa do trong goi skill (luc tung) — tranh peer.rx lech / cham
   const ax = p.ax != null ? +p.ax : (peer && peer.rx != null ? peer.rx : (peer ? peer.x : H.x));

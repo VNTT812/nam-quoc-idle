@@ -63,7 +63,8 @@ function jmFrame(o) {
     case 2: o.ang += (Math.random() - 0.5) * 0.9; step(o.ang, o.spd); break;
     case 3: case 4: {                                                   // vong quanh nguoi ra chieu / xoan oc no rong dan
       o.ang += JM_DIR * o.spin; if (o.kind === 4) o.rad += (o.spd + 50) * JM_DIR;
-      const cx = o.kind === 3 ? H.x : o.cx, cy = o.kind === 3 ? H.y : o.cy;
+      // Dung tam luc spawn (caster) — KHONG neo H local (PK/peer se lech quanh minh)
+      const cx = o.cx != null ? o.cx : H.x, cy = o.cy != null ? o.cy : H.y;
       o.x = cx + Math.cos(o.ang) * o.rad; o.y = cy - 14 + Math.sin(o.ang) * o.rad / 2; break;
     }
   }

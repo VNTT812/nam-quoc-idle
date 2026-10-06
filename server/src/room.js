@@ -55,6 +55,7 @@ export class Room {
       vx: 0, vy: 0,
       face: 1, dir: 0, act: 'st',
       life: 1,
+      pk: false,
       inSeq: 0,
       lastIn: Date.now(),
       seen: Date.now()
@@ -97,6 +98,7 @@ export class Room {
     if (msg.dir != null) p.dir = msg.dir | 0;
     if (msg.act != null) p.act = String(msg.act).slice(0, 8);
     if (msg.life != null) p.life = Math.max(0, Math.min(1, +msg.life));
+    if (msg.pk != null) p.pk = !!msg.pk;
 
     if (msg.x != null && msg.y != null) {
       const tx = +msg.x, ty = +msg.y;
@@ -169,6 +171,73 @@ export class Room {
     }
   }
 
+  onPkFlag(cid, msg) {
+    const p = this.players.get(cid);
+    if (!p) return;
+    p.pk = !!(msg && msg.pk);
+    const body = JSON.stringify({ t: 'pkflag', cid, pk: p.pk ? 1 : 0, serverT: Date.now() });
+    for (const o of this.players.values()) {
+      if (o.cid === cid) continue;
+      if (o.ws.readyState === 1) {
+        try { o.ws.send(body); } catch (_) {}
+      }
+    }
+  }
+
+  onPkHit(cid, msg) {
+    const p = this.players.get(cid);
+    if (!p || !msg || !msg.to) return;
+    const now = Date.now();
+    if (p._pkHitAt && now - p._pkHitAt < 80) {
+      if ((p._pkHitN | 0) >= 6) return;
+      p._pkHitN = (p._pkHitN | 0) + 1;
+    } else { p._pkHitAt = now; p._pkHitN = 1; }
+    p.act = 'at';
+    if (msg.face != null) p.face = msg.face >= 0 ? 1 : -1;
+    if (msg.dir != null) p.dir = msg.dir | 0;
+    const body = JSON.stringify({
+      t: 'pkhit',
+      cid,
+      to: String(msg.to),
+      dmg: Math.max(0, Math.min(50000, Math.round(+msg.dmg || 0))),
+      id: msg.id | 0,
+      L: msg.L | 0,
+      nMis: msg.nMis | 0,
+      melee: !!msg.melee,
+      around: !!msg.around,
+      ax: msg.ax != null ? +msg.ax : Math.round(p.x),
+      ay: msg.ay != null ? +msg.ay : Math.round(p.y),
+      bx: msg.bx != null ? +msg.bx : 0,
+      by: msg.by != null ? +msg.by : 0,
+      face: p.face,
+      dir: p.dir,
+      crit: msg.crit ? 1 : 0,
+      serverT: now
+    });
+    for (const o of this.players.values()) {
+      if (o.cid === cid) continue;
+      if (o.ws.readyState === 1) {
+        try { o.ws.send(body); } catch (_) {}
+      }
+    }
+  }
+
+  onPkKill(cid, msg) {
+    if (!msg) return;
+    const body = JSON.stringify({
+      t: 'pkkill',
+      cid,
+      victim: msg.victim || null,
+      by: msg.by || cid,
+      serverT: Date.now()
+    });
+    for (const o of this.players.values()) {
+      if (o.ws.readyState === 1) {
+        try { o.ws.send(body); } catch (_) {}
+      }
+    }
+  }
+
   tick() {
     this.tickN++;
     const dt = TICK_MS / 1000;
@@ -196,7 +265,8 @@ export class Room {
       y: Math.round(p.y * 10) / 10,
       vx: Math.round(p.vx * 10) / 10,
       vy: Math.round(p.vy * 10) / 10,
-      face: p.face, dir: p.dir, act: p.act, life: p.life
+      face: p.face, dir: p.dir, act: p.act, life: p.life,
+      pk: p.pk ? 1 : 0
     };
     if (full) {
       o.name = p.name; o.fac = p.fac; o.sex = p.sex; o.lvl = p.lvl;

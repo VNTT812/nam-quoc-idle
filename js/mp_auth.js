@@ -192,6 +192,12 @@ async function mpaJoin() {
     if (msg.t === 'snap') mpaApplySnap(msg);
     else if (msg.t === 'skill') {
       if (typeof mpOnSkill === 'function') mpOnSkill(msg);
+    } else if (msg.t === 'pkflag') {
+      if (typeof mpOnPkFlag === 'function') mpOnPkFlag(msg);
+    } else if (msg.t === 'pkhit') {
+      if (typeof mpOnPkHit === 'function') mpOnPkHit(msg);
+    } else if (msg.t === 'pkkill') {
+      if (typeof mpOnPkKill === 'function') mpOnPkKill(msg);
     } else if (msg.t === 'pong' && msg.t0) MPA.rtt = Date.now() - msg.t0;
     else if (msg.t === 'err') {
       if (typeof toast === 'function') toast('MP: ' + (msg.msg || 'lỗi'));

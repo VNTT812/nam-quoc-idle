@@ -231,8 +231,7 @@ function drawSprite(im, sz, x, y, scale, flip, alpha = 1) {
   return true;
 }
 /* ---------- hoat anh 8 huong (img/a/<npcres>_<hanh dong>.webp) ----------
-   huong 0 = quay mat ve nguoi xem, tang theo chieu kim dong ho: N(am), TN, T, TB, B, DB, D, DN
-   Sheet 1 huong (d=1 / flip=1): khong xoay 8 huong — chi lat trai/phai theo face (SoM…). */
+   huong 0 = quay mat ve nguoi xem, tang theo chieu kim dong ho: N(am), TN, T, TB, B, DB, D, DN */
 const dirOf = (vx, vy) => (((Math.round(Math.atan2(-vx, vy) / (Math.PI / 4)) % 8) + 8) % 8);
 const ONCE = { at: 1, hurt: 1, die: 1 };
 function animLen(key, act) { const m = W.anim && W.anim[key] && W.anim[key][act]; return m ? m.n * m.ms / 1000 : 0; }
@@ -261,11 +260,8 @@ function stepAct(o, dt, idle) { // het hoat anh mot lan (danh / trung don) -> ve
   o.actT = (o.actT || 0) + dt;
   if ((o.act === 'at' || o.act === 'hurt') && o.actT >= Math.max(0.25, animLen(o.animKey, o.act))) setAct(o, idle);
 }
-/* Quai: dung / chay / danh / bi danh / chet — SoM dùng máy riêng (som_anim.js) */
+/* Quai: dung / chay / danh / bi danh / chet */
 function enemyAnimTick(e, dt) {
-  if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somEnemyAnimTick === 'function') {
-    return somEnemyAnimTick(e, dt);
-  }
   e.animKey = MON[e.tid] && MON[e.tid].anim;
   const idle = e.moving ? 'run' : 'st';
   stepAct(e, e.stun > 0 ? 0 : e.slowT > 0 ? dt * ELEM_SLOW : dt, idle);
@@ -321,9 +317,7 @@ function draw(dt) {
   for (const e of R.corpses) {
     e.actT += dt; const a = clamp(1.6 - e.actT, 0, 1);
     const sc = 1;   // nhu JX1: moi quai ve dung ti le goc nhu nhan vat (khong phong to trum / thu nho quai thuong)
-    if (!(e.animKey && (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somDrawAnim === 'function'
-      ? somDrawAnim(e.animKey, 'die', e.actT, e.x, e.y, sc * MON_SCALE, a, e.face)
-      : drawAnim(e.animKey, 'die', e.dir || 0, e.actT, e.x, e.y, sc * MON_SCALE, a, e.face)))) {
+    if (!(e.animKey && drawAnim(e.animKey, 'die', e.dir || 0, e.actT, e.x, e.y, sc * MON_SCALE, a, e.face))) {
       c.globalAlpha = a * 0.5; drawSprite(e.img, e.sz, e.x, e.y, sc, e.face < 0); c.globalAlpha = 1;
     }
   }
@@ -367,10 +361,8 @@ function draw(dt) {
     c.strokeStyle = SERIES_COL[e.series]; c.lineWidth = e.cls === 'normal' ? 1.2 : 2.4; c.beginPath(); c.ellipse(e.x, e.y, e.r, e.r * 0.38, 0, 0, 7); c.stroke();
     enemyAnimTick(e, dt);
     const eTint = entTint(e.slowT > 0, e.poison > 0);
-    const drawE = () => (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somDrawAnim === 'function'
-      ? somDrawAnim(e.animKey, e.act || 'st', e.actT || 0, e.x, e.y, sc * MON_SCALE, e.hitT > 0 ? 0.75 : 1, e.face)
-      : drawAnim(e.animKey, e.act || 'st', e.dir || 0, e.actT || 0, e.x, e.y, sc * MON_SCALE, e.hitT > 0 ? 0.75 : 1, e.face));
-    const ah = e.animKey && drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230, drawE);
+    const ah = e.animKey && drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230,
+      () => drawAnim(e.animKey, e.act || 'st', e.dir || 0, e.actT || 0, e.x, e.y, sc * MON_SCALE, e.hitT > 0 ? 0.75 : 1, e.face));
     if (e.curse) drawEnemyCurses(c, e, sc * MON_SCALE);                 // bua hai (skillsys.js)
     if (e.stFx) drawEnemyState(c, e, ah ? Math.min(ah, 110) : 50, sc * MON_SCALE, dt);   // trang thai do chieu gay ra (skillfx.js)
     if (!ah && !drawTinted(eTint, e.x - (e.cls === 'boss' ? 170 : 110), e.y - (e.cls === 'boss' ? 300 : 200), e.cls === 'boss' ? 340 : 220, e.cls === 'boss' ? 330 : 230, () => drawSprite(e.img, e.sz, e.x, e.y, sc, e.face < 0, e.hitT > 0 ? 0.6 : 1))) { c.fillStyle = SERIES_COL[e.series]; c.beginPath(); c.arc(e.x, e.y - e.r, e.r, 0, 7); c.fill(); }

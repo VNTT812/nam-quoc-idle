@@ -8,20 +8,21 @@ Lấy từ data live (`world.js` + `zones2.js`, bản v195).
 
 ## A. Dãy map chính (luyện công)
 
-### 1. Hoa Sơn
+### 1. Yên Tử Sơn
 
 - Cấp: **1–10** · Map id: `2` · Nền: `img/z/2.jpg`
 - Hệ spawn: cân bằng (20%)
-- Theme: Rừng núi — sprite **Spell of Mastery** (NancyGold, CC-BY 4.0)
-- Boss: **Độc Nhãn Quỷ** (`#864`)
+- Theme gợi ý: Rừng núi / thú nhỏ
+- Boss: **Tây Nam sơn tặc đầu lĩnh** (`#141`)
+- Roster hiệu lực: `zones2.js` → `zm["2"]` (đè `world.js`)
 
 | ID | Tên | Anim sheet | Kiểu | Run |
 |---:|---|---|---|---:|
-| 860 | Nhện Độc | `som_spider` | melee | 5 |
-| 861 | Xích Thú | `som_lizard` | melee | 6 |
-| 862 | Chuột Yêu | `som_ratman` | melee | 6 |
-| 863 | Tiểu Yêu | `som_imp` | melee | 7 |
-| 864 | Độc Nhãn Quỷ **boss** | `som_cyclops` | melee | 4 |
+| 12 | Nhím | `ani019` | melee | 6 |
+| 11 | Heo rừng | `ani018` | melee | 6 |
+| 33 | Hoán hùng | `ani051` | melee | 6 |
+| 34 | Linh Miêu | `ani052` | melee | 6 |
+| 141 | Tây Nam sơn tặc đầu lĩnh **boss** | `enemy122` | melee | 5 |
 
 ### 2. Kiếm Các Tây Bắc
 
