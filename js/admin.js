@@ -4,7 +4,16 @@
    Cap cho nguoi khac: gui thu item.__admin (cap / diem / KNB / do) — ho nhan trong Thu. */
 'use strict';
 
-const isAdmin = () => typeof netUname === 'function' && netUname() === 'admin';
+/** Sticky: F5 xong session Supabase chua kip restore — van choi duoc phai Test trong tab nay. */
+function netAdminSticky(on) {
+  try { if (on) sessionStorage.setItem('nqi_is_admin', '1'); else sessionStorage.removeItem('nqi_is_admin'); } catch (e) { /* private */ }
+}
+const isAdmin = () => {
+  const u = typeof netUname === 'function' ? netUname() : '';
+  if (u === 'admin') { netAdminSticky(true); return true; }
+  if (u) { netAdminSticky(false); return false; }                             // da dang nhap TK khac
+  try { return sessionStorage.getItem('nqi_is_admin') === '1'; } catch (e) { return false; }
+};
 
 function adminApply() {
   if (!S || !S.fac) return;

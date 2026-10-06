@@ -32,10 +32,32 @@ async function netClient() {
     if (s && s.user) {
       NET.user = s.user;
       if (ev === 'SIGNED_IN' && typeof mpEnsure === 'function') setTimeout(() => { try { mpEnsure(); } catch (e) { /* dong doi */ } }, 300);
-    } else if (ev === 'SIGNED_OUT') { const was = !!NET.user; NET.user = null; if (typeof mpLeave === 'function') try { mpLeave(); } catch (e) { /* bo qua */ } if (was && !NET.loggingOut && S && S.fac) setTimeout(() => netRelogin(), 0); }   // v194: phien het han giua chung -> bat dang nhap lai (truoc day game chay tiep ma khong luu)
+      if (typeof netThoAdminReady === 'function') setTimeout(() => { try { netThoAdminReady(); } catch (e) { /* bo qua */ } }, 0);
+    } else if (ev === 'SIGNED_OUT') {
+      const was = !!NET.user; NET.user = null;
+      if (typeof netAdminSticky === 'function') netAdminSticky(false);
+      if (typeof mpLeave === 'function') try { mpLeave(); } catch (e) { /* bo qua */ }
+      if (was && !NET.loggingOut && S && S.fac) setTimeout(() => netRelogin(), 0);   // v194: phien het han giua chung -> bat dang nhap lai
+    }
     netDot();
   });
   return NET.sb;
+}
+/** Sau khi session admin restore: mo khoa phai Test bi khoa o F5. */
+function netThoAdminReady() {
+  if (NET.user && netUname() === 'admin' && typeof netAdminSticky === 'function') netAdminSticky(true);
+  if (!window.__thoAwaitAdmin) return;
+  if (typeof isAdmin === 'function' && isAdmin()) {
+    window.__thoAwaitAdmin = false;
+    try { localStorage.setItem(SLOT_PTR, String(SLOT)); } catch (e) { /* bo qua */ }
+    location.reload();
+    return;
+  }
+  if (NET.user && typeof isAdmin === 'function' && !isAdmin()) {
+    window.__thoAwaitAdmin = false;
+    toast('Hệ Thổ★ / phái Test chỉ tài khoản admin');
+    if (typeof slotMenu === 'function') slotMenu();
+  }
 }
 const netCall = async fn => { try { const sb = await netClient(); const r = await fn(sb); if (r && r.error) throw r.error; return r; } catch (e) { throw new Error(netErr(e)); } };
 
@@ -122,9 +144,10 @@ async function netSyncAll() {
     const c = rows.find(x => x.slot === i), cu = c ? Date.parse(c.updated) : 0;
     if (i === SLOT && S && S.fac) continue;                                   // slot dang choi: netCheckCloud
     const loc = slotState(i);
-    if (!c) {                                                                 // dam may chua co: chi tai len nhan vat tao boi tai khoan nay
-      if (loc && loc.netOwner === NET.user.id) await netUploadSlot(i, loc);
-      else if (loc) { try { const k = slotKey(i); localStorage.setItem(k + '_bak', localStorage.getItem(k)); localStorage.removeItem(k); changed = true; } catch (e) { /* bo qua */ } }
+    if (!c) {                                                                 // dam may chua co: tai len neu chua gan chu / dung chu / admin (tranh mat NV Test)
+      if (loc && !netForeign(loc) && (!loc.netOwner || loc.netOwner === NET.user.id || (typeof isAdmin === 'function' && isAdmin()))) {
+        loc.netOwner = NET.user.id; await netUploadSlot(i, loc);
+      } else if (loc) { try { const k = slotKey(i); localStorage.setItem(k + '_bak', localStorage.getItem(k)); localStorage.removeItem(k); changed = true; } catch (e) { /* bo qua */ } }
       continue;
     }
     if (!netCloudStale(loc, cu) && !netForeign(loc)) continue;                // ban may nay = ban dam may (cung tai khoan)
@@ -143,7 +166,11 @@ async function netCheckCloud() {
   if (!NET.user || !S || !S.fac) return;
   const r = await netCall(sb => sb.from('saves').select('slot,name,lvl,fac,updated').eq('slot', SLOT).maybeSingle()), c = r.data;
   if (!c) {
-    if (S.netOwner === NET.user.id) { await netUpload(); return; }            // nhan vat moi tao o tai khoan nay (nhan vat tai khoan khac: bo khoi may nay)
+    /* Chua co ban dam may: neu chua gan chu hoac dung chu → danh dau + tai len (tranh F5 xoa nhan vat Test vua tao). */
+    if (!S.netOwner || S.netOwner === NET.user.id || (typeof isAdmin === 'function' && isAdmin())) {
+      S.netOwner = NET.user.id; save();
+      await netUpload(); return;
+    }
     SAVE_LOCK = true; try { const k = slotKey(SLOT); localStorage.setItem(k + '_bak', localStorage.getItem(k)); localStorage.removeItem(k); localStorage.setItem(SLOT_PTR, 'menu'); } catch (e) { /* bo qua */ }
     toast('Nhân vật chỉ có trên máy này, không có trên đám mây: không dùng được'); setTimeout(() => location.reload(), 1500); return;
   }
@@ -190,6 +217,8 @@ function netGate(err) {
 }
 async function netAfterLogin() {
   const changed = await netSyncAll();
+  if (typeof netThoAdminReady === 'function') netThoAdminReady();
+  if (window.__thoAwaitAdmin === false && typeof isAdmin === 'function' && isAdmin()) return; // dang reload vao phai Test
   if (!S || !S.fac) {                                       // chua vao nhan vat: tai lai de hien nhan vat vua lay tu dam may
     const used = [...Array(SLOT_N).keys()].filter(i => slotInfo(i));
     if (used.length) { try { localStorage.setItem(SLOT_PTR, used.length > 1 ? 'menu' : String(used[0])); } catch (e) { /* bo qua */ } location.reload(); return; }
@@ -354,6 +383,7 @@ async function netSwitchAccount(btn) {
     if (S && S.fac) await netUpload().catch(() => {});
     try { await netClient(); } catch (e) { /* van thu dang xuat local */ }
     NET.loggingOut = true;
+    if (typeof netAdminSticky === 'function') netAdminSticky(false);
     try { if (NET.sb) await NET.sb.auth.signOut(); } catch (e) { /* bo qua */ }
     NET.loggingOut = false; NET.user = null; NET.mailN = 0; netDot();
   }, () => { closeModal(true); toast('Đã đăng xuất — đăng nhập tài khoản khác'); netGate(); });
@@ -523,6 +553,8 @@ async function netInit() {
   const h = $('#giftBtn'); if (h && !$('#netBtn')) { const b = document.createElement('button'); b.id = 'netBtn'; b.title = 'Giang hồ online: tài khoản, xếp hạng, thư, chợ'; b.textContent = '🌐'; h.parentNode.insertBefore(b, h); b.onclick = () => { if (typeof uiSfx === 'function') uiSfx('click'); netModal(); }; }
   try { await netProbe(); await netClient(); } catch (e) { netGate('Không kết nối được máy chủ: ' + (e.message || e)); return; }
   if (!NET.user) { netGate(); return; }
+  if (typeof netThoAdminReady === 'function') netThoAdminReady();
+  if (window.__thoAwaitAdmin) return;                                       // dang cho reload vao phai Test
   netSyncAll().then(ch => { if (ch && (!S || !S.fac)) location.reload(); }).catch(() => {});
   netMailCount();
   netCheckCloud().catch(() => {});

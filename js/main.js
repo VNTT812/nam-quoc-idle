@@ -132,28 +132,37 @@ function init() {
   document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);
   resizeArena(); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera(); restoreGround();
   bootLoadShow('Đang khởi động…', 0.08);
-  if (S.fac && typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(S.fac)) {
-    bootLoadHide(); toast('Hệ Thổ★ / phái Test chỉ tài khoản admin'); slotMenu(); return;
-  }
-  if (S.fac && FAC[S.fac] && FAC[S.fac].test) {
+  /* Phai Test: neu chua nhan ra admin (session chua restore) thi KHONG return som —
+     van goi netInit(); sau khi dang nhap se reload / mo khoa slot. */
+  const thoBlocked = S.fac && typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(S.fac);
+  if (thoBlocked) {
+    window.__thoAwaitAdmin = true;
+    bootLoadHide();
+    toast(typeof netOn === 'function' && netOn()
+      ? 'Đang xác nhận tài khoản admin để chơi phái Test…'
+      : 'Hệ Thổ★ / phái Test chỉ tài khoản admin');
+    slotMenu();
+  } else if (S.fac && FAC[S.fac] && FAC[S.fac].test) {
     if (typeof thoTestUnlock90 === 'function') thoTestUnlock90(S.fac);
     if (typeof thoTestEnsureWeapon === 'function') thoTestEnsureWeapon(S.fac);
   }
-  if (pk.menu) { bootLoadHide(); slotMenu(); }
-  else if (!S.fac) { bootLoadHide(); pickFaction(); }
-  else {
-    recalc(); R.life = R.P.life; R.mana = R.P.mana;
-    const z0 = zoneOf(Math.min(S.stage, STAGES));
-    obsLoad(z0.id); [H.x, H.y] = inWorld(H.x, H.y); snapCamera();
-    loadZoneBg(z0, 'Đang tải ' + z0.n + '…').then(() => {
-      if (had) { recalc(); showOffline(offlineGains()); }
-      showTab('log'); log('Tiếp tục hành tẩu giang hồ…');
-      if (window.__tampered) { log('<span class="dim">Dữ liệu lưu không khớp chữ ký (đã chỉnh sửa ngoài game): dùng bản sao lưu gần nhất nếu có.</span>'); toast('Phát hiện chỉnh sửa file lưu'); }
-      loginCheck(); dotGift(); actDot(); if (typeof autoMapCheck === 'function') { syncMaxStage(); if (S.mode !== 'quest' && S.autoMap !== false) autoMapCheck(); }
-      { let n = 0, k = 0; for (const it of S.inv.concat(Object.values(S.eq || {}), S.epBox || [])) { const c = vioDedup(it); if (c) { n += c; k++; } }
-        if (n) { R.dirty = true; log(`Sửa ${k} món Tím bị trùng dòng: gỡ ${n} dòng từ dòng trùng đầu tiên trở đi, trả lại đá thuộc tính để khảm lại.`); } }
-      if (window.SET_PURGED) { const n = window.SET_PURGED.reduce((a, b) => a + b, 0); window.SET_PURGED = null; log(`Đã xóa ${n} món thuộc bộ không còn trong game (Đằng Long, Tinh Sương…).`); }
-    });
+  if (!thoBlocked) {
+    if (pk.menu) { bootLoadHide(); slotMenu(); }
+    else if (!S.fac) { bootLoadHide(); pickFaction(); }
+    else {
+      recalc(); R.life = R.P.life; R.mana = R.P.mana;
+      const z0 = zoneOf(Math.min(S.stage, STAGES));
+      obsLoad(z0.id); [H.x, H.y] = inWorld(H.x, H.y); snapCamera();
+      loadZoneBg(z0, 'Đang tải ' + z0.n + '…').then(() => {
+        if (had) { recalc(); showOffline(offlineGains()); }
+        showTab('log'); log('Tiếp tục hành tẩu giang hồ…');
+        if (window.__tampered) { log('<span class="dim">Dữ liệu lưu không khớp chữ ký (đã chỉnh sửa ngoài game): dùng bản sao lưu gần nhất nếu có.</span>'); toast('Phát hiện chỉnh sửa file lưu'); }
+        loginCheck(); dotGift(); actDot(); if (typeof autoMapCheck === 'function') { syncMaxStage(); if (S.mode !== 'quest' && S.autoMap !== false) autoMapCheck(); }
+        { let n = 0, k = 0; for (const it of S.inv.concat(Object.values(S.eq || {}), S.epBox || [])) { const c = vioDedup(it); if (c) { n += c; k++; } }
+          if (n) { R.dirty = true; log(`Sửa ${k} món Tím bị trùng dòng: gỡ ${n} dòng từ dòng trùng đầu tiên trở đi, trả lại đá thuộc tính để khảm lại.`); } }
+        if (window.SET_PURGED) { const n = window.SET_PURGED.reduce((a, b) => a + b, 0); window.SET_PURGED = null; log(`Đã xóa ${n} món thuộc bộ không còn trong game (Đằng Long, Tinh Sương…).`); }
+      });
+    }
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { if (S.fac) save(); }
