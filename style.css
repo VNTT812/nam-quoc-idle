@@ -52,11 +52,15 @@ button[disabled]{opacity:.4;cursor:default}
 .petpick button.on{border-color:var(--gold)} .petpick img{display:block;width:100%;height:44px;object-fit:contain} .petpick b{display:block;font-weight:500}
 #hud{position:absolute;left:8px;right:8px;top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;pointer-events:none}
 #mainSk{grid-column:1/3;font-size:11px;color:var(--gold);text-shadow:0 0 3px #000}
-#mpBadge{position:absolute;right:8px;top:58px;z-index:5;pointer-events:none;display:flex;gap:6px;align-items:center;padding:3px 8px;border:1px solid #2a3d34;background:rgba(8,14,11,.78);color:#c9c2a8;font:11px var(--font);border-radius:4px;text-shadow:0 1px 1px #000}
+#mpBadge{position:absolute;right:8px;top:58px;z-index:5;pointer-events:auto;display:flex;gap:6px;align-items:center;padding:3px 8px;border:1px solid #2a3d34;background:rgba(8,14,11,.78);color:#c9c2a8;font:11px var(--font);border-radius:4px;text-shadow:0 1px 1px #000;cursor:pointer}
 #mpBadge b{color:#d4b56a;font-weight:500}
 #mpBadge.on{border-color:#3f7a62;color:#d7f0e2}
 #mpBadge.on b{color:#8fe0b8}
 #mpBadge.load{opacity:.75} #mpBadge.err{border-color:#6a3030;color:#e0a0a0} #mpBadge.off,#mpBadge.idle{opacity:.55}
+#mpBadge.pk{border-color:#a03838;box-shadow:0 0 0 1px #ff606033 inset}
+#mpBadge.pk b{color:#f0a0a0}
+#mpPkBtn{appearance:none;border:1px solid #5a3030;background:#2a1414;color:#e8b0b0;font:10px var(--font);padding:1px 6px;border-radius:3px;cursor:pointer;line-height:1.3}
+#mpPkBtn.on{border-color:#d04040;background:#4a1818;color:#ffd0d0;font-weight:600}
 
 #panel{flex:1;min-height:0;overflow:hidden;background:var(--panel);border-top:1px solid var(--gold2)}
 .tab{height:100%;overflow-y:auto;padding:10px 10px 16px}

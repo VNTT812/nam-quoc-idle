@@ -26,6 +26,8 @@ Sau khi đăng nhập, vào **bãi luyện công** (cùng map): tối đa ~6 ng�
 - **Drop / EXP** — chỉ người **last-hit** nhận
 - Host (cid nhỏ nhất) làm trọng tài spawn quái (client) — **không** phải máy bạn host game cho người khác
 
+**PK online (beta):** trên bãi luyện, bấm nút **PK** (badge Đồng đội). Cả hai phải bật PK → click người chơi để khóa mục tiêu → Auto/đánh tay sẽ gây sát thương qua mạng. Gục PK không xóa quái chung.
+
 Phó bản / tháp / trong thành vẫn solo. Badge **Đồng đội** góc phải sân đấu hiện số người trên map.
 
 ### Dedicated MP server (auth vị trí)
