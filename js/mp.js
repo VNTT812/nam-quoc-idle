@@ -8,8 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~12Hz + noi suy tre 90ms (FPS man hinh): muot nhu local, it giat */
-const MP_MAX = 6, MP_POS = 0.08, MP_SYNC = 5, MP_WAIT = 1600, MP_PEER_TTL = 30000, MP_SNAP = 260, MP_DELAY = 90;
+/* Pos ~16Hz khi chay / 8Hz dung; noi suy tre 130ms; field soft-merge (khong wipe quai). */
+const MP_MAX = 6, MP_POS = 0.06, MP_POS_IDLE = 0.14, MP_SYNC = 8, MP_WAIT = 1600, MP_PEER_TTL = 30000;
+const MP_SNAP = 420, MP_HARD = 900, MP_DELAY = 130, MP_HIST = 16;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -86,11 +87,19 @@ function mpSendField(force) {
   mpSend('field', snap);
 }
 
-function mpEnsureEnemy(pack, home) {
+function mpEnsureEnemy(pack, home, softPos) {
   let e = R.enemies.find(x => x.mid === pack.mid && !x.dead);
   if (e) {
     e.hp = Math.min(e.hp, pack.hp); e.max = pack.max || e.max;
-    if (pack.x != null) { e.x = pack.x; e.y = pack.y; }
+    if (pack.x != null && pack.y != null) {
+      const d = Math.hypot(pack.x - e.x, pack.y - e.y);
+      // softPos (field sync): chi keo ve khi lech xa — tranh tele/an-hien moi 5s
+      if (!softPos || d > 80) {
+        if (d > 220) { e.x = pack.x; e.y = pack.y; }
+        else { e.x += (pack.x - e.x) * 0.35; e.y += (pack.y - e.y) * 0.35; }
+      }
+    }
+    if (home) { e.home = home; home.e = e; home.mid = pack.mid; }
     return e;
   }
   const L = pack.L || stageLevel(S.stage) + (pack.cls === 'boss' ? 1 : 0);
@@ -104,18 +113,56 @@ function mpEnsureEnemy(pack, home) {
   return e;
 }
 
+/* Soft-merge field theo mid: khong wipe R.enemies — tranh quai luc an luc hien. */
 function mpApplyField(snap) {
   if (!snap || !snap.pts || !S || !S.fac) return;
   MP.applying = true;
   try {
-    const keep = R.enemies.filter(e => (e.goldBoss || e.sat || e.satG) && !e.dead);
-    const pts = snap.pts.map(p => ({ x: p.x, y: p.y, cls: p.cls, tid: p.tid, t: p.t || 0, mid: p.mid || null, e: null }));
-    R.field = { key: snap.key || fieldKey(), pts, kills: snap.kills | 0, mp: true };
-    R.enemies = keep;
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i], src = snap.pts[i];
-      if (src.e && src.e.mid) mpEnsureEnemy(src.e, p);
+    const key = snap.key || fieldKey();
+    const special = R.enemies.filter(e => e && !e.dead && (e.goldBoss || e.sat || e.satG));
+    const byMid = new Map();
+    for (const e of R.enemies) if (e && e.mid && !e.dead && !(e.goldBoss || e.sat || e.satG)) byMid.set(e.mid, e);
+
+    let pts = R.field && R.field.key === key && R.field.pts && R.field.pts.length === snap.pts.length
+      ? R.field.pts : null;
+    if (!pts) pts = snap.pts.map(p => ({ x: p.x, y: p.y, cls: p.cls, tid: p.tid, t: p.t || 0, mid: p.mid || null, e: null }));
+    R.field = { key, pts, kills: snap.kills | 0, mp: true };
+
+    const live = [], used = new Set();
+    for (let i = 0; i < snap.pts.length; i++) {
+      const src = snap.pts[i], p = pts[i];
+      p.x = src.x; p.y = src.y; p.cls = src.cls; p.tid = src.tid;
+      if (src.e && src.e.mid) {
+        p.t = 0; p.mid = src.e.mid;
+        let e = byMid.get(src.e.mid) || (p.e && p.e.mid === src.e.mid && !p.e.dead ? p.e : null);
+        if (e) {
+          e.hp = Math.min(e.hp, src.e.hp); e.max = src.e.max || e.max;
+          e.home = p; p.e = e; used.add(e.mid);
+          const tx = src.e.x != null ? src.e.x : p.x, ty = src.e.y != null ? src.e.y : p.y;
+          const d = Math.hypot(tx - e.x, ty - e.y);
+          if (d > 280) { e.x = tx; e.y = ty; }
+          else if (d > 100) { e.x += (tx - e.x) * 0.2; e.y += (ty - e.y) * 0.2; }
+          live.push(e);
+        } else {
+          live.push(mpEnsureEnemy(src.e, p, true));
+          used.add(src.e.mid);
+        }
+      } else {
+        if (p.e && !p.e.dead && p.e.hp > 0) {
+          // host bao trong nhung local con song: cho die/hit packet, chi cap timer
+          p.t = src.t || 0;
+        } else {
+          p.e = null; p.mid = src.mid || null; p.t = src.t || 0;
+        }
+      }
     }
+    for (const [mid, e] of byMid) {
+      if (!used.has(mid)) { e.dead = true; e.mpSkipReward = true; if (e.home && e.home.e === e) e.home.e = null; }
+    }
+    // giu thu tu on dinh: special + live (object cu), khong tao lai
+    const seen = new Set(live.map(e => e.mid));
+    for (const e of special) if (e.mid) seen.add(e.mid);
+    R.enemies = special.concat(live);
     MP.fieldSnap = snap;
   } finally { MP.applying = false; }
 }
@@ -181,7 +228,7 @@ function mpElect() {
   mpUi();
 }
 
-function mpUpsertPeer(row) {
+function mpUpsertPeer(row, fromPos) {
   if (!row) return;
   const k = String(row.cid || row.key || '');
   if (!k || k === mpCid()) return;
@@ -192,26 +239,38 @@ function mpUpsertPeer(row) {
   if (!p) {
     p = MP.peers[k] = {
       cid: k, name: 'Võ lâm', fac: '', sex: 0, lvl: 0, face: 1, dir: 0, act: 'st', actT: 0,
-      life: 1, title: '', titleCol: '', jx: null, x: tx, y: ty, tx, ty, vx: 0, vy: 0,
-      seen: now, _t: now, _px: tx, _py: ty, _jo: null, _joCache: ''
+      life: 1, title: '', titleCol: '', jx: null, x: tx, y: ty, tx, ty, rx: tx, ry: ty, vx: 0, vy: 0,
+      seen: now, _t: now, _px: tx, _py: ty, _jo: null, _joCache: '', seq: 0, hist: row.x != null ? [{ t: now, x: tx, y: ty }] : []
     };
     if (typeof toast === 'function') toast('Đồng đội: ' + (row.name || 'Võ lâm') + ' vào map');
   }
-  if (row.x != null) {
-    const dt = Math.max(0.04, (now - (p._t || now)) / 1000);
-    p.vx = (tx - p.tx) / dt;
-    p.vy = (ty - p.ty) / dt;
-    const spd = Math.hypot(p.vx, p.vy);
-    if (spd > 480) { p.vx *= 480 / spd; p.vy *= 480 / spd; }
-    p.tx = tx; p.ty = ty; p._t = now;
-    // lich su pos de noi suy muot (FPS man hinh)
-    if (!p.hist) p.hist = [];
-    const last = p.hist[p.hist.length - 1];
-    if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || now - last.t > 40) {
-      p.hist.push({ t: now, x: tx, y: ty });
-      if (p.hist.length > 8) p.hist.shift();
-    } else { last.t = now; last.x = tx; last.y = ty; }
-    if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+  // Chi broadcast pos moi ghi hist. Presence chi meta — tranh toa do cu de tele.
+  if (fromPos && row.x != null) {
+    const seq = row.seq != null ? (row.seq | 0) : 0;
+    const pt = row.t != null ? (+row.t) : now;
+    if (seq && p.seq && seq <= p.seq) { p.seen = now; /* stale */ }
+    else if (p._pt && pt + 40 < p._pt) { p.seen = now; /* out-of-order time */ }
+    else {
+      if (seq) p.seq = seq;
+      p._pt = Math.max(p._pt || 0, pt);
+      const dt = Math.max(0.05, (now - (p._t || now)) / 1000);
+      let vx = (tx - p.tx) / dt, vy = (ty - p.ty) / dt;
+      const spd = Math.hypot(vx, vy);
+      if (spd > 520) { vx *= 520 / spd; vy *= 520 / spd; }
+      // EMA van toc — bot giat khi goi mang lech nhip
+      p.vx = p.vx ? p.vx * 0.55 + vx * 0.45 : vx;
+      p.vy = p.vy ? p.vy * 0.55 + vy * 0.45 : vy;
+      p.tx = tx; p.ty = ty; p._t = now;
+      if (!p.hist) p.hist = [];
+      const last = p.hist[p.hist.length - 1];
+      // dung timestamp goi mang (pt) de noi suy dung tre, khong phai Date.now nhan
+      const ht = Math.min(now, Math.max(pt, (last && last.t) || pt));
+      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.4 || ht - last.t > 35) {
+        p.hist.push({ t: ht, x: tx, y: ty });
+        if (p.hist.length > MP_HIST) p.hist.shift();
+      } else { last.t = ht; last.x = tx; last.y = ty; }
+      if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+    }
   }
   if (row.name != null) p.name = String(row.name).slice(0, 16);
   if (row.fac != null) p.fac = row.fac || p.fac;
@@ -267,7 +326,7 @@ function mpPresenceSync() {
     const row = Object.assign({}, (st[k] && st[k][0]) || {}, { cid: k });
     live.add(k);
     if (k === mpCid()) continue;
-    mpUpsertPeer(row);
+    mpUpsertPeer(row, false); // presence: meta only, khong day pos cu vao hist
   }
   // chi xoa peer khi mat presence LAU + khong con nhan pos (tranh nhap nhay khi sync nhip)
   for (const k of Object.keys(MP.peers)) {
@@ -279,8 +338,7 @@ function mpPresenceSync() {
 
 function mpOnPos(p) {
   if (!p || p.cid === mpCid()) return;
-  mpUpsertPeer(p);
-  mpElect();
+  mpUpsertPeer(p, true);
 }
 
 function mpJxPack() {
@@ -298,9 +356,10 @@ function mpPosPayload(full) {
   if (changed) MP.lastJx = jxKey;
   if (actChanged) MP.lastAct = act;
   // goi nhe: chi toa do + huong + act (jx/title khi doi do / full)
+  MP.posSeq = (MP.posSeq | 0) + 1;
   const o = {
-    cid: mpCid(),
-    x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
+    cid: mpCid(), seq: MP.posSeq,
+    x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10, face: H.face >= 0 ? 1 : -1,
     dir: H.dir | 0, act, life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
   };
   if (full || changed || actChanged) {
@@ -317,17 +376,18 @@ function mpPosPayload(full) {
 function mpTrackNow(forceBcast) {
   if (!MP.ch || MP.state !== 'ok' || !S || !S.fac) return;
   const now = Date.now();
-  if (now - (MP.lastTrack || 0) < 80 && !forceBcast) return;
+  const moving = !!(H.moving || Math.hypot(H.vx || 0, H.vy || 0) > 8 || (H.act || '') === 'run' || (H.act || '') === 'at');
+  const minGap = forceBcast ? 0 : (moving ? 55 : 120);
+  if (now - (MP.lastTrack || 0) < minGap) return;
   MP.lastTrack = now;
   const act = H.act || 'st';
   const urgent = forceBcast || act === 'at' || act !== MP.lastAct;
   const p = mpPosPayload(!!forceBcast);
-  // presence track thua hon (meta nang): ~3 goi pos / 1 track
+  // presence track thua hon (meta): ~5 goi pos / 1 track — KHONG dung presence de noi suy
   MP.posN = (MP.posN || 0) + 1;
-  if (urgent || MP.posN % 3 === 0) {
+  if (urgent || MP.posN % 5 === 0) {
     try { MP.ch.track(Object.assign({}, p, { name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, jx: p.jx || mpJxPack() })); } catch (e) { /* bo qua */ }
   }
-  // broadcast pos moi tick — payload nho, muot di chuyen
   mpSend('pos', p);
 }
 
@@ -417,14 +477,18 @@ function mpInit() {
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
-  if (h.length === 1) return { x: h[0].x, y: h[0].y };
+  if (h.length === 1) {
+    // extrapolate nhe bang van toc
+    const age = Math.min(0.18, Math.max(0, (now - MP_DELAY - h[0].t) / 1000));
+    return { x: h[0].x + (p.vx || 0) * age, y: h[0].y + (p.vy || 0) * age };
+  }
   const t = now - MP_DELAY;
   if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
   const last = h[h.length - 1], prev = h[h.length - 2];
   if (t >= last.t) {
-    const span = Math.max(1, last.t - prev.t);
-    const u = Math.min(0.1, (t - last.t) / 1000); // extrapolate toi da 100ms
-    return { x: last.x + (last.x - prev.x) / span * 1000 * u, y: last.y + (last.y - prev.y) / span * 1000 * u };
+    // extrapolate toi da 180ms theo van toc EMA (muot hon delta 2 diem)
+    const u = Math.min(0.18, (t - last.t) / 1000);
+    return { x: last.x + (p.vx || 0) * u, y: last.y + (p.vy || 0) * u };
   }
   for (let i = 1; i < h.length; i++) {
     if (t <= h[i].t) {
@@ -446,12 +510,14 @@ function othSmoothRender(dt) {
     const goal = mpInterpAt(p, now);
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
-    if (dist > MP_SNAP) { p.rx = goal.x; p.ry = goal.y; }
-    else {
-      // spring nhanh theo FPS — 120Hz van muot
-      const a = 1 - Math.exp(-dt * 26);
-      p.rx += (goal.x - p.rx) * a;
-      p.ry += (goal.y - p.ry) * a;
+    if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; } // tele that (doi map / lag lon)
+    else if (dist > MP_SNAP) {
+      // keo nhanh, khong snap cung
+      const a = 1 - Math.exp(-dt * 18);
+      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
+    } else {
+      const a = 1 - Math.exp(-dt * 22);
+      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     }
     p.x = p.rx; p.y = p.ry;
     p.actT = (p.actT || 0) + dt;
@@ -481,7 +547,9 @@ function othTick(dt) {
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
   if (MP.state !== 'ok') return;
   MP.trackT = (MP.trackT || 0) + dt;
-  if (MP.trackT >= MP_POS) { MP.trackT = 0; mpTrackNow(); }
+  const moving = !!(H.moving || (H.act || '') === 'run' || (H.act || '') === 'at');
+  const gap = moving ? MP_POS : MP_POS_IDLE;
+  if (MP.trackT >= gap) { MP.trackT = 0; mpTrackNow(); }
   if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;
@@ -571,15 +639,17 @@ function othDraw(c, p) {
   fieldTick = function (dt) {
     if (mpActive() && !mpIsHost()) {
       const zid = zoneOf(Math.min(S.stage, STAGES)).id, f = R.field;
-      const same = f && (f.key === fieldKey() || (f.mp && MP.zoneId === zid));
+      const same = f && f.pts && (f.key === fieldKey() || (f.mp && MP.zoneId === zid));
       if (!same) {
+        // khong _fieldBuild() local — tranh wipe/an-hien; xin lai host
         if (MP.fieldSnap && (MP.fieldSnap.key === fieldKey() || MP.fieldSnap.zone === zid)) mpApplyField(MP.fieldSnap);
-        else if (!MP.waitHost || Date.now() > MP.waitHost) _fieldBuild();
+        else if (!MP._needT || Date.now() - MP._needT > 1200) { MP._needT = Date.now(); mpSend('need', { cid: mpCid() }); }
         return;
       }
       for (const p of f.pts) {
         if (p.e && p.e.dead) { p.e = null; p.t = p.cls === 'boss' ? FLD_BOSS_RESPAWN : FLD_RESPAWN / (typeof mountHaste === 'function' ? mountHaste() : 1); }
         if (!p.e && p.t > 0) p.t -= dt;
+        // khach KHONG tu spawn — chi host; tranh doi mid / luc an luc hien
       }
       if (R.enemies.some(e => e.dead)) R.enemies = R.enemies.filter(e => !e.dead);
       return;
