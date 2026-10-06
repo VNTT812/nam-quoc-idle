@@ -268,7 +268,7 @@ function netMailLabel(m) {
 function netApplyAdminGrant(a) {
   const parts = [];
   if (!a || !a.__admin) return parts;
-  if (a.lvl != null) {
+  if (a.lvl != null && a.lvl !== '') {
     const lv = clamp(Math.floor(+a.lvl) || 1, 1, typeof MAX_LEVEL !== 'undefined' ? MAX_LEVEL : 200);
     const old = S.lvl | 0;
     if (lv > old) {
@@ -303,14 +303,23 @@ function netApplyAdminGrant(a) {
   return parts;
 }
 async function netClaim(m, quiet) {
-  const isAdminMail = !!(m.item && m.item.__admin);
+  const isAdminMail = !!(m.item && m.item.__admin) || m.kind === 'admin';
   if (m.item && !isAdminMail && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
-  if (isAdminMail && m.item.gear && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
+  if (isAdminMail && m.item && m.item.gear && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy — dọn túi rồi nhận');
+  // Admin cap/diem: thu phai co nhan vat dang choi
+  if (isAdminMail && (!S || !S.fac)) throw new Error('Vào nhân vật trước rồi nhận thư');
   const r = await netCall(sb => sb.rpc('claim_mail', { mid: m.id })), d = r.data || m;
   const parts = [];
-  if (d.item && d.item.__admin) parts.push(...netApplyAdminGrant(d.item));
-  else if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
-  if (d.gold > 0) { S.gold += +d.gold; parts.push(fmt(+d.gold) + ' lượng'); }
+  try {
+    if (d.item && d.item.__admin) parts.push(...netApplyAdminGrant(d.item));
+    else if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
+    if (d.gold > 0) { S.gold += +d.gold; parts.push(fmt(+d.gold) + ' lượng'); }
+  } catch (e) {
+    // thu da xoa tren may chu — van luu phan da apply, bao loi ro
+    save();
+    if (typeof updateTop === 'function') updateTop();
+    throw e;
+  }
   save(); if (!quiet) log(`📨 Nhận thư từ <b>${esc(d.from_name)}</b>: ${esc(parts.join(', ') || netMailLabel(d) || 'quà')}`);
   if (typeof updateTop === 'function') updateTop();
   if (typeof refresh === 'function') refresh();

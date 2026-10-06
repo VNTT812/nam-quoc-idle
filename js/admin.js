@@ -234,47 +234,66 @@ async function adminFindChar(name) {
   name = String(name || '').trim();
   if (!name) throw new Error('Nhập tên nhân vật nhận');
   if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
-  const r = await netCall(sb => sb.from('chars').select('name,fac,lvl,power,sex').eq('name', name).maybeSingle());
-  if (!r.data) throw new Error('Không tìm thấy «' + name + '» (cần họ từng lưu xếp hạng / đặt tên)');
-  return r.data;
+  let r = await netCall(sb => sb.from('chars').select('name,fac,lvl,power,sex').eq('name', name).maybeSingle());
+  if (r.data) return r.data;
+  r = await netCall(sb => sb.from('chars').select('name,fac,lvl,power,sex').ilike('name', name).limit(8));
+  const rows = r.data || [];
+  if (rows.length === 1) return rows[0];
+  if (rows.length > 1) throw new Error('Nhiều tên gần giống — nhập đúng: ' + rows.map(x => x.name).join(', '));
+  throw new Error('Không tìm thấy «' + name + '» (họ cần đặt tên + vào xếp hạng một lần)');
 }
 
-/** Gửi quà Admin qua thư: cấp / điểm / KNB / đồ. Người nhận bấm Nhận trong Thư. */
+/** Gửi quà Admin qua thư. Đồ = thư gift thường (mọi bản nhận được); cấp/điểm/KNB = gói __admin. */
 async function adminGrantPlayer(opts) {
   if (!isAdmin()) throw new Error('Chỉ tài khoản admin');
   if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
   const to = String((opts && opts.to) || '').trim();
   const ch = await adminFindChar(to);
-  const payload = { __admin: 1 };
-  let has = false;
-  if (opts.lvl != null && opts.lvl !== '') {
-    payload.lvl = clamp(Math.floor(+opts.lvl) || 1, 1, MAX_LEVEL);
-    has = true;
-  }
-  if (opts.addLv > 0) {
-    payload.addLv = clamp(Math.floor(+opts.addLv) || 0, 0, 200);
-    has = true;
-  }
-  if (opts.attrPts > 0) { payload.attrPts = Math.max(0, Math.floor(+opts.attrPts) || 0); has = true; }
-  if (opts.skPts > 0) { payload.skPts = Math.max(0, Math.floor(+opts.skPts) || 0); has = true; }
-  if (opts.knb > 0) { payload.knb = Math.max(0, Math.floor(+opts.knb) || 0); has = true; }
-  if (opts.gear && Array.isArray(opts.gear.base)) {
-    const g = JSON.parse(JSON.stringify(opts.gear));
-    delete g.uid; delete g.lock;
-    payload.gear = g;
-    has = true;
-  }
-  if (!has) throw new Error('Chọn cấp, điểm, KNB hoặc đồ để cấp');
   if (typeof netNeedChar === 'function') await netNeedChar();
   const note = String(opts.note || 'Quà từ Admin').slice(0, 100);
   const from = (S && typeof hasRealName === 'function' && hasRealName() && S.name) ? S.name : 'Admin';
-  await netCall(sb => sb.from('mail').insert({
-    to_name: ch.name, from_name: from, from_owner: NET.user.id,
-    kind: 'admin', item: payload, gold: 0, note
-  }));
-  const label = typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'quà';
-  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)}`);
-  return { char: ch, label, payload };
+  const labels = [];
+  let sent = 0;
+
+  // 1) Do: gui nhu gift thuong — client cu/moi deu nhan duoc (khong boc __admin)
+  if (opts.gear && Array.isArray(opts.gear.base)) {
+    const g = JSON.parse(JSON.stringify(opts.gear));
+    delete g.uid; delete g.lock;
+    await netCall(sb => sb.from('mail').insert({
+      to_name: ch.name, from_name: from, from_owner: NET.user.id,
+      kind: 'gift', item: g, gold: 0, note
+    }));
+    labels.push(g.n || 'đồ'); sent++;
+  }
+
+  // 2) Cap / diem / KNB: goi __admin + vo hien thi (base/mag rong) de khong vo UI thu
+  const payload = { __admin: 1, n: 'Quà Admin', base: [], mag: [], r: 5, d: 99, lvl: 1 };
+  let hasStat = false;
+  if (opts.lvl != null && opts.lvl !== '') {
+    payload.lvl = clamp(Math.floor(+opts.lvl) || 1, 1, MAX_LEVEL);
+    hasStat = true;
+  }
+  if (opts.addLv > 0) {
+    payload.addLv = clamp(Math.floor(+opts.addLv) || 0, 0, 200);
+    hasStat = true;
+  }
+  if (opts.attrPts > 0) { payload.attrPts = Math.max(0, Math.floor(+opts.attrPts) || 0); hasStat = true; }
+  if (opts.skPts > 0) { payload.skPts = Math.max(0, Math.floor(+opts.skPts) || 0); hasStat = true; }
+  if (opts.knb > 0) { payload.knb = Math.max(0, Math.floor(+opts.knb) || 0); hasStat = true; }
+  if (hasStat) {
+    payload.n = 'Quà Admin: ' + (typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp / điểm');
+    await netCall(sb => sb.from('mail').insert({
+      to_name: ch.name, from_name: from, from_owner: NET.user.id,
+      kind: 'admin', item: payload, gold: 0, note
+    }));
+    labels.push(typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp/điểm');
+    sent++;
+  }
+  if (!sent) throw new Error('Chọn cấp, điểm, KNB hoặc đồ để cấp');
+  const label = labels.join(' · ');
+  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)} — họ mở 🌐 Thư → Nhận`);
+  toast('Đã gửi tới ' + ch.name + ' · bảo họ mở Thư → Nhận');
+  return { char: ch, label, payload: hasStat ? payload : null };
 }
 
 function adminModal() {

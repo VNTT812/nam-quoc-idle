@@ -10,7 +10,7 @@ const MP = {
 };
 /* Pos ~20Hz khi chay / ~7Hz dung; noi suy tre 180ms + van toc gui kem; field soft-merge. */
 const MP_MAX = 6, MP_POS = 0.05, MP_POS_IDLE = 0.15, MP_SYNC = 8, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 280, MP_HARD = 720, MP_DELAY = 180, MP_HIST = 28, MP_EXTRAP = 0.12, MP_MAX_SPD = 220;
+const MP_SNAP = 280, MP_HARD = 720, MP_DELAY = 140, MP_HIST = 36, MP_EXTRAP = 0.16, MP_MAX_SPD = 260;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -361,20 +361,25 @@ function mpJxPack() {
   return { h: r.helm | 0, a: r.armor | 0, w: r.weapon | 0, o: r.horse | 0 };
 }
 function mpLocalVel() {
-  // van toc tu buoc di chuyen (input) — on dinh hon uoc tu goi mang
+  // van toc: uu tien input; click-to-move / auto thi uoc tu dich chuyen thuc (MP._lx)
   const now = performance.now();
-  const dt = Math.max(0.016, Math.min(0.1, (now - (MP._lvT || now)) / 1000));
+  const dt = Math.max(0.016, Math.min(0.12, (now - (MP._lvT || now)) / 1000));
   MP._lvT = now;
   let vx = 0, vy = 0;
   if (typeof inputVec === 'function') {
-    const v = inputVec(), moving = !!(v && (v[0] || v[1]) && (H.moving || (H.act || '') === 'run'));
-    if (moving) {
+    const v = inputVec();
+    if (v && (v[0] || v[1]) && (H.moving || (H.act || '') === 'run')) {
       const sp = 150 * (typeof curSpeed === 'function' ? curSpeed() : 1);
       vx = v[0] * sp; vy = v[1] * sp;
     }
-  } else if (H.px != null) {
-    vx = (H.x - H.px) / dt; vy = (H.y - H.py) / dt;
   }
+  // click chuot / auto farm: inputVec = 0 nhung van chay — dung lich su toa do rieng (khong dung H.px, render ghi de)
+  if (Math.hypot(vx, vy) < 8 && MP._lx != null) {
+    const ddt = Math.max(0.016, Math.min(0.12, (now - (MP._lxT || now)) / 1000));
+    const dx = H.x - MP._lx, dy = H.y - MP._ly;
+    if (Math.hypot(dx, dy) > 0.35) { vx = dx / ddt; vy = dy / ddt; }
+  }
+  MP._lx = H.x; MP._ly = H.y; MP._lxT = now;
   const spd = Math.hypot(vx, vy);
   if (spd > MP_MAX_SPD) { const k = MP_MAX_SPD / spd; vx *= k; vy *= k; }
   if (spd < 8) { vx = 0; vy = 0; }
@@ -391,10 +396,10 @@ function mpPosPayload(full) {
   if (changed) MP.lastJx = jxKey;
   if (actChanged) MP.lastAct = act;
   const vel = mpLocalVel();
-  // goi nhe: toa do + van toc + huong + act (jx/title khi doi do / full)
+  // goi nhe: toa do + van toc + timestamp nguon + huong + act
   MP.posSeq = (MP.posSeq | 0) + 1;
   const o = {
-    cid: mpCid(), seq: MP.posSeq,
+    cid: mpCid(), seq: MP.posSeq, t: Date.now(),
     x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10,
     vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
     face: H.face >= 0 ? 1 : -1,
