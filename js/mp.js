@@ -8,8 +8,8 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos/track nhe de tranh CHANNEL_ERROR (spam Realtime -> badge "lỗi" + peer nhap nhay) */
-const MP_MAX = 6, MP_POS = 0.28, MP_BCAST = 0.55, MP_SYNC = 4.5, MP_WAIT = 1600, MP_PEER_TTL = 28000;
+/* Pos nhe + extrapolate: muot di chuyen, it "dich"; field sync van thua de tranh rot kenh */
+const MP_MAX = 6, MP_POS = 0.12, MP_SYNC = 5, MP_WAIT = 1600, MP_PEER_TTL = 30000, MP_SNAP = 220;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -185,32 +185,50 @@ function mpUpsertPeer(row) {
   if (!row) return;
   const k = String(row.cid || row.key || '');
   if (!k || k === mpCid()) return;
-  const prev = MP.peers[k];
-  const tx = row.x != null ? +row.x : (prev ? prev.tx : 0);
-  const ty = row.y != null ? +row.y : (prev ? prev.ty : 0);
-  const was = !!prev;
-  const jx = row.jx && typeof row.jx === 'object' ? { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 } : (prev && prev.jx) || null;
-  const jxKey = jx ? JSON.stringify(jx) + '|' + (row.sex != null ? row.sex | 0 : (prev ? prev.sex | 0 : 0)) : '';
-  MP.peers[k] = {
-    cid: k,
-    name: String(row.name || (prev && prev.name) || 'Võ lâm').slice(0, 16),
-    fac: row.fac || (prev && prev.fac) || '',
-    sex: row.sex != null ? (row.sex | 0) : (prev ? prev.sex | 0 : 0),
-    lvl: row.lvl != null ? (row.lvl | 0) : (prev ? prev.lvl | 0 : 0),
-    face: row.face != null ? (row.face >= 0 ? 1 : -1) : (prev ? prev.face : 1),
-    dir: row.dir != null ? (row.dir | 0) : (prev ? prev.dir | 0 : 0),
-    act: row.act || (prev && prev.act) || 'st',
-    actT: prev ? prev.actT || 0 : 0,
-    life: Math.max(0, Math.min(1, row.life != null ? +row.life : (prev ? prev.life : 1))),
-    title: row.title != null ? String(row.title).slice(0, 24) : (prev && prev.title) || '',
-    titleCol: row.titleCol || (prev && prev.titleCol) || '',
-    jx, x: prev ? prev.x : tx, y: prev ? prev.y : ty,
-    tx, ty, seen: Date.now(),
-    _px: prev ? prev._px : tx, _py: prev ? prev._py : ty,
-    _jo: prev && prev._jxKey === jxKey ? prev._jo : null,
-    _jxKey: jxKey
-  };
-  if (!was && typeof toast === 'function') toast('Đồng đội: ' + MP.peers[k].name + ' vào map');
+  let p = MP.peers[k];
+  const now = Date.now();
+  const tx = row.x != null ? +row.x : (p ? p.tx : 0);
+  const ty = row.y != null ? +row.y : (p ? p.ty : 0);
+  if (!p) {
+    p = MP.peers[k] = {
+      cid: k, name: 'Võ lâm', fac: '', sex: 0, lvl: 0, face: 1, dir: 0, act: 'st', actT: 0,
+      life: 1, title: '', titleCol: '', jx: null, x: tx, y: ty, tx, ty, vx: 0, vy: 0,
+      seen: now, _t: now, _px: tx, _py: ty, _jo: null, _joCache: ''
+    };
+    if (typeof toast === 'function') toast('Đồng đội: ' + (row.name || 'Võ lâm') + ' vào map');
+  }
+  // van toc tu 2 moc pos — extrapolate giua cac goi (bot "dich")
+  const dt = Math.max(0.05, (now - (p._t || now)) / 1000);
+  if (row.x != null) {
+    p.vx = (tx - p.tx) / dt;
+    p.vy = (ty - p.ty) / dt;
+    const spd = Math.hypot(p.vx, p.vy);
+    if (spd > 420) { p.vx *= 420 / spd; p.vy *= 420 / spd; } // cap
+    // nhay qua xa: keo dan, khong snap
+    if (Math.hypot(tx - p.x, ty - p.y) > MP_SNAP) {
+      p.x += (tx - p.x) * 0.55;
+      p.y += (ty - p.y) * 0.55;
+    }
+    p.tx = tx; p.ty = ty; p._t = now;
+  }
+  if (row.name != null) p.name = String(row.name).slice(0, 16);
+  if (row.fac != null) p.fac = row.fac || p.fac;
+  if (row.sex != null) p.sex = row.sex | 0;
+  if (row.lvl != null) p.lvl = row.lvl | 0;
+  if (row.face != null) p.face = row.face >= 0 ? 1 : -1;
+  if (row.dir != null) p.dir = row.dir | 0;
+  if (row.act != null && row.act !== p.act) {
+    p.act = row.act;
+    if (row.act === 'at' || row.act === 'hurt') p.actT = 0; // reset anim danh / trung
+  }
+  if (row.life != null) p.life = Math.max(0, Math.min(1, +row.life));
+  if (row.title != null) p.title = String(row.title).slice(0, 24);
+  if (row.titleCol != null) p.titleCol = row.titleCol;
+  if (row.jx && typeof row.jx === 'object') {
+    p.jx = { h: row.jx.h | 0, a: row.jx.a | 0, w: row.jx.w | 0, o: row.jx.o | 0 };
+    p._jo = null; p._joCache = '';
+  }
+  p.seen = now;
 }
 
 /* Ghep bo JX1 tu hang trang bi dong bo (khong can item day du) */
@@ -271,14 +289,21 @@ function mpPosPayload(full) {
   const tw = typeof titleWorn === 'function' && titleWorn();
   const jx = mpJxPack();
   const jxKey = jx ? (jx.h + ',' + jx.a + ',' + jx.w + ',' + jx.o) : '';
+  const act = H.act || 'st';
   const changed = full || jxKey !== MP.lastJx;
+  const actChanged = act !== MP.lastAct;
   if (changed) MP.lastJx = jxKey;
+  if (actChanged) MP.lastAct = act;
+  // goi nhe: chi toa do + huong + act (jx/title khi doi do / full)
   const o = {
-    cid: mpCid(), name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
+    cid: mpCid(),
     x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
-    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
+    dir: H.dir | 0, act, life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
   };
-  if (changed) {
+  if (full || changed || actChanged) {
+    o.name = mpName(); o.fac = S.fac || ''; o.sex = S.sex | 0; o.lvl = S.lvl | 0;
+  }
+  if (changed || full) {
     o.jx = jx;
     o.title = tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '';
     o.titleCol = tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '';
@@ -287,13 +312,19 @@ function mpPosPayload(full) {
 }
 function mpTrackNow(forceBcast) {
   if (!MP.ch || MP.state !== 'ok' || !S || !S.fac) return;
-  if (Date.now() - (MP.lastTrack || 0) < 120 && !forceBcast) return;
-  MP.lastTrack = Date.now();
+  const now = Date.now();
+  if (now - (MP.lastTrack || 0) < 80 && !forceBcast) return;
+  MP.lastTrack = now;
+  const act = H.act || 'st';
+  const urgent = forceBcast || act === 'at' || act !== MP.lastAct;
   const p = mpPosPayload(!!forceBcast);
-  try { MP.ch.track(p); } catch (e) { /* bo qua */ }
+  // presence track thua hon (meta nang): ~3 goi pos / 1 track
   MP.posN = (MP.posN || 0) + 1;
-  // broadcast thua hon track: du de ve peer, bot spam
-  if (forceBcast || MP.posN % 2 === 0) mpSend('pos', p);
+  if (urgent || MP.posN % 3 === 0) {
+    try { MP.ch.track(Object.assign({}, p, { name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, jx: p.jx || mpJxPack() })); } catch (e) { /* bo qua */ }
+  }
+  // broadcast pos moi tick — payload nho, muot di chuyen
+  mpSend('pos', p);
 }
 
 /* ---------- kenh map ---------- */
@@ -381,19 +412,37 @@ function mpInit() {
 function othEnts() {
   return Object.values(MP.peers).map(p => ({ oth: p, y: p.y }));
 }
+function mpJxBodyReady(Jo, act) {
+  if (!Jo || !JXL) return false;
+  const jact = (Jo.asc && (Jo.asc[act] || Jo.asc.st)) || null; if (!jact) return false;
+  const row = Jo.rows.armor; if (row < 0) return false;
+  const nm = (((JXL.tabs[Jo.sx] || {})['躯体'] || {})[row] || {})[jact];
+  if (!nm) return false;
+  const sk = jxSheetKey(Jo.sx, nm), m = JXL.sheets[sk]; if (!m) return false;
+  const im = img('img/jx/' + sk + '.webp');
+  return !!(im && im.complete && im.naturalWidth);
+}
 function othTick(dt) {
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
-  // van noi suy peer khi dang retry (giu hinh, khong an mat)
+  const now = Date.now();
   for (const p of Object.values(MP.peers)) {
-    const k = Math.min(1, dt * 10);
-    p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k;
+    // extrapolate theo van toc, roi hut ve moc tx/ty (muot, it dich)
+    const age = (now - (p._t || now)) / 1000;
+    const predX = p.tx + (p.vx || 0) * Math.min(age, 0.25);
+    const predY = p.ty + (p.vy || 0) * Math.min(age, 0.25);
+    const k = 1 - Math.exp(-dt * 14);
+    p.x += (predX - p.x) * k;
+    p.y += (predY - p.y) * k;
     p.actT = (p.actT || 0) + dt;
-    if (Date.now() - (p.seen || 0) > MP_PEER_TTL) delete MP.peers[p.cid];
+    if (p.act === 'at' && p.actT > 0.55) p.act = Math.hypot(p.vx || 0, p.vy || 0) > 20 ? 'run' : 'st';
+    if (now - (p.seen || 0) > MP_PEER_TTL) delete MP.peers[p.cid];
   }
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
   if (MP.state !== 'ok') return;
   MP.trackT = (MP.trackT || 0) + dt;
   if (MP.trackT >= MP_POS) { MP.trackT = 0; mpTrackNow(); }
+  // danh: gui ngay khi vua danh (khong cho het chu ky pos)
+  if ((H.act || '') === 'at' && MP.lastAct !== 'at') mpTrackNow(true);
   if (mpIsHost()) {
     MP.syncT = (MP.syncT || 0) + dt;
     if (MP.syncT >= MP_SYNC) { MP.syncT = 0; mpSendField(); }
@@ -405,7 +454,6 @@ function othTick(dt) {
 }
 function othDraw(c, p) {
   if (!p) return;
-  // ngoai man hinh: ve mui ten mep khung nhin (de biet dong doi o dau)
   const vx0 = CAM.x, vy0 = CAM.y, vx1 = CAM.x + AR.w, vy1 = CAM.y + AR.h;
   const margin = 28;
   if (p.x < vx0 - 40 || p.x > vx1 + 40 || p.y < vy0 - 40 || p.y > vy1 + 40) {
@@ -421,12 +469,13 @@ function othDraw(c, p) {
   c.strokeStyle = typeof campCol === 'function' ? campCol(p.fac) : '#8fe0b8'; c.lineWidth = 2; c.globalAlpha = 0.85;
   c.beginPath(); c.ellipse(p.x, p.y, 18, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1;
   const hw = typeof heroGfx === 'function' ? heroGfx(p.fac, p.sex) : null;
-  const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (Math.hypot(p.tx - p._px, p.ty - p._py) > 2 ? 'run' : 'st');
+  const moving = Math.hypot(p.vx || 0, p.vy || 0) > 18 || Math.hypot(p.tx - p.x, p.ty - p.y) > 4;
+  const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (moving ? 'run' : 'st');
   const sc = typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1;
   let h = 0;
-  // QUAN TRONG: khong goi drawHeroAnim — ham do dung R.jx/R.look cua MINH -> ve do minh len nguoi khac (loi trang phuc + bong ma)
+  // chi ve JX khi co THAN (躯体) — thieu than se ra giay/vu khi bay
   const Jo = mpJxFromPeer(p);
-  if (Jo && typeof drawJxHero === 'function') {
+  if (Jo && typeof drawJxHero === 'function' && mpJxBodyReady(Jo, act)) {
     h = drawJxHero(act, p.dir || 0, p.actT || 0, p.x, p.y, sc, 1, hw && hw.anim, Jo) || 0;
   }
   if (!h && hw && hw.anim && typeof drawAnim === 'function') {
@@ -442,7 +491,6 @@ function othDraw(c, p) {
   const col = typeof campCol === 'function' ? campCol(p.fac) : (NAME_COL && NAME_COL.hero) || '#fff3c0';
   const sub = p.title ? `«${p.title}»` : '';
   label(p.x, p.y - (h ? Math.min(h, 90) * 0.9 : 52) - 4, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b', sub, p.titleCol || '');
-  p._px = p.tx; p._py = p.ty;
 }
 
 /* ---------- moc field / combat ---------- */
