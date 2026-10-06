@@ -15,12 +15,12 @@ CATALOG = ROOT / "assets/pack/quai/catalog.json"
 OUT = Path("/opt/cursor/artifacts/yentu-j-remaster")
 ACTS = ("st", "run", "at", "hurt", "die")
 
-# stem → (label, RGB glow, warm push, cool push, sat, contrast)
+# stem → (label, RGB glow, warm push, cool push, sat, contrast) — đậm hơn
 STYLES = {
-    "ani019": ("Nhím · Độc", (168, 80, 255), 0.92, 1.18, 1.25, 1.18),  # violet poison
-    "ani018": ("Heo rừng · Hỏa", (255, 110, 30), 1.28, 0.78, 1.30, 1.20),  # ember fire
-    "ani051": ("Hoán hùng · Ám", (90, 70, 200), 0.85, 1.22, 1.10, 1.22),  # shadow indigo
-    "ani052": ("Linh Miêu · Lôi", (70, 210, 255), 0.88, 1.30, 1.28, 1.18),  # lightning cyan
+    "ani019": ("Nhím · Độc", (190, 60, 255), 0.88, 1.28, 1.55, 1.28),  # violet poison
+    "ani018": ("Heo rừng · Hỏa", (255, 90, 10), 1.45, 0.62, 1.60, 1.32),  # ember fire
+    "ani051": ("Hoán hùng · Ám", (110, 55, 255), 0.72, 1.38, 1.35, 1.35),  # shadow indigo
+    "ani052": ("Linh Miêu · Lôi", (40, 230, 255), 0.78, 1.45, 1.55, 1.28),  # lightning cyan
 }
 
 
@@ -31,36 +31,49 @@ def mythic_cell(cell: Image.Image, glow: tuple[int, int, int], warm: float, cool
     up = cell.resize((w * 4, h * 4), Image.Resampling.NEAREST)
     up = ImageEnhance.Contrast(up).enhance(contrast)
     up = ImageEnhance.Color(up).enhance(sat)
-    up = up.filter(ImageFilter.UnsharpMask(radius=1.0, percent=75, threshold=2))
+    up = up.filter(ImageFilter.UnsharpMask(radius=1.1, percent=95, threshold=2))
 
     a = np.asarray(up).astype(np.float32)
     rgb, alpha = a[..., :3], a[..., 3]
     # warm/cool balance
     rgb[..., 0] = np.clip(rgb[..., 0] * warm, 0, 255)
     rgb[..., 2] = np.clip(rgb[..., 2] * cool, 0, 255)
-    # slight desat mid then tint toward element
+    # mạnh hơn: nhuộm body theo hệ + giữ chút form gốc
     gray = rgb.mean(axis=2, keepdims=True)
     tint = np.array(glow, dtype=np.float32)
-    rgb = rgb * 0.78 + gray * 0.12 + tint * 0.10
+    rgb = rgb * 0.48 + gray * 0.12 + tint * 0.40
+
+    # highlight sáng theo hệ (lông/gai sáng hơn)
+    lum = gray[..., 0] / 255.0
+    hi = np.clip((lum - 0.45) * 2.2, 0, 1)
+    for i in range(3):
+        rgb[..., i] = np.clip(rgb[..., i] + hi * glow[i] * 0.35, 0, 255)
 
     mask = Image.fromarray(np.clip(alpha, 0, 255).astype(np.uint8))
     edge = np.asarray(mask.filter(ImageFilter.FIND_EDGES)).astype(np.float32) / 255.0
-    edge = np.clip(edge * 2.2, 0, 1)
-    # outer soft glow ring
-    dil = np.asarray(mask.filter(ImageFilter.MaxFilter(7))).astype(np.float32)
+    edge = np.clip(edge * 2.8, 0, 1)
+    # aura kép: ring gần + ring xa
+    dil_near = np.asarray(mask.filter(ImageFilter.MaxFilter(5))).astype(np.float32)
+    dil_far = np.asarray(mask.filter(ImageFilter.MaxFilter(11))).astype(np.float32)
     body = alpha > 40
-    ring = (dil > 40) & (~body)
-    # rim light in element color
+    ring_near = (dil_near > 40) & (~body)
+    ring_far = (dil_far > 40) & (~body) & (~ring_near)
+    # rim sáng đậm theo hệ
     for i in range(3):
-        rgb[..., i] = np.where(edge > 0.05, np.clip(rgb[..., i] * (1 - edge * 0.25) + glow[i] * edge * 0.85, 0, 255), rgb[..., i])
-    # soft aura pixels outside silhouette
+        rgb[..., i] = np.where(
+            edge > 0.04,
+            np.clip(rgb[..., i] * (1 - edge * 0.45) + glow[i] * edge * 1.15, 0, 255),
+            rgb[..., i],
+        )
     out_rgb = rgb.copy()
     out_a = alpha.copy()
     for i in range(3):
-        out_rgb[..., i] = np.where(ring, glow[i] * 0.55, out_rgb[..., i])
-    out_a = np.where(ring, np.maximum(out_a, 110), out_a)
+        out_rgb[..., i] = np.where(ring_near, np.clip(glow[i] * 0.95, 0, 255), out_rgb[..., i])
+        out_rgb[..., i] = np.where(ring_far, np.clip(glow[i] * 0.55, 0, 255), out_rgb[..., i])
+    out_a = np.where(ring_near, np.maximum(out_a, 200), out_a)
+    out_a = np.where(ring_far, np.maximum(out_a, 130), out_a)
     # clean fringe
-    out_a = np.where(out_a < 12, 0, out_a)
+    out_a = np.where(out_a < 10, 0, out_a)
 
     out = np.dstack([out_rgb.clip(0, 255), out_a.clip(0, 255)]).astype(np.uint8)
     up2 = Image.fromarray(out, "RGBA")
