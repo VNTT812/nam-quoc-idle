@@ -6,9 +6,10 @@
 const MP = {
   sb: null, ch: null, zoneId: null, peers: {}, host: '', online: 0, state: 'off',
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
-  seq: 0, uiT: 0, joinedAt: 0, ensureT: 0
+  seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-const MP_MAX = 6, MP_POS = 0.1, MP_SYNC = 1.6, MP_WAIT = 1400;
+/* Pos/track nhe de tranh CHANNEL_ERROR (spam Realtime -> badge "lỗi" + peer nhap nhay) */
+const MP_MAX = 6, MP_POS = 0.28, MP_BCAST = 0.55, MP_SYNC = 4.5, MP_WAIT = 1600, MP_PEER_TTL = 28000;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -43,10 +44,10 @@ function mpUi() {
   if (typeof fieldMode !== 'function' || !fieldMode() || R.town || R.dg || R.tower) {
     badge.className = 'idle'; el.textContent = 'solo'; return;
   }
-  if (MP.state === 'load') { badge.className = 'load'; el.textContent = 'đang nối…'; return; }
-  if (MP.state === 'err') { badge.className = 'err'; el.textContent = 'lỗi'; return; }
+  if (MP.state === 'load' || MP.state === 'retry') { badge.className = 'load'; el.textContent = MP.state === 'retry' ? 'nối lại…' : 'đang nối…'; return; }
+  if (MP.state === 'err') { badge.className = 'err'; el.textContent = 'mất mạng'; return; }
   if (MP.state !== 'ok') { badge.className = 'off'; el.textContent = 'chưa nối'; return; }
-  const n = Math.max(1, MP.online);
+  const n = Math.max(1, MP.online | 0, 1 + Object.keys(MP.peers).length);
   badge.className = n > 1 ? 'on' : 'ok';
   el.textContent = n > 1 ? `${n} người · ${mpIsHost() ? 'chủ' : 'khách'}` : '1 người (chủ)';
 }
@@ -66,15 +67,18 @@ function mpPackEnemy(e, p) {
   };
 }
 
-function mpSendField() {
+function mpSendField(force) {
   const f = R.field; if (!f || !mpIsHost()) return;
+  if (!force && Date.now() - (MP.lastFieldSend || 0) < 2000) return;
+  MP.lastFieldSend = Date.now();
+  // chi gui quai con song + diem spawn (bo n/aggro text) — goi nhe hon, it rot kenh
   const pts = f.pts.map((p, i) => {
     const e = p.e && !p.e.dead ? p.e : null;
     if (e && !e.mid) e.mid = mpMid(p);
     return {
-      i, x: Math.round(p.x), y: Math.round(p.y), cls: p.cls, tid: p.tid, t: Math.max(0, +(p.t || 0).toFixed(1)),
+      i, x: Math.round(p.x), y: Math.round(p.y), cls: p.cls, tid: p.tid, t: e ? 0 : Math.max(0, Math.round(p.t || 0)),
       mid: e ? e.mid : (p.mid || null),
-      e: e ? { mid: e.mid, hp: Math.round(e.hp), max: Math.round(e.max), x: Math.round(e.x), y: Math.round(e.y), tid: e.tid, L: e.L, cls: e.cls, dens: !!e.dens, n: e.n || '', aggro: !!e.aggro } : null
+      e: e ? { mid: e.mid, hp: Math.round(e.hp), max: Math.round(e.max), x: Math.round(e.x), y: Math.round(e.y), tid: e.tid, L: e.L | 0, cls: e.cls, dens: e.dens ? 1 : 0 } : null
     };
   });
   const snap = { key: f.key, kills: f.kills | 0, zone: MP.zoneId, pts, host: mpCid() };
@@ -211,8 +215,9 @@ function mpUpsertPeer(row) {
 
 /* Ghep bo JX1 tu hang trang bi dong bo (khong can item day du) */
 function mpJxFromPeer(p) {
-  if (!p || !p.jx || typeof JXL === 'undefined' || !JXL || !JX_PART_IDX) return null;
-  if (p._jo && p._jxKey && p._jo.key && p._jo.key.indexOf(p._jxKey.split('|')[0]) >= 0) return p._jo;
+  if (!p || !p.jx || typeof JXL === 'undefined' || !JXL || typeof JX_PART_IDX === 'undefined') return null;
+  const cacheKey = (p.sex | 0) + ':' + (p.jx.h | 0) + ',' + (p.jx.a | 0) + ',' + (p.jx.w | 0) + ',' + (p.jx.o | 0);
+  if (p._jo && p._joCache === cacheKey) return p._jo;
   const sx = p.sex ? 'f' : 'm';
   const rows = { helm: p.jx.h | 0, armor: p.jx.a | 0, weapon: p.jx.w | 0, horse: p.jx.o | 0 };
   if (rows.weapon < 0) rows.weapon = 0;
@@ -220,7 +225,7 @@ function mpJxFromPeer(p) {
   const ascTab = JXL.assoc[sx] || {}, asc = ascTab[wn] || ascTab['空手'];
   const ride = rows.horse >= 0 && asc && asc[1] ? 1 : 0;
   const Jo = { sx, rows, asc: asc ? asc[ride] || asc[0] || {} : {}, ride, key: JSON.stringify([sx, rows, ride]) };
-  p._jo = Jo; p._jxKey = JSON.stringify(p.jx) + '|' + (p.sex | 0);
+  p._jo = Jo; p._joCache = cacheKey;
   try {
     for (const jact of Object.values(Jo.asc)) {
       if (!jact) continue;
@@ -243,7 +248,11 @@ function mpPresenceSync() {
     if (k === mpCid()) continue;
     mpUpsertPeer(row);
   }
-  for (const k of Object.keys(MP.peers)) if (!live.has(k) && Date.now() - (MP.peers[k].seen || 0) > 12000) delete MP.peers[k];
+  // chi xoa peer khi mat presence LAU + khong con nhan pos (tranh nhap nhay khi sync nhip)
+  for (const k of Object.keys(MP.peers)) {
+    if (live.has(k)) continue;
+    if (Date.now() - (MP.peers[k].seen || 0) > MP_PEER_TTL) delete MP.peers[k];
+  }
   mpElect();
 }
 
@@ -258,48 +267,63 @@ function mpJxPack() {
   const r = R.jx.rows;
   return { h: r.helm | 0, a: r.armor | 0, w: r.weapon | 0, o: r.horse | 0 };
 }
-function mpPosPayload() {
+function mpPosPayload(full) {
   const tw = typeof titleWorn === 'function' && titleWorn();
-  return {
+  const jx = mpJxPack();
+  const jxKey = jx ? (jx.h + ',' + jx.a + ',' + jx.w + ',' + jx.o) : '';
+  const changed = full || jxKey !== MP.lastJx;
+  if (changed) MP.lastJx = jxKey;
+  const o = {
     cid: mpCid(), name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
     x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
-    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? R.life / R.P.life : 1,
-    jx: mpJxPack(),
-    title: tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '',
-    titleCol: tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : ''
+    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
   };
+  if (changed) {
+    o.jx = jx;
+    o.title = tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '';
+    o.titleCol = tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '';
+  }
+  return o;
 }
-function mpTrackNow() {
+function mpTrackNow(forceBcast) {
   if (!MP.ch || MP.state !== 'ok' || !S || !S.fac) return;
-  const p = mpPosPayload();
+  if (Date.now() - (MP.lastTrack || 0) < 120 && !forceBcast) return;
+  MP.lastTrack = Date.now();
+  const p = mpPosPayload(!!forceBcast);
   try { MP.ch.track(p); } catch (e) { /* bo qua */ }
-  mpSend('pos', p);   // backup: broadcast vi tri (presence doi khi cham / mat sync)
+  MP.posN = (MP.posN || 0) + 1;
+  // broadcast thua hon track: du de ve peer, bot spam
+  if (forceBcast || MP.posN % 2 === 0) mpSend('pos', p);
 }
 
 /* ---------- kenh map ---------- */
 async function mpLeave() {
-  const ch = MP.ch; MP.ch = null; MP.zoneId = null; MP.peers = {}; MP.fieldSnap = null; MP.host = ''; MP.online = 0; MP.state = 'off';
+  const ch = MP.ch; MP.leaving = ch; MP.ch = null; MP.zoneId = null; MP.fieldSnap = null; MP.host = ''; MP.online = 0; MP.state = 'off';
+  // giu MP.peers nhe — roi map thi xoa
+  MP.peers = {};
   if (ch && MP.sb) { try { await MP.sb.removeChannel(ch); } catch (e) { /* bo qua */ } }
-  mpUi();
+  MP.leaving = null; mpUi();
 }
 
 async function mpJoin(z) {
   z = z || (typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null);
   if (!z || !mpCanPlay()) { if (!NET.user || !S || !S.fac) await mpLeave(); else if (!fieldMode() || R.town || R.dg || R.tower) await mpLeave(); return; }
   const rid = mpRoom(z);
-  if (MP.ch && MP.zoneId === z.id && MP.state === 'ok') { mpTrackNow(); return; }
+  if (MP.ch && MP.zoneId === z.id && (MP.state === 'ok' || MP.state === 'load') && MP.ch.state === 'joined') { mpTrackNow(true); return; }
   if (MP.joinBusy) return;
   MP.joinBusy = true;
   mpDom();
-  MP.state = 'load'; MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; MP.fieldSnap = null; MP.peers = {}; mpUi();
+  // KHONG xoa peers khi noi lai — tranh nhan vat phu luc an luc hien
+  MP.state = MP.state === 'ok' ? 'retry' : 'load'; MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; mpUi();
   try {
     if (!MP.sb) MP.sb = await netClient();
   } catch (e) { MP.state = 'err'; MP.joinBusy = false; mpUi(); return; }
-  const old = MP.ch; MP.ch = null;
+  const old = MP.ch; MP.ch = null; MP.leaving = old;
   if (old) { try { await MP.sb.removeChannel(old); } catch (e) { /* bo qua */ } }
+  MP.leaving = null;
   const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false }, presence: { key: mpCid() } } });
   ch.on('presence', { event: 'sync' }, () => { if (MP.ch === ch) mpPresenceSync(); })
-    .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(); } })
+    .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(true); } })
     .on('presence', { event: 'leave' }, () => { if (MP.ch === ch) mpPresenceSync(); })
     .on('broadcast', { event: 'pos' }, ({ payload }) => { if (MP.ch === ch) mpOnPos(payload); })
     .on('broadcast', { event: 'field' }, ({ payload }) => {
@@ -310,41 +334,47 @@ async function mpJoin(z) {
     .on('broadcast', { event: 'spawn' }, ({ payload }) => { if (MP.ch === ch) mpOnSpawn(payload); })
     .on('broadcast', { event: 'hit' }, ({ payload }) => { if (MP.ch === ch) mpOnHit(payload); })
     .on('broadcast', { event: 'die' }, ({ payload }) => { if (MP.ch === ch) mpOnDie(payload); })
-    .on('broadcast', { event: 'need' }, ({ payload }) => { if (MP.ch === ch && mpIsHost() && payload && payload.cid !== mpCid()) mpSendField(); })
+    .on('broadcast', { event: 'need' }, ({ payload }) => { if (MP.ch === ch && mpIsHost() && payload && payload.cid !== mpCid()) mpSendField(true); })
     .subscribe(async st => {
-      if (MP.ch !== ch) return;
+      if (MP.ch !== ch || MP.leaving === ch) return;
       if (st === 'SUBSCRIBED') {
-        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false;
-        try { await ch.track(mpPosPayload()); } catch (e) { /* bo qua */ }
+        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0;
+        try { await ch.track(mpPosPayload(true)); } catch (e) { /* bo qua */ }
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
-        mpSend('pos', mpPosPayload());
-        if (mpIsHost() && R.field) mpSendField();
+        mpSend('pos', mpPosPayload(true));
+        if (mpIsHost() && R.field) mpSendField(true);
         mpUi();
-        if (typeof log === 'function') log(`<span class="dim">Đồng đội: phòng <b>${esc(rid)}</b> — cần cùng bản đồ (cùng id map).</span>`);
-      } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') {
-        MP.state = 'err'; MP.joinBusy = false; mpUi();
-        clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, 3000);
+      } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') {
+        MP.state = 'retry'; MP.joinBusy = false; MP.retries = (MP.retries || 0) + 1; mpUi();
+        const wait = Math.min(12000, 2000 + MP.retries * 1500);
+        clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
+      } else if (st === 'CLOSED') {
+        // rot that (khong phai removeChannel chu dong): noi lai em
+        if (MP.ch === ch) {
+          MP.state = 'retry'; MP.joinBusy = false; mpUi();
+          clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, 2500);
+        }
       }
     });
-  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 4000);
+  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 5000);
 }
 
 function mpEnsure() {
   if (!mpCanPlay()) { mpUi(); return; }
-  if (MP.state === 'ok' && MP.ch && MP.zoneId === zoneOf(Math.min(S.stage, STAGES)).id) { mpTrackNow(); return; }
-  if (MP.state === 'load' || MP.joinBusy) return;
+  const zid = zoneOf(Math.min(S.stage, STAGES)).id;
+  if (MP.state === 'ok' && MP.ch && MP.zoneId === zid) return; // othTick da track dinh ky
+  if (MP.state === 'load' || MP.state === 'retry' || MP.joinBusy) return;
   mpJoin(zoneOf(Math.min(S.stage, STAGES)));
 }
 
 function mpInit() {
   mpDom(); mpUi();
   if (!netOn || !netOn()) return;
-  setTimeout(mpEnsure, 500);
-  setTimeout(mpEnsure, 2000);
-  setTimeout(mpEnsure, 5000);
-  if (!MP.timer) MP.timer = setInterval(mpEnsure, 4000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) mpEnsure(); });
+  setTimeout(mpEnsure, 600);
+  setTimeout(mpEnsure, 2500);
+  if (!MP.timer) MP.timer = setInterval(mpEnsure, 6000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (MP.state === 'ok') mpTrackNow(true); else mpEnsure(); } });
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
@@ -353,7 +383,15 @@ function othEnts() {
 }
 function othTick(dt) {
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
-  if (!mpActive()) return;
+  // van noi suy peer khi dang retry (giu hinh, khong an mat)
+  for (const p of Object.values(MP.peers)) {
+    const k = Math.min(1, dt * 10);
+    p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k;
+    p.actT = (p.actT || 0) + dt;
+    if (Date.now() - (p.seen || 0) > MP_PEER_TTL) delete MP.peers[p.cid];
+  }
+  if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
+  if (MP.state !== 'ok') return;
   MP.trackT = (MP.trackT || 0) + dt;
   if (MP.trackT >= MP_POS) { MP.trackT = 0; mpTrackNow(); }
   if (mpIsHost()) {
@@ -362,13 +400,7 @@ function othTick(dt) {
   } else if (MP.waitHost && Date.now() > MP.waitHost && !MP.fieldSnap) {
     MP.waitHost = 0;
     if (!R.field) fieldBuild();
-    else mpSendField();
-  }
-  for (const p of Object.values(MP.peers)) {
-    const k = Math.min(1, dt * 10);
-    p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k;
-    p.actT = (p.actT || 0) + dt;
-    if (Date.now() - (p.seen || 0) > 15000) delete MP.peers[p.cid];
+    else mpSendField(true);
   }
 }
 function othDraw(c, p) {
