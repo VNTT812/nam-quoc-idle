@@ -14,15 +14,14 @@ Lấy từ data live (`world.js` + `zones2.js`, bản v195).
 - Hệ spawn: cân bằng (20%)
 - Theme gợi ý: Rừng núi / thú nhỏ
 - Boss: **Tây Nam sơn tặc đầu lĩnh** (`#141`)
+- Roster hiệu lực: `zones2.js` → `zm["2"]` (đè `world.js`)
 
 | ID | Tên | Anim sheet | Kiểu | Run |
 |---:|---|---|---|---:|
-| 11 | Heo rừng | `ani018` | melee | 6 |
 | 12 | Nhím | `ani019` | melee | 6 |
-| 42 | Hươu đốm | `ani061` | melee | 4 |
-| 43 | Heo trắng | `ani063` | melee | 3 |
-| 31 | Kim Miêu | `ani049` | melee | 6 |
-| 5 | Sói xám | `ani009` | melee | 6 |
+| 11 | Heo rừng | `ani018` | melee | 6 |
+| 33 | Hoán hùng | `ani051` | melee | 6 |
+| 34 | Linh Miêu | `ani052` | melee | 6 |
 | 141 | Tây Nam sơn tặc đầu lĩnh **boss** | `enemy122` | melee | 5 |
 
 ### 2. Kiếm Các Tây Bắc
