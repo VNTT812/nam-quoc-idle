@@ -1,0 +1,117 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Thổ★ weapon smoke</title>
+<body>
+<pre id="out">loading…</pre>
+<script src="../data.js?v=263"></script>
+<script src="../world.js?v=263"></script>
+<script>
+window.SERIES_DESC = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
+window.CAMP = {}; window.FAC_SHORT = {};
+window.isAdmin = () => true;
+window.toast = t => (window.__toasts = (window.__toasts || []).concat(t));
+window.log = () => {};
+window.R = { dirty: true, P: null, logs: [], quiet: true, buffAssume: false, ignoreEqt: null };
+window.S = null;
+window.SK9_BRANCH = {};
+window.EV2 = {}; window.HORSE_LIM = {}; window.JM_SHADOW = {}; window.NPC_SK_R = {};
+window.JFX = { f: {}, s: {}, g: {}, m: {}, c: {} };
+window.JXST = {};
+window.THO_TEST_FX = null;
+window.horseAdj = (it, v) => v;
+window.titleAttr = () => {};
+window.horseAttr = () => {};
+window.rebornBonus = () => ({ dmg: 0 });
+window.rebornN = () => 0;
+window.newbieOn = () => false;
+window.NEWBIE_REGEN = { life: 0, mana: 0 };
+window.HERO_DMG_K = 6;
+window.ENG_MODE = 0;
+window.invDirty = false;
+window.closeModal = () => {};
+window.refresh = () => {};
+window.renderPad = () => {};
+window.save = () => {};
+window.uiSfx = () => {};
+window.fillSlots = () => {};
+window.enoughToActive = () => false;
+window.goldEnhance = () => 0;
+window.setCounts = () => ({});
+</script>
+<script src="../js/core.js?v=263"></script>
+<script src="../js/stats.js?v=263"></script>
+<script src="../js/loot.js?v=263"></script>
+<script>
+function equip(it) {
+  if (!reqOk(it)) return false;
+  const slot = slotFor(it), old = S.eq[slot];
+  S.inv = S.inv.filter(x => x !== it); if (old) S.inv.unshift(old);
+  S.eq[slot] = it; return true;
+}
+function joinFaction(key) {
+  const f = FAC[key];
+  if (!f || f.novice || !isNovice() || f.series !== heroSeries()) return;
+  S.fac = key;
+  if (f.starter && !S.sk[f.starter]) { S.sk[f.starter] = 1; S.main = f.starter; }
+  const lv = clamp(Math.round(S.lvl / 12) + 1, 1, 10), dp = facWeaponDP(f);
+  const w = makeItem(dp[0], dp[1], lv, 0);
+  if (w) { S.inv.unshift(w); if (reqOk(w)) equip(w); }
+}
+</script>
+<script src="../js/tho_test.js?v=263"></script>
+<script>
+(function () {
+  const lines = [];
+  const ok = (name, v) => lines.push((v ? 'PASS' : 'FAIL') + '  ' + name + (v === true || v === false ? '' : ' = ' + JSON.stringify(v)));
+  try {
+    ok('FAC.wudang_t', !!FAC.wudang_t);
+    ok('FAC.kunlun_t', !!FAC.kunlun_t);
+    ok('seriesMatch(5,4)', seriesMatch(5, 4));
+    ok('khacOf(5)===2', khacOf(5) === 2);
+    ok('accrueOf(5)===0', accrueOf(5) === 0);
+
+    S = {
+      fac: 'wudang_t', sex: 0, name: 'Smoke', lvl: 80, gold: 1, knb: 0, uid: 1,
+      attr: { str: 200, dex: 50, vit: 50, eng: 100 }, attrPts: 0, skPts: 0, sk: { 9153: 1 }, skL: {},
+      eq: {}, inv: [], main: 9153, mainLock: false, slots: [0, 0, 0, 0],
+      autoEquip: true, autoJunk: true, lootF: LOOT_DEF(), stage: 1, wave: 1
+    };
+    const setSword = {
+      uid: S.uid++, d: 0, k: 0, n: 'Lăng Nhạc Thái Cực Kiếm', ic: '', lvl: 10, s: 4, r: 4,
+      set: { kind: 'gold', grp: 1, n1: 2, n2: 6 },
+      base: [[28, 100, 100], [29, 150, 150]], req: [[36, 50], [32, 50], [39, 8]], mag: [], ext: [], price: 1
+    };
+    S.lootF.setMine = true;
+    ok('facIdMatch(8)', facIdMatch(8));
+    ok('setKept(setSword)', setKept(setSword));
+    ok('reqOk(setSword)', reqOk(setSword));
+    ok('weaponFits(setSword)', weaponFits(setSword));
+    ok('equip(setSword)', equip(setSword) && S.eq.weapon && S.eq.weapon.n === setSword.n);
+
+    const mineW = J.sets.gold.filter(r => r.d <= 1 && facIdMatch(((r.req.find(q => q[0] === 39) || [])[1])));
+    ok('mine weapons > 0', mineW.length > 0);
+
+    S.eq = {}; S.inv = []; S.fac = 'vo5'; S.lvl = 10;
+    S.attr = { str: 0, dex: 0, vit: 0, eng: 0 }; S.attrPts = 45; S.sk = {}; S.skPts = 9; S.main = 0;
+    joinFaction('wudang_t');
+    thoTestUnlock90('wudang_t');
+    thoTestEnsureWeapon('wudang_t');
+    ok('join weapon equipped', !!(S.eq.weapon && S.eq.weapon.k === 0 && weaponFits(S.eq.weapon)));
+
+    S.eq = {}; S.inv = []; S.fac = 'vo5'; S.sk = {}; S.skPts = 9; S.main = 0;
+    S.attr = { str: 0, dex: 0, vit: 0, eng: 0 }; S.attrPts = 45;
+    joinFaction('kunlun_t');
+    thoTestUnlock90('kunlun_t');
+    thoTestEnsureWeapon('kunlun_t');
+    ok('kunlun dao equipped', !!(S.eq.weapon && S.eq.weapon.k === 1 && weaponFits(S.eq.weapon)));
+
+    const failed = lines.some(l => l.startsWith('FAIL'));
+    document.getElementById('out').textContent = lines.join('\n') + '\n\n' + (failed ? 'OVERALL FAIL' : 'OVERALL PASS');
+    document.title = failed ? 'FAIL' : 'PASS';
+  } catch (e) {
+    document.getElementById('out').textContent = 'ERROR\n' + (e.stack || e);
+    document.title = 'FAIL';
+  }
+})();
+</script>
+</body>

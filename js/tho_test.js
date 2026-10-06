@@ -230,25 +230,26 @@
   }
   window.thoTestUnlock90 = thoTestUnlock90;
 
-  /* Dam bao cam dung loai vu khi phai (kiem VD / dao CL) — sau join, doi phai, load save */
+  /* Dam bao cam dung loai vu khi phai (kiem VD / dao CL) — sau join, doi phai, load save.
+     Côn Lôn đao bậc 2 cần Sức mạnh 30 trong khi Thổ★ chỉ có 20 gốc → phải cộng điểm trước rồi mới mặc. */
   function thoTestEnsureWeapon(facKey) {
     const f = FAC[facKey || (S && S.fac)]; if (!f || !f.test || f.novice || !S) return false;
-    const ok = it => it && it.d <= 1 && typeof weaponFits === 'function' && weaponFits(it) && typeof reqOk === 'function' && reqOk(it);
-    if (ok(S.eq && S.eq.weapon)) return false;
-    let w = (S.inv || []).find(ok);
+    const fits = it => it && it.d <= 1 && typeof weaponFits === 'function' && weaponFits(it);
+    const wear = it => fits(it) && typeof reqOk === 'function' && reqOk(it);
+    if (wear(S.eq && S.eq.weapon)) return false;
+    let w = (S.inv || []).find(fits) || (S.eq && fits(S.eq.weapon) ? S.eq.weapon : null);
     if (!w && typeof makeItem === 'function' && typeof facWeaponDP === 'function') {
       const dp = facWeaponDP(f), lv = typeof clamp === 'function' ? clamp(Math.round(S.lvl / 12) + 1, 1, 10) : Math.max(1, Math.min(10, Math.round(S.lvl / 12) + 1));
       w = makeItem(dp[0], dp[1], lv, 0);
       if (w) { S.inv = S.inv || []; S.inv.unshift(w); if (typeof invDirty !== 'undefined') invDirty = true; }
     }
-    if (w && ok(w) && typeof equip === 'function') {
-      /* Du diem tiem nang: uu tien du yeu cau Suc manh / Than phap vu khi phai */
-      if (typeof reqDeficit === 'function' && S.attrPts > 0) {
-        const d = reqDeficit(w);
-        for (const k in d) { const n = Math.min(d[k], S.attrPts); S.attr[k] = (S.attr[k] || 0) + n; S.attrPts -= n; }
-      }
-      if (ok(w)) { equip(w, true); R.dirty = true; return true; }
+    if (!w || !fits(w) || typeof equip !== 'function') return false;
+    /* Cong diem tiem nang TRUOC khi kiem reqOk (dao CL can Str 30 > goc Tho 20) */
+    if (typeof reqDeficit === 'function' && (S.attrPts || 0) > 0) {
+      const d = reqDeficit(w);
+      for (const k in d) { const n = Math.min(d[k], S.attrPts); if (n > 0) { S.attr[k] = (S.attr[k] || 0) + n; S.attrPts -= n; } }
     }
+    if (wear(w)) { equip(w, true); R.dirty = true; return true; }
     return false;
   }
   window.thoTestEnsureWeapon = thoTestEnsureWeapon;
