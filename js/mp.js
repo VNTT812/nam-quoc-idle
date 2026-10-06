@@ -8,9 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~30Hz khi chay / ~8Hz dung; noi suy tre ~70ms + van toc; it flap "nối lại". */
+/* Pos ~30Hz khi chay; delay thich ung (chay ~30ms / dung ~80ms) — live test RTT~31ms. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 220, MP_HARD = 640, MP_DELAY = 70, MP_HIST = 40, MP_EXTRAP = 0.22, MP_MAX_SPD = 280;
+const MP_SNAP = 180, MP_HARD = 560, MP_DELAY = 30, MP_DELAY_IDLE = 80, MP_HIST = 40, MP_EXTRAP = 0.28, MP_MAX_SPD = 300;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -251,39 +251,41 @@ function mpUpsertPeer(row, fromPos) {
   if (fromPos && row.x != null) {
     const seq = row.seq != null ? (row.seq | 0) : 0;
     const pt = row.t != null ? (+row.t) : now;
-    if (seq && p.seq && seq <= p.seq) { p.seen = now; /* stale */ }
+    if (seq && p.seq && seq <= p.seq) { p.seen = now; /* stale seq */ }
     else if (p._pt && pt + 80 < p._pt) { p.seen = now; /* out-of-order time */ }
+    else if (p.clockOff && (now - pt - p.clockOff) > 900) { p.seen = now; /* goi den tre >0.9s — bo, tranh tele lui */ }
     else {
       if (seq) p.seq = Math.max(p.seq || 0, seq);
-      // uoc lech dong ho: now ≈ pt + clockOff (EMA) — noi suy dung thoi gian nguon
+      // uoc lech dong ho: now ≈ pt + clockOff (EMA)
       const off = now - pt;
-      p.clockOff = p.clockOff ? p.clockOff * 0.85 + off * 0.15 : off;
-      // van toc: uu tien goi tu nguon (khong phu thuoc nhip nhan goi)
-      let vx, vy;
-      if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
+      // bo qua mau lech dong ho vo ly (goi buffer 3s+)
+      if (p.clockOff && Math.abs(off - p.clockOff) > 2500) { p.seen = now; }
       else {
-        const dt = Math.max(0.04, ((p._pt ? pt - p._pt : 0) || (now - (p._t || now))) / 1000);
-        vx = (tx - p.tx) / dt; vy = (ty - p.ty) / dt;
-      }
-      const spd = Math.hypot(vx, vy);
-      if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
-      if (spd < 6) { vx = 0; vy = 0; } // dung yen: khong extrapolate
-      p.vx = p.vx != null ? p.vx * 0.35 + vx * 0.65 : vx;
-      p.vy = p.vy != null ? p.vy * 0.35 + vy * 0.65 : vy;
-      p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt);
-      if (!p.hist) p.hist = [];
-      const last = p.hist[p.hist.length - 1];
-      // lich su theo timestamp NGUON (pt) — dong bo voi clockOff
-      const ht = pt;
-      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 40) {
-        // tele xa: chen diem trung gian de spring khong nhay
-        if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
-          p.hist.push({ t: last.t + Math.max(40, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
+        p.clockOff = p.clockOff ? p.clockOff * 0.88 + off * 0.12 : off;
+        let vx, vy;
+        if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
+        else {
+          const dt = Math.max(0.04, ((p._pt ? pt - p._pt : 0) || (now - (p._t || now))) / 1000);
+          vx = (tx - p.tx) / dt; vy = (ty - p.ty) / dt;
         }
-        p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
-        if (p.hist.length > MP_HIST) p.hist.shift();
-      } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
-      if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+        const spd = Math.hypot(vx, vy);
+        if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
+        if (spd < 6) { vx = 0; vy = 0; }
+        p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
+        p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
+        p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt);
+        if (!p.hist) p.hist = [];
+        const last = p.hist[p.hist.length - 1];
+        const ht = pt;
+        if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 35) {
+          if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
+            p.hist.push({ t: last.t + Math.max(35, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
+          }
+          p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
+          if (p.hist.length > MP_HIST) p.hist.shift();
+        } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
+        if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+      }
     }
   }
   if (row.name != null) p.name = String(row.name).slice(0, 16);
@@ -553,17 +555,18 @@ function mpInit() {
   if (!netOn || !netOn()) return;
   setTimeout(mpEnsure, 600);
   setTimeout(mpEnsure, 2500);
-  if (!MP.timer) MP.timer = setInterval(mpEnsure, 6000);
+  if (!MP.timer) MP.timer = setInterval(mpEnsure, 10000); // it poll hon — tranh recreate kenh
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (MP.state === 'ok') mpTrackNow(true); else mpEnsure(); } });
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
-/* Noi suy tre MP_DELAY ms tren lich su pos (thoi gian NGUON + clockOff) */
+/* Noi suy: delay thich ung — dang chay gan live + extrapolate, dung yen buffer muot. */
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
-  // quy ve dong ho nguon: tSrc ≈ now - clockOff - delay
-  const t = now - (p.clockOff || 0) - MP_DELAY;
+  const spd = Math.hypot(p.vx || 0, p.vy || 0);
+  const delay = spd > 36 ? MP_DELAY : MP_DELAY_IDLE;
+  const t = now - (p.clockOff || 0) - delay;
   if (h.length === 1) {
     const age = Math.min(MP_EXTRAP, Math.max(0, (t - h[0].t) / 1000));
     const vx = h[0].vx != null ? h[0].vx : (p.vx || 0), vy = h[0].vy != null ? h[0].vy : (p.vy || 0);
@@ -572,19 +575,20 @@ function mpInterpAt(p, now) {
   if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
   const last = h[h.length - 1];
   if (t >= last.t) {
-    // chi extrapolate khi dang chay; dung yen thi dung tai last
     const vx = last.vx != null ? last.vx : (p.vx || 0), vy = last.vy != null ? last.vy : (p.vy || 0);
     if (Math.hypot(vx, vy) < 10) return { x: last.x, y: last.y };
-    const u = Math.min(MP_EXTRAP, (t - last.t) / 1000);
+    // extrapolate + lead nhe khi dang chay (bu RTT ~30ms)
+    const lead = spd > 36 ? 0.025 : 0;
+    const u = Math.min(MP_EXTRAP, (t - last.t) / 1000 + lead);
     return { x: last.x + vx * u, y: last.y + vy * u };
   }
   for (let i = 1; i < h.length; i++) {
     if (t <= h[i].t) {
       const a = h[i - 1], b = h[i];
       let u = (t - a.t) / Math.max(1, b.t - a.t);
-      u = u * u * (3 - 2 * u); // smoothstep
-      // Hermite nhe theo van toc diem (bot giat o khuc cua)
-      const dtSec = Math.max(0.04, (b.t - a.t) / 1000);
+      // dang chay: noi suy thang (it tre hon smoothstep)
+      if (spd <= 36) u = u * u * (3 - 2 * u);
+      const dtSec = Math.max(0.035, (b.t - a.t) / 1000);
       const m0x = (a.vx != null ? a.vx : (b.x - a.x) / dtSec) * dtSec;
       const m0y = (a.vy != null ? a.vy : (b.y - a.y) / dtSec) * dtSec;
       const m1x = (b.vx != null ? b.vx : (b.x - a.x) / dtSec) * dtSec;
@@ -606,16 +610,20 @@ function othSmoothRender(dt) {
     const goal = mpInterpAt(p, now);
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
+    const spd = Math.hypot(p.vx || 0, p.vy || 0);
     if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; }
-    else {
-      // spring nhanh hon → bot cam giac delay (van muot)
-      const rate = dist > MP_SNAP ? 18 : (dist > 36 ? 24 : 32);
+    else if (spd > 40 && dist > 12) {
+      // dang chay: bám goal nhanh (bot delay)
+      const a = 1 - Math.exp(-dt * 40);
+      p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
+    } else {
+      const rate = dist > MP_SNAP ? 20 : (dist > 28 ? 28 : 36);
       const a = 1 - Math.exp(-dt * rate);
       p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     }
     p.x = p.rx; p.y = p.ry;
     p.actT = (p.actT || 0) + dt;
-    if (p.act === 'at' && p.actT > 0.5) p.act = Math.hypot(p.vx || 0, p.vy || 0) > 24 ? 'run' : 'st';
+    if (p.act === 'at' && p.actT > 0.5) p.act = spd > 24 ? 'run' : 'st';
   }
 }
 function othEnts() {
