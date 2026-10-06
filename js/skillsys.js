@@ -96,6 +96,7 @@ function skillSysTick(dt) {
       if (e.cls === 'normal' && R.enemies.filter(x => !x.dead).length < 3) continue;   // quai thuong le te: khong ton bua
       R.mana -= cost; const c = e.curse || (e.curse = {}); c[id] = now + Math.min(dur, 60);
       if (typeof castFx === 'function') castFx({ id: +id });   // hinh luc bat bua (PreCastSpr)
+      if (typeof mpNotifyCast === 'function') mpNotifyCast(+id, e);
       // bua hai pham vi (Ngu Doc / Thien Nhan): trung them quai dung gan muc tieu
       for (const o of R.enemies) if (o !== e && !o.dead && Math.hypot(o.x - e.x, o.y - e.y) < 120) (o.curse || (o.curse = {}))[id] = now + Math.min(dur, 60);
     }

@@ -246,6 +246,86 @@ function mpOnDie(p) {
   } finally { MP.applying = false; }
 }
 
+/** Goi skill payload — uu tien auth WSS (on dinh); fallback Supabase broadcast. */
+function mpSkillNetOk() {
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return true;
+  return mpActive();
+}
+function mpSkillPayload(extra) {
+  return Object.assign({
+    ax: Math.round(H.x), ay: Math.round(H.y),
+    face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: 'at'
+  }, extra);
+}
+function mpEmitSkill(payload) {
+  if (!payload) return;
+  let viaAuth = false;
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok' && typeof mpaSend === 'function') {
+    try { mpaSend(Object.assign({ t: 'skill' }, payload)); viaAuth = true; } catch (e) { /* bo qua */ }
+  }
+  // Supabase backup (khi khong auth / auth lech)
+  if (!viaAuth) mpSend('skill', payload);
+  else if (MP.ch && (MP.state === 'ok' || MP.state === 'retry')) {
+    try { mpSend('skill', payload); } catch (e) { /* bo qua */ }
+  }
+}
+/** Gui hieu ung chieu cho peer — chi khi minh tung (caster === H). */
+function mpNotifySkill(caster, tgt, atk) {
+  if (!mpSkillNetOk() || MP.applying || !atk || caster !== H) return;
+  const now = Date.now();
+  if (MP._skT && now - MP._skT < 70) {
+    if ((MP._skN | 0) >= 8) return;
+    MP._skN = (MP._skN | 0) + 1;
+  } else { MP._skT = now; MP._skN = 1; }
+  mpEmitSkill(mpSkillPayload({
+    id: atk.id | 0, L: atk.L | 0, nMis: atk.nMis | 0,
+    melee: !!atk.melee, around: !!atk.around,
+    mid: tgt && tgt.mid ? tgt.mid : null,
+    bx: Math.round((tgt || H).x), by: Math.round((tgt || H).y)
+  }));
+}
+/** Bua hai / buff chi co PreCastSpr — khong di qua skillFx. */
+function mpNotifyCast(id, tgt) {
+  if (!mpSkillNetOk() || MP.applying || !id) return;
+  mpEmitSkill(mpSkillPayload({
+    id: +id, cast: 1,
+    mid: tgt && tgt.mid ? tgt.mid : null,
+    bx: tgt ? Math.round(tgt.x) : Math.round(H.x),
+    by: tgt ? Math.round(tgt.y) : Math.round(H.y)
+  }));
+}
+function mpOnSkill(p) {
+  if (!p || p.cid === mpCid() || MP.applying) return;
+  if (R.quiet) return;
+  const peer = MP.peers[String(p.cid || '')];
+  // Uu tien toa do trong goi skill (luc tung) — tranh peer.rx lech / cham
+  const ax = p.ax != null ? +p.ax : (peer && peer.rx != null ? peer.rx : (peer ? peer.x : H.x));
+  const ay = p.ay != null ? +p.ay : (peer && peer.ry != null ? peer.ry : (peer ? peer.y : H.y));
+  const caster = { x: ax, y: ay };
+  if (peer) {
+    peer.act = 'at'; peer.actT = 0;
+    if (p.face != null) peer.face = p.face >= 0 ? 1 : -1;
+    if (p.dir != null) peer.dir = p.dir | 0;
+    peer._cVx = 0; peer._cVy = 0; peer._coast = false;
+  }
+  let tgt = { x: +p.bx || ax, y: +p.by || ay };
+  if (p.mid) {
+    const e = (R.enemies || []).find(z => z && z.mid === p.mid && !z.dead);
+    if (e) tgt = e;
+  }
+  const atk = { id: p.id | 0, L: p.L || 1, nMis: p.nMis || 1, melee: !!p.melee, around: !!p.around };
+  MP.applying = true;
+  try {
+    if (p.cast) {
+      if (typeof castFx === 'function') castFx(atk, caster);
+    } else if (typeof skillFx === 'function') {
+      skillFx(caster, tgt, atk);
+    } else if (typeof castFx === 'function') {
+      castFx(atk, caster);
+    }
+  } finally { MP.applying = false; }
+}
+
 function mpOnSpawn(p) {
   if (!p || !p.mid || mpIsHost()) return;
   MP.applying = true;
@@ -646,6 +726,7 @@ async function mpJoin(z) {
     .on('broadcast', { event: 'spawn' }, ({ payload }) => { if (MP.ch === ch) mpOnSpawn(payload); })
     .on('broadcast', { event: 'hit' }, ({ payload }) => { if (MP.ch === ch) mpOnHit(payload); })
     .on('broadcast', { event: 'die' }, ({ payload }) => { if (MP.ch === ch) mpOnDie(payload); })
+    .on('broadcast', { event: 'skill' }, ({ payload }) => { if (MP.ch === ch) mpOnSkill(payload); })
     .on('broadcast', { event: 'need' }, ({ payload }) => { if (MP.ch === ch && mpIsHost() && payload && payload.cid !== mpCid()) mpSendField(true); })
     .on('broadcast', { event: 'who' }, ({ payload }) => {
       if (MP.ch !== ch || !payload || payload.cid === mpCid()) return;
