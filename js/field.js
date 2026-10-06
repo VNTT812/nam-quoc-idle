@@ -75,7 +75,9 @@ function fieldTick(dt) {
 /* hanh vi quai chua giao chien: dung / di loanh quanh diem goc; thay nguoi thi duoi */
 function fieldIdle(e, dt) {
   const p = e.home, d = Math.hypot(H.x - e.x, H.y - e.y);
-  if ((e.agT = (e.agT || 0) - dt) <= 0) { e.agT = 0.4; if (d < FLD_AGGRO && R.life > 0 && obsSee(e.x, e.y, H.x, H.y)) e.aggro = true; }
+  // GM deo danh hieu: khong bi quai phat hien (tang hinh)
+  if (typeof titleGmStealth === 'function' && titleGmStealth()) e.aggro = false;
+  else if ((e.agT = (e.agT || 0) - dt) <= 0) { e.agT = 0.4; if (d < FLD_AGGRO && R.life > 0 && obsSee(e.x, e.y, H.x, H.y)) e.aggro = true; }
   if (e.aggro) return false;
   if (e.backT > 0) {                                      // dang quay ve diem goc
     e.backT -= dt; e.moving = true; obsSteer(e, p.x, p.y, e.spd * 1.6 * dt);

@@ -178,6 +178,8 @@ const titleWorn = () => {
   if (id === 'gm' && !(typeof isAdmin === 'function' && isAdmin())) return null;
   return x;
 };
+/* GameMaster dang deo: tang hinh — quai khong aggro / khong duoi / khong danh */
+const titleGmStealth = () => { const x = titleWorn(); return !!(x && x[0] === 'gm'); };
 function titleAttr(A) { const x = titleWorn(); if (x) addAttr(A, x[6][0], [x[6][1], 0, 0]); }   // goi tu calc()
 function titleModal() {
   titleCheck();
