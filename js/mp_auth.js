@@ -118,33 +118,26 @@ function mpaApplySnap(msg) {
       const spd = Math.hypot(vx, vy);
       if (spd > 300) { const k = 300 / spd; vx *= k; vy *= k; }
       if (spd < 6) { vx = 0; vy = 0; }
-      // EMA nhe — uu tien mau moi (bot lag khi cua)
-      p.vx = p.vx != null ? p.vx * 0.2 + vx * 0.8 : vx;
-      p.vy = p.vy != null ? p.vy * 0.2 + vy * 0.8 : vy;
+      // EMA nhe — giu coast vel khi doi huong (tranh underrun = dung khung)
+      p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
+      p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
+      if (Math.hypot(p.vx, p.vy) > 20) { p._cVx = p.vx; p._cVy = p.vy; }
       p.tx = tx; p.ty = ty;
       p._recvAt = now;
       p.seq = tick;
-      // Neo ahist theo serverT — deu nhip, khong warp khi tunnel burst
-      const st = Number.isFinite(+msg.serverT) ? +msg.serverT : now;
-      const off = now - st;
-      if (p.aClock == null) p.aClock = off;
-      else if (off < p.aClock) p.aClock = p.aClock * 0.65 + off * 0.35;
-      else p.aClock = p.aClock * 0.94 + off * 0.06;
+      // ahist theo thoi diem NHAN — don gian, on dinh
       if (!p.ahist) p.ahist = [];
       const last = p.ahist[p.ahist.length - 1];
-      // bunched / duplicate tick: ghi de mau cu trong ~half-tick
-      if (!last || st - last.t > 12) {
-        p.ahist.push({ t: st, x: tx, y: ty, vx: p.vx, vy: p.vy });
+      if (!last || now - last.t > 10) {
+        p.ahist.push({ t: now, x: tx, y: ty, vx: p.vx, vy: p.vy });
         while (p.ahist.length > MP_AUTH_HIST) p.ahist.shift();
       } else {
-        last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; last.t = st;
+        last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; last.t = now;
       }
-      // snap render neu lech xa (vd vua thoat clamp sai) — het đứng frame cu
       if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
       else if (Math.hypot(tx - p.rx, ty - p.ry) > 220) {
         p.rx = tx; p.ry = ty; p.x = tx; p.y = ty;
-        p.ahist = [{ t: st, x: tx, y: ty, vx: p.vx, vy: p.vy }];
-        p.aClock = off;
+        p.ahist = [{ t: now, x: tx, y: ty, vx: p.vx, vy: p.vy }];
       }
     }
     p.seen = now;

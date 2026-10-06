@@ -11,8 +11,8 @@ const MP = {
 /* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 1, MP_WAIT = 1600, MP_PEER_TTL = 45000;
 const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_MAX_SPD = 300;
-/* Auth: Hermite tren serverT (buffer ~70ms @40Hz ≈ 3 snap) — muot, it lag */
-const MP_AUTH_DELAY = 0.07, MP_AUTH_EXTRAP = 0.18, MP_AUTH_BLEND = 28, MP_AUTH_HIST = 32;
+/* Auth: buffer ~110ms + coast underrun — het khựng đứng khung khi doi huong / jitter */
+const MP_AUTH_DELAY = 0.11, MP_AUTH_EXTRAP = 0.22, MP_AUTH_BLEND = 18, MP_AUTH_HIST = 40;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -687,44 +687,37 @@ function mpInit() {
 function mpAuthOn() {
   return typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
 }
-/* Auth: Hermite tren truc serverT (aClock) — het warping khi tunnel jitter. */
+/* Auth: lerp theo thoi diem NHAN + coast khi underrun (het đứng khung). */
 function mpAuthGoal(p, now) {
   const h = p.ahist;
   if (!h || !h.length) {
     if (p.tx == null) return { x: p.x || 0, y: p.y || 0 };
     return { x: p.tx, y: p.ty };
   }
-  const t = now - (p.aClock || 0) - MP_AUTH_DELAY * 1000;
+  const t = now - MP_AUTH_DELAY * 1000;
   if (h.length === 1) {
     const s = h[0];
     const age = Math.max(0, Math.min(MP_AUTH_EXTRAP, (t - s.t) / 1000));
-    return { x: s.x + (s.vx || 0) * age, y: s.y + (s.vy || 0) * age };
+    const vx = s.vx || p._cVx || 0, vy = s.vy || p._cVy || 0;
+    return { x: s.x + vx * age, y: s.y + vy * age };
   }
   if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
   const last = h[h.length - 1];
   if (t >= last.t) {
+    // Underrun: LUON coast theo van toc (khong bao gio freeze khi spd thap)
     const age = Math.min(MP_AUTH_EXTRAP, Math.max(0, (t - last.t) / 1000));
-    const spd = Math.hypot(last.vx || 0, last.vy || 0);
-    if (spd < 8) return { x: last.x, y: last.y };
-    return { x: last.x + (last.vx || 0) * age, y: last.y + (last.vy || 0) * age };
+    let vx = last.vx || 0, vy = last.vy || 0;
+    if (Math.hypot(vx, vy) < 12) { vx = p._cVx || 0; vy = p._cVy || 0; }
+    return { x: last.x + vx * age, y: last.y + vy * age };
   }
   for (let i = 1; i < h.length; i++) {
     if (t <= h[i].t) {
       const a = h[i - 1], b = h[i];
-      const span = Math.max(1, b.t - a.t);
-      let u = (t - a.t) / span;
+      let u = (t - a.t) / Math.max(1, b.t - a.t);
       u = Math.max(0, Math.min(1, u));
-      // Hermite nhe — cua muot, it overshoot (0.45)
-      const dtSec = span / 1000;
-      const m0x = (a.vx || 0) * dtSec * 0.45, m0y = (a.vy || 0) * dtSec * 0.45;
-      const m1x = (b.vx || 0) * dtSec * 0.45, m1y = (b.vy || 0) * dtSec * 0.45;
-      const u2 = u * u, u3 = u2 * u;
-      const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u;
-      const h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
-      return {
-        x: h00 * a.x + h10 * m0x + h01 * b.x + h11 * m1x,
-        y: h00 * a.y + h10 * m0y + h01 * b.y + h11 * m1y
-      };
+      // smoothstep nhe — bot giat o moc mau
+      u = u * u * (3 - 2 * u);
+      return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u };
     }
   }
   return { x: last.x, y: last.y };
@@ -791,14 +784,15 @@ function othSmoothRender(dt) {
     if (dist > MP_HARD) {
       p.rx = goal.x; p.ry = goal.y;
     } else if (auth) {
-      // Hermite da muot: stick sat goal — dist nho → gan snap, xa → blend nhanh
-      if (dist <= 1.2) {
-        p.rx = goal.x; p.ry = goal.y;
-      } else if (dist > 0.03) {
-        const rate = dist > 64 ? MP_AUTH_BLEND + 8 : dist > 20 ? MP_AUTH_BLEND + 4 : MP_AUTH_BLEND;
+      // Blend mem + cap buoc — khong soft-snap
+      if (dist > 0.02) {
+        const rate = dist > 120 ? MP_AUTH_BLEND + 8 : dist > 48 ? MP_AUTH_BLEND + 3 : MP_AUTH_BLEND;
         const a = 1 - Math.exp(-dt * rate);
-        p.rx += (goal.x - p.rx) * a;
-        p.ry += (goal.y - p.ry) * a;
+        let mx = (goal.x - p.rx) * a, my = (goal.y - p.ry) * a;
+        const maxStep = Math.max(200, spd * 1.5 + 80) * dt;
+        const step = Math.hypot(mx, my);
+        if (step > maxStep && dist < 500) { mx *= maxStep / step; my *= maxStep / step; }
+        p.rx += mx; p.ry += my;
       }
     } else if (dist > 0.05) {
       const cap = Math.max(160, spd * 1.25 + 40) * dt;
@@ -905,7 +899,9 @@ function othDraw(c, p) {
   c.strokeStyle = typeof campCol === 'function' ? campCol(p.fac) : '#8fe0b8'; c.lineWidth = 2; c.globalAlpha = 0.85;
   c.beginPath(); c.ellipse(px, py, 18, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1;
   const hw = typeof heroGfx === 'function' ? heroGfx(p.fac, p.sex) : null;
-  const moving = Math.hypot(p.vx || 0, p.vy || 0) > 18 || Math.hypot((p.tx || px) - px, (p.ty || py) - py) > 3;
+  const moving = Math.hypot(p.vx || 0, p.vy || 0) > 14
+    || Math.hypot(p._cVx || 0, p._cVy || 0) > 20
+    || Math.hypot((p.tx || px) - px, (p.ty || py) - py) > 2.5;
   const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (moving ? 'run' : 'st');
   const sc = typeof HERO_SCALE !== 'undefined' ? HERO_SCALE : 1;
   let h = 0;
