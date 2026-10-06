@@ -26,3 +26,7 @@ Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
 ## Đang áp: F · Pixel remaster (chốt)
 - Từ backup gốc, cache `?v=305`
 - Thay bản J mythic trên 4 stem
+
+## Đang áp: J Mythic + F Pixel remaster
+- Tool: `tools/quai_remaster_jf.py` (Mythic J rồi Pixel remaster F)
+- Cache `?v=306`
