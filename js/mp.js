@@ -274,6 +274,15 @@ function mpElect() {
       // Vua thanh khach: bo quai local (mid theo cid cu), xin field host
       MP.fieldSnap = null;
       MP.waitHost = Date.now() + MP_WAIT;
+      if (R.enemies && R.enemies.length) {
+        for (const e of R.enemies) {
+          if (e && !e.mpRemote && !(e.goldBoss || e.sat || e.satG)) {
+            e.dead = true; e.mpSkipReward = true;
+            if (e.home && e.home.e === e) e.home.e = null;
+          }
+        }
+        R.enemies = R.enemies.filter(e => e && !e.dead);
+      }
       if (!MP._needT || Date.now() - MP._needT > 400) {
         MP._needT = Date.now();
         if (typeof mpSend === 'function') mpSend('need', { cid: mpCid() });
