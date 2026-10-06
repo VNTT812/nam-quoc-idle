@@ -24,9 +24,18 @@ Sau khi đăng nhập, vào **bãi luyện công** (cùng map): tối đa ~6 ng�
 
 - **HP quái chung** — mọi người đánh cùng một máu
 - **Drop / EXP** — chỉ người **last-hit** nhận
-- Host (cid nhỏ nhất) làm trọng tài spawn; chưa có game server riêng
+- Host (cid nhỏ nhất) làm trọng tài spawn quái (client) — **không** phải máy bạn host game cho người khác
 
 Phó bản / tháp / trong thành vẫn solo. Badge **Đồng đội** góc phải sân đấu hiện số người trên map.
+
+### Dedicated MP server (auth vị trí)
+
+Muốn server làm trọng tài vị trí (giảm phụ thuộc peer-to-peer): xem **[docs/DEDICATED_MP.md](docs/DEDICATED_MP.md)**.
+
+```bash
+cd server && npm install && MP_DEV_OPEN=1 npm start
+# game: http://127.0.0.1:47291/?mp_auth=1
+```
 
 Muốn chơi thử trên máy, không cần đăng nhập:
 

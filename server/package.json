@@ -1,0 +1,18 @@
+{
+  "name": "nam-quoc-mp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dedicated authoritative map server (pos) for Nam Quốc Idle",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "ws": "^8.18.0"
+  }
+}

@@ -700,7 +700,10 @@ function mpJxBodyReady(Jo, act) {
   return !!(im && im.complete && im.naturalWidth);
 }
 function othTick(dt) {
+  if (typeof mpaTick === 'function') mpaTick(dt); // dedicated auth server (js/mp_auth.js)
   if ((MP.uiT = (MP.uiT || 0) + dt) > 0.5) { MP.uiT = 0; mpUi(); }
+  // auth mode dang ok: bo gui pos Supabase (server la nguon dung)
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok') return;
   // di chuyen ve o othSmoothRender (theo FPS). Day chi gui mang.
   if (!(MP.ch && (MP.state === 'ok' || MP.state === 'retry') && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower)) return;
   MP.trackT = (MP.trackT || 0) + dt;
