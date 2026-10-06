@@ -810,7 +810,11 @@ function othSmoothRender(dt) {
     }
     p.x = p.rx; p.y = p.ry;
     p.actT = (p.actT || 0) + dt;
-    if (p.act === 'at' && p.actT > 0.5) p.act = spd > 24 ? 'run' : 'st';
+    const moveSpd = Math.hypot(p.vx || 0, p.vy || 0) || Math.hypot(p._cVx || 0, p._cVy || 0);
+    if (p.act === 'at' && p.actT > 0.5) p.act = moveSpd > 18 ? 'run' : 'st';
+    // Giữ run khi đang coast underrun — tránh nhấp nháy st/run (= cảm giác khựng)
+    else if (p.act === 'st' && moveSpd > 22) p.act = 'run';
+    else if (p.act === 'run' && moveSpd < 8 && Math.hypot((p.tx || p.rx) - p.rx, (p.ty || p.ry) - p.ry) < 1.5) p.act = 'st';
   }
 }
 function othEnts() {
