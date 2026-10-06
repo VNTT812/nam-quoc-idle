@@ -68,17 +68,31 @@ const TITLE_TXT = [
   { fill: '#ffd0b0', stroke: '#501810' },       // Chi ton
   { fill: '#fff3c0', stroke: '#5a2808' }        // GM
 ];
-/* Banner: moi danh hieu (tru GM) dung base anim + ve DUNG ten luc deo. GM = SPR rieng noi bat. */
-const TITLE_FX_BASE = { src: 'img/title/base.png', w: 158, h: 70, frames: 8, fps: 11, fw: 206, fh: 91, dyn: 1 };
+/* Moi danh hieu 1 style mau anim khac nhau (img/title/style_*.png). dyn=1: ve dung ten luc deo. */
+const TITLE_STYLE = {
+  xuatson: 'silver', lv30: 'moon', lv50: 'azure', lv80: 'cyan', lv100: 'violet', lv150: 'gold', lv200: 'flame',
+  cs1: 'orchid', cs3: 'royal', cs5: 'holy',
+  mp1: 'jade', mp2: 'forest', mp3: 'lime', mp4: 'ember',
+  k1000: 'copper', k10000: 'sunset', k100000: 'crimson',
+  b50: 'amber', b500: 'blood', gold5: 'gold', tower20: 'storm', tower50: 'ice',
+  dt100: 'sakura', dt1000: 'rose', zone8: 'ocean', zone16: 'azure',
+  login30: 'copper', setfull: 'gold', vio6: 'royal', rich: 'amber',
+  thienha: null // sheet rieng
+};
 const TITLE_FX = {
-  /* SPR GameMaster — lon nhat + glow */
-  gm: { src: 'img/title/gm.png', w: 210, h: 144, frames: 8, fps: 14, fw: 254, fh: 174, glow: 1 },
-  /* Thien Ha: sheet rieng (moi them) */
+  /* GameMaster — thu nho + glow nhe */
+  gm: { src: 'img/title/gm.png', w: 148, h: 101, frames: 8, fps: 13, fw: 254, fh: 174, glow: 1 },
   thienha: { src: 'img/title/thienha.png', w: 156, h: 69, frames: 8, fps: 12, fw: 206, fh: 91 }
 };
 for (const t of TITLES) {
-  if (TITLE_FX[t[0]]) continue; // gm / thienha giu nguyen
-  TITLE_FX[t[0]] = Object.assign({}, TITLE_FX_BASE, { tier: t[3] | 0 });
+  const id = t[0];
+  if (TITLE_FX[id]) { TITLE_FX[id].tier = t[3] | 0; continue; }
+  const st = TITLE_STYLE[id] || 'ember';
+  // fps lech nhe theo id — anim khong dong bo het
+  const fps = 9 + ((id.charCodeAt(0) + (id.charCodeAt(id.length - 1) || 0)) % 6);
+  TITLE_FX[id] = {
+    src: 'img/title/style_' + st + '.png', w: 158, h: 70, frames: 8, fps, fw: 206, fh: 91, dyn: 1, tier: t[3] | 0, style: st
+  };
 }
 const titleFxOf = t => {
   const id = !t ? null : (typeof t === 'string' ? t : t[0]);
@@ -118,16 +132,16 @@ function drawTitleFx(c, x, yTop, id, labelOpt) {
   const dx = x - w / 2, dy = yTop - h + bob;
   c.save();
   if (glow) {
-    const g = c.createRadialGradient(x, yTop - h * 0.45, 4, x, yTop - h * 0.45, w * 0.62);
-    g.addColorStop(0, 'rgba(255,220,120,0.45)');
-    g.addColorStop(0.45, 'rgba(255,140,40,0.18)');
+    const g = c.createRadialGradient(x, yTop - h * 0.45, 4, x, yTop - h * 0.45, w * 0.55);
+    g.addColorStop(0, 'rgba(255,220,120,0.32)');
+    g.addColorStop(0.5, 'rgba(255,140,40,0.12)');
     g.addColorStop(1, 'rgba(255,80,0,0)');
     c.fillStyle = g;
-    c.beginPath(); c.ellipse(x, yTop - h * 0.42, w * 0.58, h * 0.55, 0, 0, 7); c.fill();
-    c.globalAlpha = 0.35 + 0.15 * Math.sin(t * 6);
+    c.beginPath(); c.ellipse(x, yTop - h * 0.42, w * 0.5, h * 0.48, 0, 0, 7); c.fill();
+    c.globalAlpha = 0.22 + 0.1 * Math.sin(t * 6);
     c.globalCompositeOperation = 'lighter';
-    if (n > 1) c.drawImage(im, fi * fw, 0, fw, fh, dx - 3, dy - 2, w + 6, h + 4);
-    else c.drawImage(im, dx - 3, dy - 2, w + 6, h + 4);
+    if (n > 1) c.drawImage(im, fi * fw, 0, fw, fh, dx - 2, dy - 1, w + 4, h + 2);
+    else c.drawImage(im, dx - 2, dy - 1, w + 4, h + 2);
     c.globalCompositeOperation = 'source-over';
   }
   c.globalAlpha = glow ? 1 : 0.96;
