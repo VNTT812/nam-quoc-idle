@@ -112,7 +112,16 @@ function updateCamera(dt) { const [tx, ty] = camTarget(), k = Math.min(1, dt * 6
 const BG_TILE = 1536;
 function drawTiledBg(c, bg) {
   if (!(bg && bg.complete && bg.naturalWidth)) { c.fillStyle = '#26301f'; c.fillRect(CAM.x - 2, CAM.y - 2, AR.w + 4, AR.h + 4); return; }
-  if (OBS.g) { c.drawImage(bg, 0, 0, WORLD.w, WORLD.h); return; }          // ban do that rong, khong lat guong
+  if (OBS.g) {
+    // chi ve khung nhin — tranh blit ca anh 3584 moi frame (lag)
+    const iw = bg.naturalWidth, ih = bg.naturalHeight;
+    const sx = Math.max(0, Math.floor(CAM.x) - 2);
+    const sy = Math.max(0, Math.floor(CAM.y) - 2);
+    const sw = Math.min(iw - sx, Math.ceil(AR.w) + 4);
+    const sh = Math.min(ih - sy, Math.ceil(AR.h) + 4);
+    if (sw > 0 && sh > 0) c.drawImage(bg, sx, sy, sw, sh, sx, sy, sw, sh);
+    return;
+  }
   const T = BG_TILE, i0 = Math.floor(CAM.x / T), i1 = Math.floor((CAM.x + AR.w) / T), j0 = Math.floor(CAM.y / T), j1 = Math.floor((CAM.y + AR.h) / T);
   for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
     const fx = i & 1, fy = j & 1;
