@@ -139,6 +139,59 @@
     for (const id of [163, 215, 368]) if (MAP[id] && !EV2[MAP[id]] && EV2[id]) EV2[MAP[id]] = deep(EV2[id]);
   }
 
+  /* --- Tu dung FX Test: recolor + doi form (THO_TEST_FX tu tools/tho_test_fx.py) --- */
+  const TFX = window.THO_TEST_FX;
+  const facOf = id => { const s = SK[id]; return s && String(s.f || '').endsWith('_t') ? (s.f.startsWith('wudang') ? 'wd' : s.f.startsWith('kunlun') ? 'kl' : null) : null; };
+  const FORM_FLIP = { 1: 6, 6: 1, 2: 1, 8: 12, 12: 1, 3: 6, 7: 6 };
+  if (TFX && JFX) {
+    /* dang ky missile recolor */
+    for (const fac of ['wd', 'kl']) {
+      const pack = (TFX.mids || {})[fac] || {};
+      for (const mid of Object.keys(pack)) {
+        const row = pack[mid], nid = row.id, m = deep(row.m);
+        JFX.m[nid] = m; JFX.m[String(nid)] = m;
+      }
+      /* precast rieng */
+      const prePath = (TFX.pre || {})[fac];
+      if (prePath && JFX.c) {
+        const key = 'tt_' + fac;
+        const base = JFX.c['4'] || JFX.c[4] || { n: 5, d: 1, w: 111, h: 124, ax: 54, ay: 76, ms: 80 };
+        JFX.c[key] = Object.assign(deep(base), { f: prePath, ms: fac === 'wd' ? 70 : 95 });
+      }
+    }
+    for (const id of own) {
+      const nid = MAP[id], fac = facOf(nid); if (!fac) continue;
+      const pack = (TFX.mids || {})[fac] || {};
+      const f = JFX.f[nid] || (JFX.f[nid] = {});
+      let mid = f.c != null ? f.c : JFX.s[nid];
+      if (mid != null && pack[String(mid)]) {
+        const nm = pack[String(mid)].id;
+        f.c = nm; JFX.s[nid] = nm; JFX.s[String(nid)] = nm;
+      }
+      if ((TFX.pre || {})[fac]) f.pre = 'tt_' + fac;
+      /* doi form / so dan — nhin khac ban Tho that */
+      if (f.form != null && FORM_FLIP[f.form] != null) f.form = FORM_FLIP[f.form];
+      else if (f.form == null && SK[nid] && SK[nid].form) f.form = FORM_FLIP[SK[nid].form] || SK[nid].form;
+      if (f.num != null) f.num = Math.min(8, Math.max(1, (+f.num || 1) + (fac === 'wd' ? 1 : 0)));
+      if (JFX.g && JFX.g[nid]) {
+        const g = JFX.g[nid] = deep(JFX.g[nid]);
+        if (Array.isArray(g) && g.length) g[0] = FORM_FLIP[g[0]] != null ? FORM_FLIP[g[0]] : g[0];
+      }
+      if (SK[nid] && SK[nid].form != null && FORM_FLIP[SK[nid].form] != null) SK[nid].form = FORM_FLIP[SK[nid].form];
+      /* trang thai recolor */
+      const stPack = (TFX.states || {})[fac] || {};
+      if (JXST && stPack[String(id)]) {
+        JXST[nid] = deep(stPack[String(id)]);
+        JXST[String(nid)] = JXST[nid];
+      } else if (JXST && JXST[nid] && TFX.map && TFX.map[fac] && TFX.map[fac][JXST[nid].f]) {
+        JXST[nid] = deep(JXST[nid]);
+        JXST[nid].f = TFX.map[fac][JXST[nid].f];
+        JXST[String(nid)] = JXST[nid];
+      }
+      JFX.f[nid] = f; JFX.f[String(nid)] = f;
+    }
+  }
+
   /* --- khoa UI: chi admin thay he / phai Test --- */
   const visibleSeries = () => SERIES.map((_, i) => i).filter(i => i !== SER || canSeeThoTest());
   window.visibleSeries = visibleSeries;
