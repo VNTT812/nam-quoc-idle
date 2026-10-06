@@ -251,41 +251,49 @@ function mpUpsertPeer(row, fromPos) {
   if (fromPos && row.x != null) {
     const seq = row.seq != null ? (row.seq | 0) : 0;
     const pt = row.t != null ? (+row.t) : now;
-    if (seq && p.seq && seq <= p.seq) { p.seen = now; /* stale seq */ }
-    else if (p._pt && pt + 80 < p._pt) { p.seen = now; /* out-of-order time */ }
-    else if (p.clockOff && (now - pt - p.clockOff) > 900) { p.seen = now; /* goi den tre >0.9s — bo, tranh tele lui */ }
-    else {
+    const off = now - pt; // uoc luong clockOff tu goi nay
+    let drop = false;
+    if (seq && p.seq && seq <= p.seq) drop = true;                         // stale seq
+    else if (p._pt && pt + 80 < p._pt) drop = true;                         // out-of-order time
+    else if (off < -800 || off > 8000) drop = true;                         // timestamp vo ly
+    else if (p.clockOff && off > p.clockOff + 900) drop = true;             // den tre vs uoc luong — BO, khong pha clock
+    // Quan trong: TRUOC DAY abs(off-clockOff)>2500 se discard MAI MAI sau 1 goi buffer 3s
+    // → peer dung im. Gio: goi tre chi drop; goi tuoi (off nho) thi re-anchor clock.
+    if (drop) {
+      // failsafe: bi drop qua lau nhung seq moi → ep nhan + neo lai clock
+      if (seq && (!p.seq || seq > p.seq) && p._acceptAt && now - p._acceptAt > 450 && off >= 0 && off < 2000) {
+        p.clockOff = off; p.seq = seq; drop = false;
+      } else { p.seen = now; }
+    }
+    if (!drop) {
       if (seq) p.seq = Math.max(p.seq || 0, seq);
-      // uoc lech dong ho: now ≈ pt + clockOff (EMA)
-      const off = now - pt;
-      // bo qua mau lech dong ho vo ly (goi buffer 3s+)
-      if (p.clockOff && Math.abs(off - p.clockOff) > 2500) { p.seen = now; }
+      if (!p.clockOff) p.clockOff = off;
+      else if (p.clockOff - off > 600) p.clockOff = off; // goi tuoi sau poison — neo ngay (tranh dung im ~0.5s)
+      else if (off < p.clockOff) p.clockOff = p.clockOff * 0.65 + off * 0.35; // keo ve duong tuoi
+      else p.clockOff = p.clockOff * 0.96 + off * 0.04;
+      let vx, vy;
+      if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
       else {
-        p.clockOff = p.clockOff ? p.clockOff * 0.88 + off * 0.12 : off;
-        let vx, vy;
-        if (row.vx != null && row.vy != null) { vx = +row.vx; vy = +row.vy; }
-        else {
-          const dt = Math.max(0.04, ((p._pt ? pt - p._pt : 0) || (now - (p._t || now))) / 1000);
-          vx = (tx - p.tx) / dt; vy = (ty - p.ty) / dt;
-        }
-        const spd = Math.hypot(vx, vy);
-        if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
-        if (spd < 6) { vx = 0; vy = 0; }
-        p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
-        p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
-        p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt);
-        if (!p.hist) p.hist = [];
-        const last = p.hist[p.hist.length - 1];
-        const ht = pt;
-        if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 35) {
-          if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
-            p.hist.push({ t: last.t + Math.max(35, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
-          }
-          p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
-          if (p.hist.length > MP_HIST) p.hist.shift();
-        } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
-        if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+        const dt = Math.max(0.04, ((p._pt ? pt - p._pt : 0) || (now - (p._t || now))) / 1000);
+        vx = (tx - p.tx) / dt; vy = (ty - p.ty) / dt;
       }
+      const spd = Math.hypot(vx, vy);
+      if (spd > MP_MAX_SPD) { const k2 = MP_MAX_SPD / spd; vx *= k2; vy *= k2; }
+      if (spd < 6) { vx = 0; vy = 0; }
+      p.vx = p.vx != null ? p.vx * 0.3 + vx * 0.7 : vx;
+      p.vy = p.vy != null ? p.vy * 0.3 + vy * 0.7 : vy;
+      p.tx = tx; p.ty = ty; p._t = now; p._pt = Math.max(p._pt || 0, pt); p._acceptAt = now;
+      if (!p.hist) p.hist = [];
+      const last = p.hist[p.hist.length - 1];
+      const ht = pt;
+      if (!last || Math.hypot(tx - last.x, ty - last.y) > 0.5 || ht - last.t > 35) {
+        if (last && Math.hypot(tx - last.x, ty - last.y) > 220 && ht - last.t < 600) {
+          p.hist.push({ t: last.t + Math.max(35, (ht - last.t) * 0.5), x: (last.x + tx) * 0.5, y: (last.y + ty) * 0.5, vx: p.vx, vy: p.vy });
+        }
+        p.hist.push({ t: ht, x: tx, y: ty, vx: p.vx, vy: p.vy });
+        if (p.hist.length > MP_HIST) p.hist.shift();
+      } else { last.t = ht; last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; }
+      if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
     }
   }
   if (row.name != null) p.name = String(row.name).slice(0, 16);

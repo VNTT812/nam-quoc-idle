@@ -12,7 +12,8 @@ Project: https://supabase.com/dashboard/project/khwkokiflhzwxuzoilux
 
 2. **Chạy SQL**  
    Dashboard → **SQL Editor** → New query  
-   Dán toàn bộ nội dung `sql/NET_SETUP.sql` → **Run**
+   Dán toàn bộ nội dung `sql/NET_SETUP.sql` → **Run**  
+   Rồi chạy thêm `sql/MAIL_FIX.sql` (vá hộp thư / Admin cấp đồ — bắt buộc nếu Thư luôn trống)
 
 3. **Tắt Confirm email**  
    Dashboard → **Authentication** → **Providers** → **Email**  
