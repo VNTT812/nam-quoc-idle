@@ -1,5 +1,5 @@
 /* ======================= VIỆT★ (TEST) — nhân Việt riêng thay Thổ★ =======================
-   Clone skill Võ Đang + Côn Lôn (id 9000+). Hình: VIET_CHAR (pack Kiếm Hiệp + sheet recolor).
+   Clone skill Võ Đang + Côn Lôn (id 9000+). Hình: VIET_CHAR (ghép bộ phận JX + recolor Việt★).
    Chi tai khoan admin nhin / choi duoc. */
 'use strict';
 (function () {
