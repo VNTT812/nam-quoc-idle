@@ -106,7 +106,7 @@ function mpOnEpos(p) {
 
 function mpSendField(force) {
   const f = R.field; if (!f || !mpIsHost()) return;
-  if (!force && Date.now() - (MP.lastFieldSend || 0) < 2000) return;
+  if (!force && Date.now() - (MP.lastFieldSend || 0) < 400) return;
   MP.lastFieldSend = Date.now();
   // chi gui quai con song + diem spawn (bo n/aggro text) — goi nhe hon, it rot kenh
   const pts = f.pts.map((p, i) => {
