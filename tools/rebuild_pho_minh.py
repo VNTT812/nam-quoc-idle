@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Dựng lại Phổ Minh Tự (400) liền mạch từ layout Yên Tử + reskin tông ấm Trần.
+"""Dựng lại Phổ Minh Tự (400): nền liền mạch + cụm chùa rõ nét.
 
-Map 400 ban đầu lát tile AI (compose_tran_style_maps) nên bị seam/ghép mảnh.
+- Base: layout Yên Tử (VLTK) reskin tông ấm — không lát tile AI.
+- Điểm nhấn: blend grass-aware 1 cảnh chùa lớn + 2 nhà/bia (không lặp lưới).
 """
 from __future__ import annotations
 
+import base64
 import json
 import re
 import subprocess
@@ -19,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from reskin_tran_layout import (  # noqa: E402
     ORIG_REV,
+    TILES,
     Z,
     bias_params,
     blur_mask,
@@ -29,6 +32,8 @@ from reskin_tran_layout import (  # noqa: E402
     mix_hue_sat,
     rgb_to_hsv,
 )
+
+CW, CH = 32, 16
 
 
 def extract_zone(js_text: str, stem: str):
@@ -50,7 +55,58 @@ def extract_zone(js_text: str, stem: str):
     raise SystemExit("parse fail")
 
 
-def main() -> None:
+def decode_obs(meta: dict) -> list[int]:
+    raw = base64.b64decode(meta["obs"])
+    n = meta["gw"] * meta["gh"]
+    blocked = [0] * n
+    for k in range(n):
+        if raw[k >> 3] & (1 << (k & 7)):
+            blocked[k] = 1
+    return blocked
+
+
+def encode_obs(blocked: list[int]) -> str:
+    n = len(blocked)
+    raw = bytearray((n + 7) // 8)
+    for k, b in enumerate(blocked):
+        if b:
+            raw[k >> 3] |= 1 << (k & 7)
+    return base64.b64encode(bytes(raw)).decode("ascii")
+
+
+def mark_rect(blocked, x, y, w, h, val, gw, gh):
+    x0 = max(0, int(x // CW))
+    y0 = max(0, int(y // CH))
+    x1 = min(gw - 1, int((x + w) // CW))
+    y1 = min(gh - 1, int((y + h) // CH))
+    for gy in range(y0, y1 + 1):
+        for gx in range(x0, x1 + 1):
+            blocked[gy * gw + gx] = 1 if val else 0
+
+
+def carve_path(blocked, pts, radius, gw, gh):
+    for i in range(len(pts) - 1):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        steps = int(max(1, ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5 / 8))
+        for s in range(steps + 1):
+            t = s / steps
+            x = x0 + (x1 - x0) * t
+            y = y0 + (y1 - y0) * t
+            gx0 = max(0, int((x - radius) // CW))
+            gy0 = max(0, int((y - radius) // CH))
+            gx1 = min(gw - 1, int((x + radius) // CW))
+            gy1 = min(gh - 1, int((y + radius) // CH))
+            r2 = radius * radius
+            for gy in range(gy0, gy1 + 1):
+                wy = (gy + 0.5) * CH
+                for gx in range(gx0, gx1 + 1):
+                    wx = (gx + 0.5) * CW
+                    if (wx - x) ** 2 + (wy - y) ** 2 <= r2:
+                        blocked[gy * gw + gx] = 0
+
+
+def build_base() -> Image.Image:
     data = subprocess.check_output(["git", "show", f"{ORIG_REV}:img/z/2.jpg"])
     orig = Image.open(BytesIO(data)).convert("RGB")
     W, H = orig.size
@@ -97,26 +153,93 @@ def main() -> None:
     out[..., 1] = np.clip(out[..., 1] * 1.02 + 1, 0, 255)
     out[..., 2] = np.clip(out[..., 2] * 0.94, 0, 255)
     img = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
-    img = ImageEnhance.Contrast(img).enhance(1.07)
-    img = ImageEnhance.Color(img).enhance(1.05)
+    return ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.05)).enhance(1.06)
+
+
+def blend_stamp(ba: np.ndarray, stamp_img: Image.Image, xy, size, core=0.38, soft=0.92):
+    """Giữ mái/đá/tượng; cỏ của stamp phai vào rừng nền — hết khung vuông."""
+    H, W = ba.shape[:2]
+    s = stamp_img.resize((size, size), Image.LANCZOS).convert("RGB")
+    sa = np.asarray(s, dtype=np.float32)
+    bx, by = xy
+    x0, y0 = max(0, bx), max(0, by)
+    x1, y1 = min(W, bx + size), min(H, by + size)
+    sx0, sy0 = x0 - bx, y0 - by
+    sw, sh = x1 - x0, y1 - y0
+    patch = sa[sy0 : sy0 + sh, sx0 : sx0 + sw].copy()
+    dest = ba[y0:y1, x0:x1]
+    yy, xx = np.ogrid[:sh, :sw]
+    rad = np.sqrt((xx - (size / 2 - sx0)) ** 2 + (yy - (size / 2 - sy0)) ** 2) / (size / 2)
+    a = np.clip((soft - rad) / max(1e-5, soft - core), 0, 1)
+    a = a * a * (3 - 2 * a)
+    r, g, b = patch[..., 0], patch[..., 1], patch[..., 2]
+    greenish = (g > r + 6) & (g > b + 4) & (g > 55)
+    pathish = (np.abs(r - g) < 35) & (r > 70) & (g > 55) & (b > 35) & ~greenish
+    built = ~greenish & ((r > g + 8) | (r + g + b < 140) | ((r > 90) & (g < 90) & (b < 80)))
+    keep = np.where(built, 1.0, np.where(pathish, 0.55, 0.22))
+    a = a * keep
+    ring = (a > 0.05) & (a < 0.55)
+    if ring.any():
+        sL = float(patch[ring].mean())
+        dL = float(dest[ring].mean())
+        if sL > 1:
+            patch = np.clip(patch * (0.65 + 0.35 * (dL / sL)), 0, 255)
+    a3 = a[..., None]
+    ba[y0:y1, x0:x1] = patch * a3 + dest * (1.0 - a3)
+    return ba
+
+
+def main() -> None:
+    base = build_base()
+    W, H = base.size
+    cx, cy = W // 2, H // 2
+    ba = np.asarray(base, dtype=np.float32)
+
+    temple = Image.open(TILES / "tran-pho-minh-map.jpg")
+    house = Image.open(TILES / "prop-tran-house.jpg")
+    stele = Image.open(TILES / "prop-tran-stele.jpg")
+
+    main_sz = 2000
+    ba = blend_stamp(ba, temple, (cx - main_sz // 2, cy - main_sz // 2 - 40), main_sz)
+    ba = blend_stamp(ba, house, (cx - 1050, cy + 240), 560, core=0.35, soft=0.85)
+    ba = blend_stamp(
+        ba, house.transpose(Image.FLIP_LEFT_RIGHT), (cx + 540, cy + 20), 520, core=0.35, soft=0.85
+    )
+    ba = blend_stamp(ba, stele, (cx - 250, cy + 760), 300, core=0.3, soft=0.8)
+
+    img = Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
+    img = ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.04)).enhance(1.05)
     out_path = Z / "400.jpg"
     img.save(out_path, quality=90, optimize=True)
     print(f"saved {out_path} {out_path.stat().st_size // 1024}KB")
 
     jmo = (ROOT / "jmo.js").read_text(encoding="utf-8")
     meta2, _, _ = extract_zone(jmo, "2")
+    gw, gh = meta2["gw"], meta2["gh"]
+    blocked = decode_obs(meta2)
+    mark_rect(blocked, cx - 360, cy - 480, 720, 520, True, gw, gh)
+    mark_rect(blocked, cx - 1050 + 80, cy + 240 + 80, 400, 320, True, gw, gh)
+    mark_rect(blocked, cx + 540 + 60, cy + 20 + 80, 380, 300, True, gw, gh)
+    carve_path(blocked, [(cx, cy + 1000), (cx, cy + 320)], 80, gw, gh)
+    carve_path(blocked, [(cx - 240, cy + 560), (cx, cy + 320), (cx + 240, cy + 560)], 60, gw, gh)
+
+    meta = dict(meta2)
+    meta["obs"] = encode_obs(blocked)
+    meta["blocked"] = int(sum(blocked))
+
     jmo2_path = ROOT / "jmo2.js"
     jmo2 = jmo2_path.read_text(encoding="utf-8")
     _, start, end = extract_zone(jmo2, "400")
     key_start = jmo2.rfind('"400"', 0, start)
-    new_obj = json.dumps(meta2, ensure_ascii=False, separators=(",", ":"))
+    new_obj = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
     jmo2_path.write_text(jmo2[:key_start] + '"400":' + new_obj + jmo2[end:], encoding="utf-8")
-    print("jmo2 400 obs synced from zone 2")
+    print(f"jmo2 400 obs blocked={meta['blocked']}")
 
     ver = bump_cache()
     z2 = (ROOT / "zones2.js").read_text(encoding="utf-8")
-    z2n = re.sub(r"img/z/400\.jpg(?:\?v=\d+)?", f"img/z/400.jpg?v={ver}", z2)
-    (ROOT / "zones2.js").write_text(z2n, encoding="utf-8")
+    (ROOT / "zones2.js").write_text(
+        re.sub(r"img/z/400\.jpg(?:\?v=\d+)?", f"img/z/400.jpg?v={ver}", z2), encoding="utf-8"
+    )
     print(f"Done v{ver}")
 
 
