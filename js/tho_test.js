@@ -130,8 +130,8 @@
     const applyHero = (facKey, fallbackSrc) => {
       const h = VC && VC.heroes && VC.heroes[facKey];
       if (h) {
-        /* Ưu tiên sprite Kiếm Hiệp (nhân Việt riêng); sheet 8 hướng giữ làm dự phòng */
-        const anim = h.animKh || h.anim;
+        /* Sprite Kiếm Hiệp trẻ + sheet nhiều frame (idle/run/at…) */
+        const anim = h.anim || h.animKh;
         W.hero[facKey] = { img: h.img, sz: h.sz.slice(), anim };
       } else if (W.hero[fallbackSrc]) {
         W.hero[facKey] = deep(W.hero[fallbackSrc]);
