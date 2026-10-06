@@ -11,7 +11,33 @@ function uiPrefs() {
 }
 function applyUiPrefs() { const p = uiPrefs(); document.documentElement.style.setProperty('--fs', UI_FS[p.fs]); document.body.classList.toggle('saver', p.saver); document.body.classList.toggle('compact', p.compact); }
 function setUiPref(o) { Object.assign(uiPrefs(), o); try { localStorage.setItem(UI_KEY, JSON.stringify(UIP)); } catch (e) { /* che do rieng tu */ } applyUiPrefs(); fitApp(); }
-function onZoneChange(z) { obsLoad(z.id); [H.x, H.y] = inWorld(H.x, H.y); for (const e of R.enemies) [e.x, e.y] = inWorld(e.x, e.y); for (const d of R.ground) [d.x, d.y] = inWorld(d.x, d.y); snapCamera(); R.bgImg = z.bg ? img(z.bg) : null; playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh(); }
+function bootLoadShow(msg, p) {
+  const el = $('#bootLoad'), bar = $('#bootBar'), m = $('#bootMsg');
+  if (!el) return;
+  el.classList.remove('hide');
+  if (m && msg) m.textContent = msg;
+  if (bar) bar.style.width = Math.round(Math.max(0, Math.min(1, p == null ? 0.12 : p)) * 100) + '%';
+}
+function bootLoadHide() {
+  const el = $('#bootLoad'); if (el) el.classList.add('hide');
+}
+function loadZoneBg(z, label) {
+  if (!z || !z.bg) { R.bgImg = null; bootLoadHide(); return Promise.resolve(null); }
+  bootLoadShow(label || ('Đang tải ' + (z.n || 'bản đồ') + '…'), 0.2);
+  R.bgImg = img(z.bg);
+  return imgReady(z.bg, p => bootLoadShow(null, 0.2 + p * 0.75)).then(im => {
+    R.bgImg = im; bootLoadShow('Xong', 1); setTimeout(bootLoadHide, 180); return im;
+  });
+}
+function onZoneChange(z) {
+  obsLoad(z.id);
+  [H.x, H.y] = inWorld(H.x, H.y);
+  for (const e of R.enemies) [e.x, e.y] = inWorld(e.x, e.y);
+  for (const d of R.ground) [d.x, d.y] = inWorld(d.x, d.y);
+  snapCamera();
+  loadZoneBg(z);
+  playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh();
+}
 function onStageChange() { if (curTab === 'log') refresh(); }
 function onLevelUp() { if (S.lvl === NEWBIE_LV && !rebornN()) log('🌱 Đạt cấp ' + NEWBIE_LV + ': hết <b>Hỗ Trợ Tân Thủ</b>.'); if (typeof autoMapCheck === 'function') autoMapCheck(); if (isNovice() && S.lvl >= NOVICE_LV && !R.quiet) { toast('Đạt cấp ' + NOVICE_LV + ': gia nhập môn phái!'); if ($('#modal').classList.contains('hidden')) joinModal(); } if (S.autoPts === true) { autoSpendAttrs(); autoSpendSkills(); } autoEquipAll(); if (!R.quiet) { checkHints(); updateDots(); renderPad(); dotGift(); if (LV_MS.some(m => m[0] === S.lvl)) toast(`Đạt mốc cấp ${S.lvl}: nhận quà ở nút 🎁`); } }
 /* Mo phong buoc co dinh 60 lan / giay + noi suy vi tri khi ve: chuyen dong deu, khong giat theo toc do khung hinh */
@@ -104,17 +130,22 @@ function init() {
   const unlock = () => { audInit(); const z = zoneOf(Math.min(S.stage, STAGES)); preloadZoneSounds(z); if (AUD.music && sndCfg().music && AUD.music.paused) AUD.music.play().catch(() => {}); else if (!AUD.music && S.fac) playMusic(R.town ? W.town.id : z.id); };
   document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);
   resizeArena(); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera(); restoreGround();
-  if (pk.menu) { slotMenu(); }
-  else if (!S.fac) { pickFaction(); }
+  bootLoadShow('Đang khởi động…', 0.08);
+  if (pk.menu) { bootLoadHide(); slotMenu(); }
+  else if (!S.fac) { bootLoadHide(); pickFaction(); }
   else {
     recalc(); R.life = R.P.life; R.mana = R.P.mana;
-    if (had) { recalc(); showOffline(offlineGains()); }
-    showTab('log'); log('Tiếp tục hành tẩu giang hồ…');
-    if (window.__tampered) { log('<span class="dim">Dữ liệu lưu không khớp chữ ký (đã chỉnh sửa ngoài game): dùng bản sao lưu gần nhất nếu có.</span>'); toast('Phát hiện chỉnh sửa file lưu'); }
-    loginCheck(); dotGift(); actDot(); if (typeof autoMapCheck === 'function') { syncMaxStage(); if (S.mode !== 'quest' && S.autoMap !== false) autoMapCheck(); }
-    { let n = 0, k = 0; for (const it of S.inv.concat(Object.values(S.eq || {}), S.epBox || [])) { const c = vioDedup(it); if (c) { n += c; k++; } }
-      if (n) { R.dirty = true; log(`Sửa ${k} món Tím bị trùng dòng: gỡ ${n} dòng từ dòng trùng đầu tiên trở đi, trả lại đá thuộc tính để khảm lại.`); } }
-    if (window.SET_PURGED) { const n = window.SET_PURGED.reduce((a, b) => a + b, 0); window.SET_PURGED = null; log(`Đã xóa ${n} món thuộc bộ không còn trong game (Đằng Long, Tinh Sương…).`); }
+    const z0 = zoneOf(Math.min(S.stage, STAGES));
+    obsLoad(z0.id); [H.x, H.y] = inWorld(H.x, H.y); snapCamera();
+    loadZoneBg(z0, 'Đang tải ' + z0.n + '…').then(() => {
+      if (had) { recalc(); showOffline(offlineGains()); }
+      showTab('log'); log('Tiếp tục hành tẩu giang hồ…');
+      if (window.__tampered) { log('<span class="dim">Dữ liệu lưu không khớp chữ ký (đã chỉnh sửa ngoài game): dùng bản sao lưu gần nhất nếu có.</span>'); toast('Phát hiện chỉnh sửa file lưu'); }
+      loginCheck(); dotGift(); actDot(); if (typeof autoMapCheck === 'function') { syncMaxStage(); if (S.mode !== 'quest' && S.autoMap !== false) autoMapCheck(); }
+      { let n = 0, k = 0; for (const it of S.inv.concat(Object.values(S.eq || {}), S.epBox || [])) { const c = vioDedup(it); if (c) { n += c; k++; } }
+        if (n) { R.dirty = true; log(`Sửa ${k} món Tím bị trùng dòng: gỡ ${n} dòng từ dòng trùng đầu tiên trở đi, trả lại đá thuộc tính để khảm lại.`); } }
+      if (window.SET_PURGED) { const n = window.SET_PURGED.reduce((a, b) => a + b, 0); window.SET_PURGED = null; log(`Đã xóa ${n} món thuộc bộ không còn trong game (Đằng Long, Tinh Sương…).`); }
+    });
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { if (S.fac) save(); }

@@ -409,7 +409,8 @@ def bump_cache() -> int:
     sw.write_text(s, encoding="utf-8")
     world = ROOT / "world.js"
     w = world.read_text(encoding="utf-8")
-    w = re.sub(r'("bg":")img/z/(\w+)\.jpg(?:\?v=\d+)?"', rf'\1img/z/\2.jpg?v={ver}"', w)
+    # dung chuoi thuong (khong raw) de \" thanh dau nhay, tranh bug bg bi \\ "
+    w = re.sub(r'("bg":")img/z/(\w+)\.jpg(?:\?v=\d+)?"', '\\1img/z/\\2.jpg?v=%d"' % ver, w)
     world.write_text(w, encoding="utf-8")
     return ver
 

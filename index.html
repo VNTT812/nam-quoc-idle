@@ -9,12 +9,19 @@
 <link rel="manifest" href="manifest.json">
 <title>NamQuoc Idle</title>
 <link rel="stylesheet" href="fonts/ibm-plex-mono.css">
-<link rel="stylesheet" href="style.css?v=240">
-<link rel="stylesheet" href="jx1ui.css?v=240">
-<link rel="stylesheet" href="jx1ui2.css?v=240">
-<link rel="stylesheet" href="ui20.css?v=240">
+<link rel="stylesheet" href="style.css?v=241">
+<link rel="stylesheet" href="jx1ui.css?v=241">
+<link rel="stylesheet" href="jx1ui2.css?v=241">
+<link rel="stylesheet" href="ui20.css?v=241">
 </head>
 <body>
+<div id="bootLoad" aria-live="polite">
+  <div class="boot-card">
+    <b>Nam Quốc Idle</b>
+    <p id="bootMsg">Đang tải bản đồ…</p>
+    <div class="boot-bar"><i id="bootBar"></i></div>
+  </div>
+</div>
 <div id="app">
   <header id="top">
     <div class="lvbox"><span id="lv">1</span></div>
@@ -81,68 +88,68 @@
   <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="mbox" tabindex="-1"><button class="mx" id="mClose">✕</button><div id="mBody"></div></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
 </div>
-<script src="data.js?v=240"></script>
-<script src="setvi.js?v=240"></script>
-<script src="setfix.js?v=240"></script>
-<script src="world.js?v=240"></script>
-<script src="zones2.js?v=240"></script>
-<script src="js/som_hoason_data.js?v=240"></script>
-<script src="js/som_hoason.js?v=240"></script>
-<script src="sound.js?v=240"></script>
-<script src="fx.js?v=240"></script>
-<script src="jmo.js?v=240"></script>
-<script src="jmo2.js?v=240"></script>
-<script src="js/core.js?v=240"></script>
-<script src="js/mapobs.js?v=240"></script>
-<script src="js/stats.js?v=240"></script>
-<script src="js/vocong.js?v=240"></script>
-<script src="js/skillsys.js?v=240"></script>
-<script src="js/kytran.js?v=240"></script>
-<script src="js/loot.js?v=240"></script>
-<script src="rdata.js?v=240"></script>
-<script src="js/sets.js?v=240"></script>
-<script src="js/recipes.js?v=240"></script>
-<script src="js/combat.js?v=240"></script>
-<script src="js/field.js?v=240"></script>
-<script src="js/ride.js?v=240"></script>
-<script src="js/save.js?v=240"></script>
-<script src="js/render.js?v=240"></script>
-<script src="js/som_anim.js?v=240"></script>
-<script src="js/jxmis.js?v=240"></script>
-<script src="jxstate.js?v=240"></script>
-<script src="fx2.js?v=240"></script>
-<script src="fx3.js?v=240"></script>
-<script src="js/skillfx.js?v=240"></script>
-<script src="js/look.js?v=240"></script>
-<script src="js/jxparts.js?v=240"></script>
-<script src="js/audio.js?v=240"></script>
-<script src="js/ui.js?v=240"></script>
-<script src="js/control.js?v=240"></script>
-<script src="js/shop.js?v=240"></script>
-<script src="js/potsel.js?v=240"></script>
-<script src="js/rewards.js?v=240"></script>
-<script src="js/title.js?v=240"></script>
-<script src="js/records.js?v=240"></script>
-<script src="js/horse.js?v=240"></script>
-<script src="js/thanma.js?v=240"></script>
-<script src="js/dungeon.js?v=240"></script>
-<script src="js/giangho.js?v=240"></script>
-<script src="js/forge.js?v=240"></script>
-<script src="js/epdo.js?v=240"></script>
-<script src="js/thuyen.js?v=240"></script>
-<script src="js/mode.js?v=240"></script>
-<script src="js/tabs2.js?v=240"></script>
-<script src="js/auto.js?v=240"></script>
-<script src="js/guide.js?v=240"></script>
-<script src="js/stash.js?v=240"></script>
-<script src="js/donkho.js?v=240"></script>
-<script src="js/name.js?v=240"></script>
-<script src="js/chatcfg.js?v=240"></script>
-<script src="js/chat.js?v=240"></script>
-<script src="js/net.js?v=240"></script>
-<script src="js/ui20.js?v=240"></script>
-<script src="js/ui20win.js?v=240"></script>
-<script src="js/admin.js?v=240"></script>
-<script src="js/main.js?v=240"></script>
+<script src="data.js?v=241"></script>
+<script src="setvi.js?v=241"></script>
+<script src="setfix.js?v=241"></script>
+<script src="world.js?v=241"></script>
+<script src="zones2.js?v=241"></script>
+<script src="js/som_hoason_data.js?v=241"></script>
+<script src="js/som_hoason.js?v=241"></script>
+<script src="sound.js?v=241"></script>
+<script src="fx.js?v=241"></script>
+<script src="jmo.js?v=241"></script>
+<script src="jmo2.js?v=241"></script>
+<script src="js/core.js?v=241"></script>
+<script src="js/mapobs.js?v=241"></script>
+<script src="js/stats.js?v=241"></script>
+<script src="js/vocong.js?v=241"></script>
+<script src="js/skillsys.js?v=241"></script>
+<script src="js/kytran.js?v=241"></script>
+<script src="js/loot.js?v=241"></script>
+<script src="rdata.js?v=241"></script>
+<script src="js/sets.js?v=241"></script>
+<script src="js/recipes.js?v=241"></script>
+<script src="js/combat.js?v=241"></script>
+<script src="js/field.js?v=241"></script>
+<script src="js/ride.js?v=241"></script>
+<script src="js/save.js?v=241"></script>
+<script src="js/render.js?v=241"></script>
+<script src="js/som_anim.js?v=241"></script>
+<script src="js/jxmis.js?v=241"></script>
+<script src="jxstate.js?v=241"></script>
+<script src="fx2.js?v=241"></script>
+<script src="fx3.js?v=241"></script>
+<script src="js/skillfx.js?v=241"></script>
+<script src="js/look.js?v=241"></script>
+<script src="js/jxparts.js?v=241"></script>
+<script src="js/audio.js?v=241"></script>
+<script src="js/ui.js?v=241"></script>
+<script src="js/control.js?v=241"></script>
+<script src="js/shop.js?v=241"></script>
+<script src="js/potsel.js?v=241"></script>
+<script src="js/rewards.js?v=241"></script>
+<script src="js/title.js?v=241"></script>
+<script src="js/records.js?v=241"></script>
+<script src="js/horse.js?v=241"></script>
+<script src="js/thanma.js?v=241"></script>
+<script src="js/dungeon.js?v=241"></script>
+<script src="js/giangho.js?v=241"></script>
+<script src="js/forge.js?v=241"></script>
+<script src="js/epdo.js?v=241"></script>
+<script src="js/thuyen.js?v=241"></script>
+<script src="js/mode.js?v=241"></script>
+<script src="js/tabs2.js?v=241"></script>
+<script src="js/auto.js?v=241"></script>
+<script src="js/guide.js?v=241"></script>
+<script src="js/stash.js?v=241"></script>
+<script src="js/donkho.js?v=241"></script>
+<script src="js/name.js?v=241"></script>
+<script src="js/chatcfg.js?v=241"></script>
+<script src="js/chat.js?v=241"></script>
+<script src="js/net.js?v=241"></script>
+<script src="js/ui20.js?v=241"></script>
+<script src="js/ui20win.js?v=241"></script>
+<script src="js/admin.js?v=241"></script>
+<script src="js/main.js?v=241"></script>
 </body>
 </html>

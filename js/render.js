@@ -3,7 +3,36 @@
 let CV, CX, DPR = 1;
 const MON_SCALE = 1.35, HERO_SCALE = 1.35; // bang hoat anh xuat o 0.6 kich thuoc goc; quai cung ti le voi nhan vat nhu JX1
 const IMG = {};
-function img(src) { if (!src) return null; let i = IMG[src]; if (!i) { i = new Image(); i.src = src; IMG[src] = i; } return i; }
+function img(src) {
+  if (!src) return null;
+  let i = IMG[src];
+  if (!i) {
+    i = new Image();
+    i.decoding = 'async';
+    i.src = src;
+    IMG[src] = i;
+  }
+  return i;
+}
+/* doi anh nen san sang (decode) — dung cho loading map */
+function imgReady(src, onProg) {
+  const im = img(src);
+  if (!im) return Promise.resolve(null);
+  if (im.complete && im.naturalWidth) {
+    if (onProg) onProg(1);
+    return im.decode ? im.decode().then(() => im).catch(() => im) : Promise.resolve(im);
+  }
+  return new Promise(resolve => {
+    let done = false;
+    const fin = () => { if (done) return; done = true; if (onProg) onProg(1); resolve(im); };
+    im.addEventListener('load', () => {
+      if (im.decode) im.decode().then(fin).catch(fin);
+      else fin();
+    }, { once: true });
+    im.addEventListener('error', fin, { once: true });
+    if (onProg) onProg(0.15);
+  });
+}
 function addText(x, y, t, color, size = 12) { const max = S.lowFx ? 20 : 60; if (R.quiet || R.txt.length > max) return; R.txt.push({ x, y, t, color, size, life: S.lowFx ? 0.6 : 0.9 }); }
 function burst(x, y, color) { if (R.quiet) return; R.fx.push({ k: 'ring', x, y, color, life: 0.45, max: 0.45 }); }
 function fxLine(a, b, atk) {
@@ -98,7 +127,8 @@ const isMobileUI = () => !(typeof isDesktopLandscape === 'function' && isDesktop
 const uiScale = () => document.body.classList.contains('mob') ? UI_SCALE_MOBILE : 1;
 function resizeArena() {
   const b = $('#battle'), box = { width: b.offsetWidth, height: b.offsetHeight };
-  DPR = Math.min(2, window.devicePixelRatio || 1) * uiScale();
+  // gioi han DPR de bot lag GPU tren man hinh mat do cao
+  DPR = Math.min(uiPrefs && uiPrefs().saver ? 1 : 1.5, window.devicePixelRatio || 1) * uiScale();
   CV.width = Math.round(box.width * DPR); CV.height = Math.round(box.height * DPR);
   AR.w = box.width; AR.h = box.height; AR.top = 58; AR.bot = box.height - 12;   // khung nhin (man hinh)
   snapCamera();
@@ -115,11 +145,13 @@ function drawTiledBg(c, bg) {
   if (OBS.g) {
     // chi ve khung nhin — tranh blit ca anh 3584 moi frame (lag)
     const iw = bg.naturalWidth, ih = bg.naturalHeight;
-    const sx = Math.max(0, Math.floor(CAM.x) - 2);
-    const sy = Math.max(0, Math.floor(CAM.y) - 2);
-    const sw = Math.min(iw - sx, Math.ceil(AR.w) + 4);
-    const sh = Math.min(ih - sy, Math.ceil(AR.h) + 4);
-    if (sw > 0 && sh > 0) c.drawImage(bg, sx, sy, sw, sh, sx, sy, sw, sh);
+    const aw = Math.max(32, AR.w | 0), ah = Math.max(32, AR.h | 0);
+    const sx = Math.max(0, Math.min(iw - 1, (CAM.x | 0) - 2));
+    const sy = Math.max(0, Math.min(ih - 1, (CAM.y | 0) - 2));
+    const sw = Math.max(1, Math.min(iw - sx, aw + 4));
+    const sh = Math.max(1, Math.min(ih - sy, ah + 4));
+    try { c.drawImage(bg, sx, sy, sw, sh, sx, sy, sw, sh); }
+    catch (e) { c.drawImage(bg, 0, 0, WORLD.w, WORLD.h); }
     return;
   }
   const T = BG_TILE, i0 = Math.floor(CAM.x / T), i1 = Math.floor((CAM.x + AR.w) / T), j0 = Math.floor(CAM.y / T), j1 = Math.floor((CAM.y + AR.h) / T);
