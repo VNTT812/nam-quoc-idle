@@ -239,9 +239,27 @@ async function netAfterLogin() {
 }
 
 /* ---------- thu ---------- */
+async function netFetchMail() {
+  // Dong bo ten len chars truoc — RLS thu chi hien thu gui dung ten xep hang
+  if (NET.user && S && S.fac && typeof hasRealName === 'function' && hasRealName()) {
+    try { await netSyncChar(true); } catch (e) { /* van thu list */ }
+  }
+  try {
+    const r = await netCall(sb => sb.rpc('list_mail'));
+    return Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+  } catch (e) {
+    const r = await netCall(sb => sb.from('mail').select('*').order('id', { ascending: false }).limit(50));
+    return r.data || [];
+  }
+}
 async function netMailCount() {
   if (!NET.user) { NET.mailN = 0; netDot(); return; }
-  try { const r = await netCall(sb => sb.from('mail').select('id', { count: 'exact', head: true })); NET.mailN = r.count || 0; } catch (e) { /* bo qua */ }
+  try {
+    const list = await netFetchMail();
+    NET.mailN = list.length;
+  } catch (e) {
+    try { const r = await netCall(sb => sb.from('mail').select('id', { count: 'exact', head: true })); NET.mailN = r.count || 0; } catch (e2) { /* bo qua */ }
+  }
   netDot();
 }
 function netCleanItem(it) {
@@ -483,9 +501,11 @@ async function profileModal(name, back) {
 }
 
 async function netMailBody(el) {
-  const r = await netCall(sb => sb.from('mail').select('*').order('id', { ascending: false }).limit(50)), list = r.data || [];
+  let list = [];
+  try { list = await netFetchMail(); } catch (e) { el.innerHTML = `<p class="reqbad">${esc(e.message || e)}</p>`; return; }
   NET.mailN = list.length; netDot();
   const inv = S.fac ? S.inv.filter(it => !it.lock) : [];
+  const myName = (S && hasRealName() && S.name) ? S.name : '';
   const rowHtml = m => {
     const adm = !!(m.item && m.item.__admin);
     const label = netMailLabel(m);
@@ -500,8 +520,11 @@ async function netMailBody(el) {
         ${nameHtml}${m.gold > 0 ? ` <span class="cp">+${fmt(m.gold)} lượng</span>` : ''}${m.note ? `<br><small class="dim">${esc(m.note)}</small>` : ''}</span>
         <button class="btn sm" data-take="${m.id}" ${S.fac ? '' : 'disabled'}>Nhận</button></div>`;
   };
+  const emptyHint = myName
+    ? `<p class="dim small">Không có thư.<br>Tên nhận thư của bạn: <b class="cp">${esc(myName)}</b> — Admin phải gửi đúng tên này. Bấm <b>Đồng bộ tên</b> nếu vừa đổi tên.</p><div class="btnrow"><button class="btn sm" id="nmSync">Đồng bộ tên lên xếp hạng</button></div>`
+    : `<p class="dim small">Không có thư. Đặt tên nhân vật rồi mở lại Thư.</p>`;
   el.innerHTML = `<div class="card"><b>📥 Hộp thư</b> ${list.length ? `<button class="btn sm" id="nmAll">Nhận tất cả</button>` : ''}
-      ${list.map(rowHtml).join('') || '<p class="dim small">Không có thư.</p>'}</div>
+      ${list.map(rowHtml).join('') || emptyHint}</div>
     ${S.fac ? `<div class="card"><b>📤 Gửi thư</b> <small class="dim">từ ${esc(hasRealName() ? S.name : '(chưa đặt tên)')} · tối đa 30 thư / ngày</small>
       <div class="row">Gửi cho <input id="nmTo" maxlength="14" placeholder="Tên nhân vật" value="${esc(NET.mailTo || '')}"></div>
       <div class="row">Ngân lượng <input id="nmGold" type="number" min="0" placeholder="0"> <small class="dim">có ${fmt(S.gold)}</small></div>
@@ -516,6 +539,7 @@ async function netMailBody(el) {
   });
   el.querySelectorAll('[data-take]').forEach(b => b.onclick = () => busy(b, () => netClaim(list.find(x => x.id === +b.dataset.take)), p => { toast('Đã nhận: ' + p.join(', ')); refresh(); netModal('mail'); }));
   const all = $('#nmAll'); if (all) all.onclick = () => busy(all, async () => { let n = 0; for (const m of list) { try { await netClaim(m, false); n++; } catch (e) { toast(e.message); break; } } return n; }, n => { toast(`Đã nhận ${n} thư`); refresh(); netModal('mail'); });
+  const syn = $('#nmSync'); if (syn) syn.onclick = () => busy(syn, () => netSyncChar(false), () => { toast('Đã đồng bộ tên: ' + (S.name || '')); netModal('mail'); });
   if (!S.fac) return;
   const keep = () => { NET.mailTo = $('#nmTo').value; };
   el.querySelectorAll('#nmInv [data-uid]').forEach(b => b.onclick = () => { keep(); NET.sel = NET.sel === +b.dataset.uid ? null : +b.dataset.uid; netModal('mail'); });

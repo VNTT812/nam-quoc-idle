@@ -243,30 +243,46 @@ async function adminFindChar(name) {
   throw new Error('Không tìm thấy «' + name + '» (họ cần đặt tên + vào xếp hạng một lần)');
 }
 
-/** Gửi quà Admin qua thư. Đồ = thư gift thường (mọi bản nhận được); cấp/điểm/KNB = gói __admin. */
+/** Gui mail admin: uu tien RPC admin_send_mail (SQL MAIL_FIX), fallback insert. */
+async function adminSendMailRow(to, item, kind, note, from) {
+  try {
+    await netCall(sb => sb.rpc('admin_send_mail', {
+      p_to: to, p_item: item, p_gold: 0, p_note: note || '', p_kind: kind || 'gift', p_from: from || 'Admin'
+    }));
+    return 'rpc';
+  } catch (e) {
+    const msg = (e && e.message) || '';
+    if (/Could not find the function|admin_send_mail|schema cache/i.test(msg)) {
+      await netCall(sb => sb.from('mail').insert({
+        to_name: to, from_name: from || 'Admin', from_owner: NET.user.id,
+        kind: kind || 'gift', item, gold: 0, note: String(note || '').slice(0, 100)
+      }));
+      return 'insert';
+    }
+    throw e;
+  }
+}
+
+/** Gửi quà Admin qua thư. Đồ = gift; cấp/điểm/KNB = __admin. */
 async function adminGrantPlayer(opts) {
   if (!isAdmin()) throw new Error('Chỉ tài khoản admin');
   if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
   const to = String((opts && opts.to) || '').trim();
   const ch = await adminFindChar(to);
-  if (typeof netNeedChar === 'function') await netNeedChar();
+  // Khong bat buoc netNeedChar — tranh loi ten admin chan viec gui
+  try { if (typeof netSyncChar === 'function' && S && S.fac && hasRealName()) await netSyncChar(true); } catch (e) { /* bo qua */ }
   const note = String(opts.note || 'Quà từ Admin').slice(0, 100);
   const from = (S && typeof hasRealName === 'function' && hasRealName() && S.name) ? S.name : 'Admin';
   const labels = [];
   let sent = 0;
 
-  // 1) Do: gui nhu gift thuong — client cu/moi deu nhan duoc (khong boc __admin)
   if (opts.gear && Array.isArray(opts.gear.base)) {
     const g = JSON.parse(JSON.stringify(opts.gear));
     delete g.uid; delete g.lock;
-    await netCall(sb => sb.from('mail').insert({
-      to_name: ch.name, from_name: from, from_owner: NET.user.id,
-      kind: 'gift', item: g, gold: 0, note
-    }));
+    await adminSendMailRow(ch.name, g, 'gift', note, from);
     labels.push(g.n || 'đồ'); sent++;
   }
 
-  // 2) Cap / diem / KNB: goi __admin + vo hien thi (base/mag rong) de khong vo UI thu
   const payload = { __admin: 1, n: 'Quà Admin', base: [], mag: [], r: 5, d: 99, lvl: 1 };
   let hasStat = false;
   if (opts.lvl != null && opts.lvl !== '') {
@@ -282,17 +298,14 @@ async function adminGrantPlayer(opts) {
   if (opts.knb > 0) { payload.knb = Math.max(0, Math.floor(+opts.knb) || 0); hasStat = true; }
   if (hasStat) {
     payload.n = 'Quà Admin: ' + (typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp / điểm');
-    await netCall(sb => sb.from('mail').insert({
-      to_name: ch.name, from_name: from, from_owner: NET.user.id,
-      kind: 'admin', item: payload, gold: 0, note
-    }));
+    await adminSendMailRow(ch.name, payload, 'admin', note, from);
     labels.push(typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp/điểm');
     sent++;
   }
   if (!sent) throw new Error('Chọn cấp, điểm, KNB hoặc đồ để cấp');
   const label = labels.join(' · ');
-  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)} — họ mở 🌐 Thư → Nhận`);
-  toast('Đã gửi tới ' + ch.name + ' · bảo họ mở Thư → Nhận');
+  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)} — họ mở 🌐 Thư → Nhận (đúng tên <b>${esc(ch.name)}</b>)`);
+  toast('Đã gửi tới «' + ch.name + '» — bảo họ Ctrl+F5 → 🌐 Thư → Nhận');
   return { char: ch, label, payload: hasStat ? payload : null };
 }
 
