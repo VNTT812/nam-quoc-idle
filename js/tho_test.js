@@ -130,9 +130,8 @@
     const applyHero = (facKey, fallbackSrc) => {
       const h = VC && VC.heroes && VC.heroes[facKey];
       if (h) {
-        /* Sprite Kiếm Hiệp trẻ + sheet nhiều frame (idle/run/at…) */
-        const anim = h.anim || h.animKh;
-        W.hero[facKey] = { img: h.img, sz: h.sz.slice(), anim };
+        /* Sheet 8 hướng (tay/chân chuyển như NV gốc) — không dùng pose đứng 1 khung */
+        W.hero[facKey] = { img: h.img, sz: (h.sz || []).slice(), anim: h.anim };
       } else if (W.hero[fallbackSrc]) {
         W.hero[facKey] = deep(W.hero[fallbackSrc]);
       }
