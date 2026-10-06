@@ -72,6 +72,38 @@ function mpPackEnemy(e, p) {
   };
 }
 
+/** Goi nhe vi tri quai dang song — 5Hz, chi mid/x/y/hp (khach bam theo host). */
+function mpSendEpos() {
+  if (!mpIsHost() || !MP.ch || MP.applying) return;
+  const list = [];
+  for (const e of (R.enemies || [])) {
+    if (!e || e.dead || !e.mid || !(e.hp > 0)) continue;
+    if (e.goldBoss || e.sat || e.satG) continue;
+    list.push([e.mid, Math.round(e.x), Math.round(e.y), Math.max(0, Math.round(e.hp))]);
+    if (list.length >= 40) break;
+  }
+  if (!list.length) return;
+  mpSend('epos', { host: mpCid(), e: list });
+}
+function mpOnEpos(p) {
+  if (!p || !Array.isArray(p.e) || mpIsHost()) return;
+  if (p.host && MP.host && p.host !== MP.host && p.host > MP.host) return;
+  MP.applying = true;
+  try {
+    for (const row of p.e) {
+      if (!row || !row[0]) continue;
+      const mid = row[0], x = +row[1], y = +row[2], hp = row[3] != null ? +row[3] : null;
+      const e = R.enemies.find(z => z && z.mid === mid && !z.dead);
+      if (!e) continue;
+      const d = Math.hypot(x - e.x, y - e.y);
+      if (d > 36) { e.x = x; e.y = y; }
+      else if (d > 4) { e.x += (x - e.x) * 0.7; e.y += (y - e.y) * 0.7; }
+      if (hp != null && hp < e.hp) e.hp = hp;
+      e.mpRemote = true;
+    }
+  } finally { MP.applying = false; }
+}
+
 function mpSendField(force) {
   const f = R.field; if (!f || !mpIsHost()) return;
   if (!force && Date.now() - (MP.lastFieldSend || 0) < 2000) return;
@@ -578,6 +610,7 @@ async function mpJoin(z) {
       if (payload.host && MP.host && payload.host !== MP.host && payload.host > MP.host) return;
       mpApplyField(payload); MP.waitHost = 0; mpUi();
     })
+    .on('broadcast', { event: 'epos' }, ({ payload }) => { if (MP.ch === ch) mpOnEpos(payload); })
     .on('broadcast', { event: 'spawn' }, ({ payload }) => { if (MP.ch === ch) mpOnSpawn(payload); })
     .on('broadcast', { event: 'hit' }, ({ payload }) => { if (MP.ch === ch) mpOnHit(payload); })
     .on('broadcast', { event: 'die' }, ({ payload }) => { if (MP.ch === ch) mpOnDie(payload); })
