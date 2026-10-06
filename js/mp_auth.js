@@ -81,7 +81,7 @@ function mpaApplySnap(msg) {
     if (!row || !row.cid || row.cid === my) continue;
     const cid = String(row.cid);
     live.add(cid);
-    // Auth render dung dead-reckon (tx/vx + _recvAt) — khong can hist Hermite
+    // Auth render: ahist Hermite tren serverT (xem mpAuthGoal)
     let p = MP.peers[cid];
     if (!p) {
       if (typeof mpUpsertPeer === 'function') {
@@ -118,14 +118,34 @@ function mpaApplySnap(msg) {
       const spd = Math.hypot(vx, vy);
       if (spd > 300) { const k = 300 / spd; vx *= k; vy *= k; }
       if (spd < 6) { vx = 0; vy = 0; }
-      p.vx = p.vx != null ? p.vx * 0.35 + vx * 0.65 : vx;
-      p.vy = p.vy != null ? p.vy * 0.35 + vy * 0.65 : vy;
+      // EMA nhe — uu tien mau moi (bot lag khi cua)
+      p.vx = p.vx != null ? p.vx * 0.2 + vx * 0.8 : vx;
+      p.vy = p.vy != null ? p.vy * 0.2 + vy * 0.8 : vy;
       p.tx = tx; p.ty = ty;
       p._recvAt = now;
       p.seq = tick;
-      // snap render neu lech xa (vd vua thoat clamp 2000 sai) — het đứng frame cu
+      // Neo ahist theo serverT — deu nhip, khong warp khi tunnel burst
+      const st = Number.isFinite(+msg.serverT) ? +msg.serverT : now;
+      const off = now - st;
+      if (p.aClock == null) p.aClock = off;
+      else if (off < p.aClock) p.aClock = p.aClock * 0.65 + off * 0.35;
+      else p.aClock = p.aClock * 0.94 + off * 0.06;
+      if (!p.ahist) p.ahist = [];
+      const last = p.ahist[p.ahist.length - 1];
+      // bunched / duplicate tick: ghi de mau cu trong ~half-tick
+      if (!last || st - last.t > 12) {
+        p.ahist.push({ t: st, x: tx, y: ty, vx: p.vx, vy: p.vy });
+        while (p.ahist.length > MP_AUTH_HIST) p.ahist.shift();
+      } else {
+        last.x = tx; last.y = ty; last.vx = p.vx; last.vy = p.vy; last.t = st;
+      }
+      // snap render neu lech xa (vd vua thoat clamp sai) — het đứng frame cu
       if (p.rx == null) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
-      else if (Math.hypot(tx - p.rx, ty - p.ry) > 220) { p.rx = tx; p.ry = ty; p.x = tx; p.y = ty; }
+      else if (Math.hypot(tx - p.rx, ty - p.ry) > 220) {
+        p.rx = tx; p.ry = ty; p.x = tx; p.y = ty;
+        p.ahist = [{ t: st, x: tx, y: ty, vx: p.vx, vy: p.vy }];
+        p.aClock = off;
+      }
     }
     p.seen = now;
   }
@@ -200,7 +220,7 @@ function mpaSendInput(dt) {
   if (!MPA.ws || MPA.ws.readyState !== 1 || MPA.state !== 'ok') return;
   if (typeof fieldMode === 'function' && (!fieldMode() || R.town || R.dg || R.tower)) return;
   MPA.sendT = (MPA.sendT || 0) + dt;
-  if (MPA.sendT < 0.033) return; // 30Hz khop server tick
+  if (MPA.sendT < 0.025) return; // 40Hz — muot hon 30Hz khi cua/doi huong
   MPA.sendT = 0;
   const vel = typeof mpLocalVel === 'function' ? mpLocalVel() : { vx: 0, vy: 0 };
   MPA.seq++;

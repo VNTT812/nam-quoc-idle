@@ -11,8 +11,8 @@ const MP = {
 /* Pos ~30Hz khi chay. Buffer render ~90–110ms (2 snap @20Hz) — uu tien muot, tranh dich chuyen. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 1, MP_WAIT = 1600, MP_PEER_TTL = 45000;
 const MP_SNAP = 160, MP_HARD = 1400, MP_DELAY = 100, MP_DELAY_IDLE = 120, MP_HIST = 48, MP_EXTRAP = 0.08, MP_MAX_SPD = 300;
-/* Auth peer: delay thap + extrap dai — bot lech / danh khong khi */
-const MP_AUTH_DELAY = 0.05, MP_AUTH_EXTRAP = 0.45, MP_AUTH_BLEND = 16;
+/* Auth: Hermite tren serverT (buffer ~70ms @40Hz ≈ 3 snap) — muot, it lag */
+const MP_AUTH_DELAY = 0.07, MP_AUTH_EXTRAP = 0.18, MP_AUTH_BLEND = 28, MP_AUTH_HIST = 32;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -687,15 +687,47 @@ function mpInit() {
 function mpAuthOn() {
   return typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok';
 }
-/* Auth: dead-reckon tu snap moi nhat + extrap dai — het khựng khi jitter/burst. */
+/* Auth: Hermite tren truc serverT (aClock) — het warping khi tunnel jitter. */
 function mpAuthGoal(p, now) {
-  if (p.tx == null) return { x: p.x || 0, y: p.y || 0 };
-  const recv = p._recvAt || now;
-  const age = (now - recv) / 1000 - MP_AUTH_DELAY;
-  const t = Math.max(0, Math.min(MP_AUTH_EXTRAP, age));
-  const vx = p.vx || 0, vy = p.vy || 0;
-  if (Math.hypot(vx, vy) < 8) return { x: p.tx, y: p.ty };
-  return { x: p.tx + vx * t, y: p.ty + vy * t };
+  const h = p.ahist;
+  if (!h || !h.length) {
+    if (p.tx == null) return { x: p.x || 0, y: p.y || 0 };
+    return { x: p.tx, y: p.ty };
+  }
+  const t = now - (p.aClock || 0) - MP_AUTH_DELAY * 1000;
+  if (h.length === 1) {
+    const s = h[0];
+    const age = Math.max(0, Math.min(MP_AUTH_EXTRAP, (t - s.t) / 1000));
+    return { x: s.x + (s.vx || 0) * age, y: s.y + (s.vy || 0) * age };
+  }
+  if (t <= h[0].t) return { x: h[0].x, y: h[0].y };
+  const last = h[h.length - 1];
+  if (t >= last.t) {
+    const age = Math.min(MP_AUTH_EXTRAP, Math.max(0, (t - last.t) / 1000));
+    const spd = Math.hypot(last.vx || 0, last.vy || 0);
+    if (spd < 8) return { x: last.x, y: last.y };
+    return { x: last.x + (last.vx || 0) * age, y: last.y + (last.vy || 0) * age };
+  }
+  for (let i = 1; i < h.length; i++) {
+    if (t <= h[i].t) {
+      const a = h[i - 1], b = h[i];
+      const span = Math.max(1, b.t - a.t);
+      let u = (t - a.t) / span;
+      u = Math.max(0, Math.min(1, u));
+      // Hermite nhe — cua muot, it overshoot (0.45)
+      const dtSec = span / 1000;
+      const m0x = (a.vx || 0) * dtSec * 0.45, m0y = (a.vy || 0) * dtSec * 0.45;
+      const m1x = (b.vx || 0) * dtSec * 0.45, m1y = (b.vy || 0) * dtSec * 0.45;
+      const u2 = u * u, u3 = u2 * u;
+      const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u;
+      const h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+      return {
+        x: h00 * a.x + h10 * m0x + h01 * b.x + h11 * m1x,
+        y: h00 * a.y + h10 * m0y + h01 * b.y + h11 * m1y
+      };
+    }
+  }
+  return { x: last.x, y: last.y };
 }
 /* Noi suy Supabase: buffer ~90ms — Hermite (chi dung khi khong auth). */
 function mpInterpAt(p, now) {
@@ -743,19 +775,15 @@ function othSmoothRender(dt) {
     const p = MP.peers[id];
     if (now - (p.seen || 0) > MP_PEER_TTL) { delete MP.peers[id]; continue; }
     let goal = auth ? mpAuthGoal(p, now) : mpInterpAt(p, now);
-    // Dang danh: keo nhe ve quai gan nhat (het hinh danh khong khi do lech quai/peer)
-    if ((p.act === 'at' || p.act === 'hurt') && typeof R !== 'undefined' && R.enemies) {
-      let best = null, bestD = 160;
+    // Chi xoay mat ve quai khi danh — KHONG keo toa do (keo = giat)
+    if (p.act === 'at' && typeof R !== 'undefined' && R.enemies) {
+      let best = null, bestD = 120;
       for (const e of R.enemies) {
         if (!e || e.dead || !(e.hp > 0)) continue;
         const d = Math.hypot(e.x - goal.x, e.y - goal.y);
         if (d < bestD) { bestD = d; best = e; }
       }
-      if (best) {
-        const pull = p.act === 'at' ? 0.35 : 0.15;
-        goal = { x: goal.x + (best.x - goal.x) * pull, y: goal.y + (best.y - goal.y) * pull };
-        p.face = best.x >= goal.x ? 1 : -1;
-      }
+      if (best) p.face = best.x >= goal.x ? 1 : -1;
     }
     if (p.rx == null) { p.rx = goal.x; p.ry = goal.y; }
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
@@ -763,8 +791,11 @@ function othSmoothRender(dt) {
     if (dist > MP_HARD) {
       p.rx = goal.x; p.ry = goal.y;
     } else if (auth) {
-      if (dist > 0.04) {
-        const rate = dist > 120 ? MP_AUTH_BLEND + 10 : dist > 48 ? MP_AUTH_BLEND + 4 : MP_AUTH_BLEND;
+      // Hermite da muot: stick sat goal — dist nho → gan snap, xa → blend nhanh
+      if (dist <= 1.2) {
+        p.rx = goal.x; p.ry = goal.y;
+      } else if (dist > 0.03) {
+        const rate = dist > 64 ? MP_AUTH_BLEND + 8 : dist > 20 ? MP_AUTH_BLEND + 4 : MP_AUTH_BLEND;
         const a = 1 - Math.exp(-dt * rate);
         p.rx += (goal.x - p.rx) * a;
         p.ry += (goal.y - p.ry) * a;

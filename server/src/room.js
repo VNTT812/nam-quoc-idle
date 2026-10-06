@@ -2,12 +2,12 @@
  * Mot phong = 1 map zone.
  * Vi tri: client gui x/y (kinematic), server validate + relay — muot hon tich phan vx thuan.
  */
-const TICK_HZ = 30;
+const TICK_HZ = 40;           // khop client 40Hz — snap day, peer muot hon
 const TICK_MS = 1000 / TICK_HZ;
 const MAX_SPD = 280;          // px/s
 const MAX_PEERS = 8;
-const SNAP_META_EVERY = 15;   // ~0.5s kem name/fac/jx
-const COAST_AFTER_MS = 55;    // het goi input: coast theo vx
+const SNAP_META_EVERY = 20;   // ~0.5s kem name/fac/jx
+const COAST_AFTER_MS = 40;    // het goi input: coast theo vx (40Hz ~25ms)
 const STOP_AFTER_MS = 900;    // het tin hieu lau: dung
 /* Map client WORLD = 3072x3072 — TRUOC DAY clamp 2000x1600 → peer dinh mép, nhìn đứng yên */
 const MAP_MIN = 20, MAP_MAX_X = 3200, MAP_MAX_Y = 3200;
@@ -102,8 +102,8 @@ export class Room {
       const tx = +msg.x, ty = +msg.y;
       if (Number.isFinite(tx) && Number.isFinite(ty)) {
         const dist = Math.hypot(tx - p.x, ty - p.y);
-        // Chap nhan trong ~0.5s di chuyen max — burst tunnel khong keo lech manh
-        const maxStep = Math.max(MAX_SPD * 0.5 + 40, MAX_SPD * dtIn * 2.5 + 48);
+        // Chap nhan trong ~0.7s di chuyen — bot keo lech khi tunnel jitter
+        const maxStep = Math.max(MAX_SPD * 0.7 + 60, MAX_SPD * dtIn * 3 + 64);
         if (dist <= maxStep) {
           p.x = tx; p.y = ty;
         } else {
