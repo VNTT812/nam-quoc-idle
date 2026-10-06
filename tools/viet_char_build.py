@@ -251,31 +251,34 @@ def build_kh_anims(base: Image.Image, out_stem: str) -> dict:
             t = i / max(1, n - 1)
             kind = sp['kind']
             if kind == 'idle':
-                dy = int(round(math.sin(i / n * math.pi * 2) * 2))
-                rot = math.sin(i / n * math.pi * 2) * 1.2
-                scale = 1.0 + 0.012 * math.sin(i / n * math.pi * 2)
-                fr = transform_sprite(base, dy=dy, rot=rot, scale=scale)
+                dy = int(round(math.sin(i / n * math.pi * 2) * 5))
+                rot = math.sin(i / n * math.pi * 2) * 3.5
+                scale = 1.0 + 0.03 * math.sin(i / n * math.pi * 2)
+                shear = math.sin(i / n * math.pi * 2) * 0.03
+                fr = transform_sprite(base, dy=dy, rot=rot, scale=scale, shear=shear)
             elif kind == 'run':
-                dy = int(round(abs(math.sin(i / n * math.pi * 2)) * 4))
-                shear = math.sin(i / n * math.pi * 2) * 0.06
-                rot = math.sin(i / n * math.pi * 2) * 3
-                fr = transform_sprite(base, dy=-dy, shear=shear, rot=rot, scale=1.02)
+                dy = int(round(abs(math.sin(i / n * math.pi * 2)) * 8))
+                shear = math.sin(i / n * math.pi * 2) * 0.12
+                rot = math.sin(i / n * math.pi * 2) * 8
+                dx = int(round(math.sin(i / n * math.pi * 2) * 3))
+                fr = transform_sprite(base, dy=-dy, dx=dx, shear=shear, rot=rot, scale=1.04)
             elif kind == 'at':
                 # rút → đánh → thu
                 phase = math.sin(t * math.pi)
-                rot = -8 + phase * 22
-                dx = int(round(phase * 6))
-                shear = phase * 0.08
-                fr = transform_sprite(base, dx=dx, rot=rot, shear=shear, scale=1.0 + phase * 0.04)
+                rot = -14 + phase * 38
+                dx = int(round(phase * 12))
+                dy = int(round(-phase * 4))
+                shear = phase * 0.14
+                fr = transform_sprite(base, dx=dx, dy=dy, rot=rot, shear=shear, scale=1.0 + phase * 0.08)
             elif kind == 'hurt':
-                dx = int(round((i - n / 2) * 2))
-                rot = -6 + i * 3
-                fr = transform_sprite(base, dx=dx, rot=rot, scale=0.98)
+                dx = int(round((i - n / 2) * 4))
+                rot = -10 + i * 6
+                fr = transform_sprite(base, dx=dx, rot=rot, scale=0.96)
             else:  # die
-                rot = t * 70
-                dy = int(round(t * 10))
-                alpha = int(round(255 * (1 - t * 0.55)))
-                fr = transform_sprite(base, dy=dy, rot=rot, scale=1.0 - t * 0.08)
+                rot = t * 85
+                dy = int(round(t * 16))
+                alpha = int(round(255 * (1 - t * 0.6)))
+                fr = transform_sprite(base, dy=dy, rot=rot, scale=1.0 - t * 0.12)
                 # fade
                 arr = np.asarray(fr).copy()
                 arr[..., 3] = (arr[..., 3].astype(np.float32) * (alpha / 255.0)).astype(np.uint8)
