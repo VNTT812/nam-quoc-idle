@@ -598,9 +598,9 @@ function othDraw(c, p) {
   }
   const col = typeof campCol === 'function' ? campCol(p.fac) : (NAME_COL && NAME_COL.hero) || '#fff3c0';
   const top = py - (h ? Math.min(h, 90) * 0.9 : 52) - 4;
-  const fxId = p.titleId && typeof titleFxOf === 'function' ? titleFxOf(p.titleId) : (p.title === 'Thiên Hạ Đệ Nhất' ? 'thienha' : null);
+  const fxId = p.titleId && typeof titleFxOf === 'function' ? titleFxOf(p.titleId) : (p.title === 'Thiên Hạ Đệ Nhất' ? 'thienha' : (p.title === 'GameMaster' ? 'gm' : null));
   let sub = p.title ? `«${p.title}»` : '';
-  if (fxId && typeof drawTitleFx === 'function' && drawTitleFx(c, px, top - 10, fxId)) sub = '';
+  if (fxId && typeof drawTitleFx === 'function' && drawTitleFx(c, px, top - 10, fxId, p.title || '')) sub = '';
   label(px, top, `${p.name} · Lv${p.lvl || '?'}`, col, 11, p.life, '#6bcf6b', sub, p.titleCol || '');
 }
 

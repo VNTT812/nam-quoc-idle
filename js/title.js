@@ -58,24 +58,51 @@ const TITLES = [
 ];
 const TITLE_BY = Object.fromEntries(TITLES.map(t => [t[0], t]));
 const titleName = t => typeof t[1] === 'function' ? t[1]() : t[1];
-/* Banner sprite tren dau (JX1-style). frames>1 = sheet ngang (fw x fh moi frame). glow=1: aura noi bat (GM). */
+/* Mau chu tren banner theo bac */
+const TITLE_TXT = [
+  null,
+  { fill: '#f2ebe0', stroke: '#2a2418' },       // Thuong
+  { fill: '#c8e0ff', stroke: '#142848' },       // Hiem
+  { fill: '#e8c8ff', stroke: '#3a1848' },       // Quy
+  { fill: '#ffe29a', stroke: '#4a2808' },       // Truyen ky
+  { fill: '#ffd0b0', stroke: '#501810' },       // Chi ton
+  { fill: '#fff3c0', stroke: '#5a2808' }        // GM
+];
+/* Banner: moi danh hieu (tru GM) dung base anim + ve DUNG ten luc deo. GM = SPR rieng noi bat. */
+const TITLE_FX_BASE = { src: 'img/title/base.png', w: 158, h: 70, frames: 8, fps: 11, fw: 206, fh: 91, dyn: 1 };
 const TITLE_FX = {
-  thienha: { src: 'img/title/thienha.png', w: 156, h: 69, frames: 8, fps: 12, fw: 206, fh: 91 },
-  lv200: { src: 'img/title/vlct.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  cs5: { src: 'img/title/cs5.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  tower50: { src: 'img/title/tower50.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  k100000: { src: 'img/title/k100000.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  dt1000: { src: 'img/title/dt1000.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  setfull: { src: 'img/title/setfull.png', w: 156, h: 69, frames: 8, fps: 11, fw: 206, fh: 91 },
-  /* SPR GameMaster 254x174 x8 — lon nhat, glow manh */
-  gm: { src: 'img/title/gm.png', w: 210, h: 144, frames: 8, fps: 14, fw: 254, fh: 174, glow: 1 }
+  /* SPR GameMaster — lon nhat + glow */
+  gm: { src: 'img/title/gm.png', w: 210, h: 144, frames: 8, fps: 14, fw: 254, fh: 174, glow: 1 },
+  /* Thien Ha: sheet rieng (moi them) */
+  thienha: { src: 'img/title/thienha.png', w: 156, h: 69, frames: 8, fps: 12, fw: 206, fh: 91 }
 };
+for (const t of TITLES) {
+  if (TITLE_FX[t[0]]) continue; // gm / thienha giu nguyen
+  TITLE_FX[t[0]] = Object.assign({}, TITLE_FX_BASE, { tier: t[3] | 0 });
+}
 const titleFxOf = t => {
   const id = !t ? null : (typeof t === 'string' ? t : t[0]);
   return id && TITLE_FX[id] ? id : null;
 };
-/* Ve banner; tra ve chieu cao da dung (de chen ten). 0 = khong ve (fallback chu) */
-function drawTitleFx(c, x, yTop, id) {
+/* Ve chu danh hieu dung ten len banner (IBM Plex Mono — font game) */
+function drawTitleLabel(c, x, y, text, tier, scale) {
+  if (!text) return;
+  const col = TITLE_TXT[tier] || TITLE_TXT[5];
+  const size = Math.max(11, Math.min(15, Math.round(13 * (scale || 1))));
+  c.font = `bold ${size}px "IBM Plex Mono", monospace`;
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineJoin = 'round'; c.miterLimit = 2;
+  c.lineWidth = Math.max(3, Math.round(size * 0.28));
+  c.strokeStyle = col.stroke;
+  c.strokeText(text, x, y);
+  // highlight tren
+  const g = c.createLinearGradient(x, y - size * 0.55, x, y + size * 0.55);
+  g.addColorStop(0, '#fffef5'); g.addColorStop(0.45, col.fill); g.addColorStop(1, col.fill);
+  c.fillStyle = g;
+  c.fillText(text, x, y);
+}
+/* Ve banner; labelOpt = ten deo (peer / mon phai dong). Tra ve chieu cao da dung. */
+function drawTitleFx(c, x, yTop, id, labelOpt) {
   const fx = id && TITLE_FX[id]; if (!fx || !c) return 0;
   const im = typeof img === 'function' ? img(fx.src) : null;
   if (!im || !im.complete || !im.naturalWidth) return 0;
@@ -91,7 +118,6 @@ function drawTitleFx(c, x, yTop, id) {
   const dx = x - w / 2, dy = yTop - h + bob;
   c.save();
   if (glow) {
-    // halo ngoai — noi bat nhat game
     const g = c.createRadialGradient(x, yTop - h * 0.45, 4, x, yTop - h * 0.45, w * 0.62);
     g.addColorStop(0, 'rgba(255,220,120,0.45)');
     g.addColorStop(0.45, 'rgba(255,140,40,0.18)');
@@ -107,6 +133,14 @@ function drawTitleFx(c, x, yTop, id) {
   c.globalAlpha = glow ? 1 : 0.96;
   if (n > 1) c.drawImage(im, fi * fw, 0, fw, fh, dx, dy, w, h);
   else c.drawImage(im, dx, dy, w, h);
+  // chu dung ten danh hieu dang deo (tru sheet GM/thienha da co chu san)
+  if (fx.dyn) {
+    const row = TITLE_BY[id];
+    const label = (labelOpt != null && labelOpt !== '') ? String(labelOpt) : (row ? titleName(row) : '');
+    const tier = (fx.tier != null ? fx.tier : (row && row[3])) || 5;
+    // chu nam o vung giua banner
+    drawTitleLabel(c, x, dy + h * 0.48, label, tier, pulse);
+  }
   c.restore();
   return h + (glow ? 6 : 2);
 }
