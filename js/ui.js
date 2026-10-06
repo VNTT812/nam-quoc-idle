@@ -492,9 +492,12 @@ function slotMenu(confirmDel) {
     const ago = o.last ? new Date(o.last).toLocaleString('vi-VN') : '';
     if (confirmDel === i) return `<div class="slotrow del"><span><b>Xóa slot ${i + 1}?</b><small>${esc(f.n)} cấp ${o.lvl} sẽ mất vĩnh viễn</small></span><button class="btn red" data-del-yes="${i}">Xóa</button><button class="btn" data-del-no="1">Hủy</button></div>`;
     const locked = typeof thoTestGuardSlot === 'function' && !thoTestGuardSlot(o.fac);
-    return `<div class="slotrow${locked ? ' lock' : ''}"><img src="${esc((heroGfx(o.fac, o.sex) || {}).img || '')}" alt=""><span><b style="color:${SERIES_COL[f.series]}">${esc(o.name && o.name !== f.n ? o.name + ' · ' : '')}${esc(f.n)}</b><small>Cấp ${o.lvl} · ải ${o.stage}${ago ? ' · ' + esc(ago) : ''}${locked ? ' · chỉ admin' : ''}</small></span>${locked ? '<button class="btn" disabled>Khóa</button>' : '<button class="btn" data-play="' + i + '">Chơi</button>'}<button class="btn red" data-del="${i}">Xóa</button></div>`;
+    const awaitAdm = locked && window.__thoAwaitAdmin;
+    const lockLbl = awaitAdm ? 'Đang mở…' : 'Khóa';
+    const lockHint = awaitAdm ? ' · chờ đăng nhập admin' : (locked ? ' · chỉ admin' : '');
+    return `<div class="slotrow${locked ? ' lock' : ''}"><img src="${esc((heroGfx(o.fac, o.sex) || {}).img || '')}" alt=""><span><b style="color:${SERIES_COL[f.series]}">${esc(o.name && o.name !== f.n ? o.name + ' · ' : '')}${esc(f.n)}</b><small>Cấp ${o.lvl} · ải ${o.stage}${ago ? ' · ' + esc(ago) : ''}${lockHint}</small></span>${locked ? `<button class="btn" disabled>${lockLbl}</button>` : '<button class="btn" data-play="' + i + '">Chơi</button>'}<button class="btn red" data-del="${i}">Xóa</button></div>`;
   }).join('');
-  modal(`<h3>Chọn nhân vật</h3><p class="desc">Mỗi slot là một nhân vật riêng, lưu độc lập.</p><div class="slotlist">${rows}</div>${typeof netOn === 'function' && netOn() ? '' : '<div class="btnrow"><button class="btn" id="slotImp">Nạp từ file lưu (.jxsave)</button></div>'}`, () => {
+  modal(`<h3>Chọn nhân vật</h3><p class="desc">Mỗi slot là một nhân vật riêng, lưu độc lập.${window.__thoAwaitAdmin ? ' <span class="cp">Đang xác nhận tài khoản admin…</span>' : ''}</p><div class="slotlist">${rows}</div>${typeof netOn === 'function' && netOn() ? '' : '<div class="btnrow"><button class="btn" id="slotImp">Nạp từ file lưu (.jxsave)</button></div>'}`, () => {
     const sc = $('#slotCloud'); if (sc) sc.onclick = () => netModal('acc');
     const si = $('#slotImp'); if (si) si.onclick = () => pickSaveFile(() => slotMenu());
     document.querySelectorAll('#mBody [data-play]').forEach(b => b.onclick = () => { try { localStorage.setItem(SLOT_PTR, b.dataset.play); } catch (e) { /* bo qua */ } SAVE_LOCK = true; location.reload(); });

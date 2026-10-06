@@ -35,7 +35,8 @@ async function netClient() {
       if (typeof netThoAdminReady === 'function') setTimeout(() => { try { netThoAdminReady(); } catch (e) { /* bo qua */ } }, 0);
     } else if (ev === 'SIGNED_OUT') {
       const was = !!NET.user; NET.user = null;
-      if (typeof netAdminSticky === 'function') netAdminSticky(false);
+      /* Chi xoa sticky khi chu dong dang xuat — tranh INITIAL_SESSION/SIGNED_OUT thoang qua xoa quyen admin luc F5. */
+      if (NET.loggingOut && typeof netAdminSticky === 'function') netAdminSticky(false);
       if (typeof mpLeave === 'function') try { mpLeave(); } catch (e) { /* bo qua */ }
       if (was && !NET.loggingOut && S && S.fac) setTimeout(() => netRelogin(), 0);   // v194: phien het han giua chung -> bat dang nhap lai
     }
@@ -46,16 +47,23 @@ async function netClient() {
 /** Sau khi session admin restore: mo khoa phai Test bi khoa o F5. */
 function netThoAdminReady() {
   if (NET.user && netUname() === 'admin' && typeof netAdminSticky === 'function') netAdminSticky(true);
+  if (typeof isAdmin === 'function' && isAdmin() && typeof slotMenu === 'function') {
+    /* Mo khoa nut Chơi neu dang mo man chon NV (khong can doi reload). */
+    const m = $('#modal'), body = $('#mBody');
+    if (m && !m.classList.contains('hidden') && body && /Chọn nhân vật/.test(body.textContent || '') && /chỉ admin|Khóa/.test(body.textContent || '')) {
+      slotMenu();
+    }
+  }
   if (!window.__thoAwaitAdmin) return;
   if (typeof isAdmin === 'function' && isAdmin()) {
     window.__thoAwaitAdmin = false;
-    try { localStorage.setItem(SLOT_PTR, String(SLOT)); } catch (e) { /* bo qua */ }
+    try { localStorage.setItem(SLOT_PTR, String(typeof SLOT !== 'undefined' ? SLOT : 0)); } catch (e) { /* bo qua */ }
     location.reload();
     return;
   }
   if (NET.user && typeof isAdmin === 'function' && !isAdmin()) {
     window.__thoAwaitAdmin = false;
-    toast('Hệ Thổ★ / phái Test chỉ tài khoản admin');
+    toast('Hệ Thổ★ / phái Test chỉ tài khoản admin — đăng nhập đúng tên admin');
     if (typeof slotMenu === 'function') slotMenu();
   }
 }

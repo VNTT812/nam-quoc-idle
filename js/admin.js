@@ -4,15 +4,33 @@
    Cap cho nguoi khac: gui thu item.__admin (cap / diem / KNB / do) — ho nhan trong Thu. */
 'use strict';
 
-/** Sticky: F5 xong session Supabase chua kip restore — van choi duoc phai Test trong tab nay. */
+/** Sticky + doc session localStorage dong bo (F5: Supabase chua kip restore). */
 function netAdminSticky(on) {
-  try { if (on) sessionStorage.setItem('nqi_is_admin', '1'); else sessionStorage.removeItem('nqi_is_admin'); } catch (e) { /* private */ }
+  try {
+    if (on) { sessionStorage.setItem('nqi_is_admin', '1'); localStorage.setItem('nqi_is_admin', '1'); }
+    else { sessionStorage.removeItem('nqi_is_admin'); localStorage.removeItem('nqi_is_admin'); }
+  } catch (e) { /* private */ }
+}
+/** Doc email admin tu ban ghi Supabase / nho dang nhap — khong can await. */
+function netAdminHintSync() {
+  try {
+    if (sessionStorage.getItem('nqi_is_admin') === '1' || localStorage.getItem('nqi_is_admin') === '1') return true;
+    const rem = JSON.parse(localStorage.getItem('nqi_remember_login') || 'null');
+    if (rem && String(rem.u || '').toLowerCase() === 'admin') return true;
+    const auth = JSON.parse(localStorage.getItem('jxidle_auth') || 'null');
+    if (!auth) return false;
+    const email = (auth.user && auth.user.email)
+      || (auth.currentSession && auth.currentSession.user && auth.currentSession.user.email)
+      || (auth.session && auth.session.user && auth.session.user.email)
+      || '';
+    return /^admin@/i.test(String(email));
+  } catch (e) { return false; }
 }
 const isAdmin = () => {
   const u = typeof netUname === 'function' ? netUname() : '';
   if (u === 'admin') { netAdminSticky(true); return true; }
   if (u) { netAdminSticky(false); return false; }                             // da dang nhap TK khac
-  try { return sessionStorage.getItem('nqi_is_admin') === '1'; } catch (e) { return false; }
+  return netAdminHintSync();
 };
 
 function adminApply() {
