@@ -195,6 +195,8 @@ async function netAfterLogin() {
   }
   closeModal(true); toast('Đã đăng nhập: ' + netUname());
   netSyncChar(true).catch(() => {}); netCheckCloud().catch(() => {}); netMailCount();
+  if (typeof mpEnsure === 'function') try { mpEnsure(); } catch (e) { /* dong doi */ }
+  else if (typeof mpJoin === 'function') try { mpJoin(zoneOf(Math.min(S.stage, STAGES))); } catch (e) { /* bo qua */ }
 }
 
 /* ---------- thu ---------- */

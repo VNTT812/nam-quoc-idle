@@ -1,19 +1,24 @@
 /* ======================= DONG DOI BAN DO (Supabase Realtime beta) =======================
-   Cung instance map (kenh map:{zoneId}): presence vi tri nguoi choi, broadcast spawn/hit/die.
+   Cung instance map (kenh map:{zoneId}): presence + broadcast vi tri/spawn/hit/die.
    Luat beta: HP quai chung; drop + exp chi nguoi last-hit. Host = cid nho nhat (trong tai spawn).
    Chi bai luyen cong (field); pho ban / thap / thanh pho van solo. Toi da MP_MAX nguoi / map. */
 'use strict';
 const MP = {
   sb: null, ch: null, zoneId: null, peers: {}, host: '', online: 0, state: 'off',
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
-  seq: 0, uiT: 0, joinedAt: 0
+  seq: 0, uiT: 0, joinedAt: 0, ensureT: 0
 };
-const MP_MAX = 6, MP_POS = 0.12, MP_SYNC = 1.6, MP_WAIT = 1400;
-const mpCid = () => (typeof chatCid === 'function' ? chatCid() : 'anon');
+const MP_MAX = 6, MP_POS = 0.1, MP_SYNC = 1.6, MP_WAIT = 1400;
+/* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
+const mpCid = () => {
+  if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
+  return typeof chatCid === 'function' ? chatCid() : 'anon';
+};
 const mpActive = () => !!(MP.ch && MP.state === 'ok' && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower);
 const mpIsHost = () => !MP.host || MP.host === mpCid();
 const mpRoom = z => 'map:' + ((z && z.id) || 0);
-const mpName = () => String((S && hasRealName && hasRealName() ? S.name : (S && FAC[S.fac] && FAC[S.fac].n) || 'Vô danh')).slice(0, 16);
+const mpName = () => String((S && typeof hasRealName === 'function' && hasRealName() ? S.name : (S && FAC[S.fac] && FAC[S.fac].n) || 'Vô danh')).slice(0, 16);
+const mpCanPlay = () => !!(typeof netOn === 'function' && netOn() && NET.user && S && S.fac && typeof fieldMode === 'function' && fieldMode() && !R.town && !R.dg && !R.tower);
 
 function mpMid(p) {
   if (p && p.mid) return p.mid;
@@ -172,36 +177,63 @@ function mpElect() {
   mpUi();
 }
 
+function mpUpsertPeer(row) {
+  if (!row) return;
+  const k = String(row.cid || row.key || '');
+  if (!k || k === mpCid()) return;
+  const prev = MP.peers[k];
+  const tx = row.x != null ? +row.x : (prev ? prev.tx : 0);
+  const ty = row.y != null ? +row.y : (prev ? prev.ty : 0);
+  const was = !!prev;
+  MP.peers[k] = {
+    cid: k,
+    name: String(row.name || (prev && prev.name) || 'Võ lâm').slice(0, 16),
+    fac: row.fac || (prev && prev.fac) || '',
+    sex: row.sex != null ? (row.sex | 0) : (prev ? prev.sex | 0 : 0),
+    lvl: row.lvl != null ? (row.lvl | 0) : (prev ? prev.lvl | 0 : 0),
+    face: row.face != null ? (row.face >= 0 ? 1 : -1) : (prev ? prev.face : 1),
+    dir: row.dir != null ? (row.dir | 0) : (prev ? prev.dir | 0 : 0),
+    act: row.act || (prev && prev.act) || 'st',
+    actT: prev ? prev.actT || 0 : 0,
+    life: Math.max(0, Math.min(1, row.life != null ? +row.life : (prev ? prev.life : 1))),
+    x: prev ? prev.x : tx, y: prev ? prev.y : ty,
+    tx, ty, seen: Date.now(),
+    _px: prev ? prev._px : tx, _py: prev ? prev._py : ty
+  };
+  if (!was && typeof toast === 'function') toast('Đồng đội: ' + MP.peers[k].name + ' vào map');
+}
+
 function mpPresenceSync() {
   if (!MP.ch) return;
-  const st = MP.ch.presenceState() || {}, peers = {};
+  const st = MP.ch.presenceState() || {}, live = new Set();
   for (const k of Object.keys(st)) {
-    const row = (st[k] && st[k][0]) || {};
+    const row = Object.assign({}, (st[k] && st[k][0]) || {}, { cid: k });
+    live.add(k);
     if (k === mpCid()) continue;
-    const prev = MP.peers[k];
-    peers[k] = {
-      cid: k, name: String(row.name || 'Võ lâm').slice(0, 16), fac: row.fac || '', sex: row.sex | 0,
-      lvl: row.lvl | 0, face: row.face >= 0 ? 1 : -1,
-      dir: row.dir | 0, act: row.act || 'st', actT: prev ? prev.actT || 0 : 0,
-      life: Math.max(0, Math.min(1, +row.life || 1)),
-      x: prev ? prev.x : (+row.x || 0), y: prev ? prev.y : (+row.y || 0),
-      tx: +row.x || 0, ty: +row.y || 0, seen: Date.now(),
-      _px: prev ? prev._px : +row.x || 0, _py: prev ? prev._py : +row.y || 0
-    };
+    mpUpsertPeer(row);
   }
-  MP.peers = peers;
+  for (const k of Object.keys(MP.peers)) if (!live.has(k) && Date.now() - (MP.peers[k].seen || 0) > 12000) delete MP.peers[k];
   mpElect();
 }
 
+function mpOnPos(p) {
+  if (!p || p.cid === mpCid()) return;
+  mpUpsertPeer(p);
+  mpElect();
+}
+
+function mpPosPayload() {
+  return {
+    cid: mpCid(), name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
+    x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
+    dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? R.life / R.P.life : 1
+  };
+}
 function mpTrackNow() {
   if (!MP.ch || MP.state !== 'ok' || !S || !S.fac) return;
-  try {
-    MP.ch.track({
-      name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
-      x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1,
-      dir: H.dir | 0, act: H.act || 'st', life: R.P && R.P.life ? R.life / R.P.life : 1
-    });
-  } catch (e) { /* bo qua */ }
+  const p = mpPosPayload();
+  try { MP.ch.track(p); } catch (e) { /* bo qua */ }
+  mpSend('pos', p);   // backup: broadcast vi tri (presence doi khi cham / mat sync)
 }
 
 /* ---------- kenh map ---------- */
@@ -212,21 +244,24 @@ async function mpLeave() {
 }
 
 async function mpJoin(z) {
-  if (!z || !netOn || !netOn() || !NET.user || !S || !S.fac) { await mpLeave(); return; }
-  if (typeof fieldMode === 'function' && !fieldMode()) { await mpLeave(); return; }
+  z = z || (typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null);
+  if (!z || !mpCanPlay()) { if (!NET.user || !S || !S.fac) await mpLeave(); else if (!fieldMode() || R.town || R.dg || R.tower) await mpLeave(); return; }
   const rid = mpRoom(z);
   if (MP.ch && MP.zoneId === z.id && MP.state === 'ok') { mpTrackNow(); return; }
+  if (MP.joinBusy) return;
+  MP.joinBusy = true;
   mpDom();
-  MP.state = 'load'; MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; MP.fieldSnap = null; mpUi();
+  MP.state = 'load'; MP.zoneId = z.id; MP.joinedAt = Date.now(); MP.waitHost = Date.now() + MP_WAIT; MP.fieldSnap = null; MP.peers = {}; mpUi();
   try {
     if (!MP.sb) MP.sb = await netClient();
-  } catch (e) { MP.state = 'err'; mpUi(); return; }
+  } catch (e) { MP.state = 'err'; MP.joinBusy = false; mpUi(); return; }
   const old = MP.ch; MP.ch = null;
   if (old) { try { await MP.sb.removeChannel(old); } catch (e) { /* bo qua */ } }
-  const ch = MP.ch = MP.sb.channel(rid, { config: { presence: { key: mpCid() } } });
+  const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false }, presence: { key: mpCid() } } });
   ch.on('presence', { event: 'sync' }, () => { if (MP.ch === ch) mpPresenceSync(); })
     .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(); } })
     .on('presence', { event: 'leave' }, () => { if (MP.ch === ch) mpPresenceSync(); })
+    .on('broadcast', { event: 'pos' }, ({ payload }) => { if (MP.ch === ch) mpOnPos(payload); })
     .on('broadcast', { event: 'field' }, ({ payload }) => {
       if (MP.ch !== ch || !payload || payload.cid === mpCid()) return;
       if (payload.host && MP.host && payload.host !== MP.host && payload.host > MP.host) return;
@@ -239,25 +274,37 @@ async function mpJoin(z) {
     .subscribe(async st => {
       if (MP.ch !== ch) return;
       if (st === 'SUBSCRIBED') {
-        MP.state = 'ok'; MP.err = '';
-        try { await ch.track({ name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, x: Math.round(H.x), y: Math.round(H.y), face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: H.act || 'st', life: 1 }); } catch (e) { /* bo qua */ }
+        MP.state = 'ok'; MP.err = ''; MP.joinBusy = false;
+        try { await ch.track(mpPosPayload()); } catch (e) { /* bo qua */ }
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
+        mpSend('pos', mpPosPayload());
         if (mpIsHost() && R.field) mpSendField();
         mpUi();
+        if (typeof log === 'function') log(`<span class="dim">Đồng đội: phòng <b>${esc(rid)}</b> — cần cùng bản đồ (cùng id map).</span>`);
       } else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') {
-        MP.state = 'err'; mpUi();
-        clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (S && S.fac) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, 3000);
+        MP.state = 'err'; MP.joinBusy = false; mpUi();
+        clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, 3000);
       }
     });
+  setTimeout(() => { if (MP.joinBusy && MP.ch === ch) MP.joinBusy = false; }, 4000);
+}
+
+function mpEnsure() {
+  if (!mpCanPlay()) { mpUi(); return; }
+  if (MP.state === 'ok' && MP.ch && MP.zoneId === zoneOf(Math.min(S.stage, STAGES)).id) { mpTrackNow(); return; }
+  if (MP.state === 'load' || MP.joinBusy) return;
+  mpJoin(zoneOf(Math.min(S.stage, STAGES)));
 }
 
 function mpInit() {
   mpDom(); mpUi();
   if (!netOn || !netOn()) return;
-  const tryJoin = () => { if (NET.user && S && S.fac && fieldMode()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); };
-  setTimeout(tryJoin, 800);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && MP.state === 'ok') mpTrackNow(); });
+  setTimeout(mpEnsure, 500);
+  setTimeout(mpEnsure, 2000);
+  setTimeout(mpEnsure, 5000);
+  if (!MP.timer) MP.timer = setInterval(mpEnsure, 4000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) mpEnsure(); });
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
@@ -273,20 +320,35 @@ function othTick(dt) {
     MP.syncT = (MP.syncT || 0) + dt;
     if (MP.syncT >= MP_SYNC) { MP.syncT = 0; mpSendField(); }
   } else if (MP.waitHost && Date.now() > MP.waitHost && !MP.fieldSnap) {
-    MP.waitHost = 0; // timeout: tu choi nhu host neu khong ai gui field
+    MP.waitHost = 0;
     if (!R.field) fieldBuild();
     else mpSendField();
   }
   for (const p of Object.values(MP.peers)) {
-    const k = Math.min(1, dt * 8);
+    const k = Math.min(1, dt * 10);
     p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k;
     p.actT = (p.actT || 0) + dt;
-    if (Date.now() - (p.seen || 0) > 8000) delete MP.peers[p.cid];
+    if (Date.now() - (p.seen || 0) > 15000) delete MP.peers[p.cid];
   }
 }
 function othDraw(c, p) {
   if (!p) return;
+  // ngoai man hinh: ve mui ten mep khung nhin (de biet dong doi o dau)
+  const vx0 = CAM.x, vy0 = CAM.y, vx1 = CAM.x + AR.w, vy1 = CAM.y + AR.h;
+  const margin = 28;
+  if (p.x < vx0 - 40 || p.x > vx1 + 40 || p.y < vy0 - 40 || p.y > vy1 + 40) {
+    const cx = clamp(p.x, vx0 + margin, vx1 - margin), cy = clamp(p.y, vy0 + margin, vy1 - margin);
+    const col = typeof campCol === 'function' ? campCol(p.fac) : '#9fe0b0';
+    c.fillStyle = col; c.strokeStyle = '#000'; c.lineWidth = 2;
+    c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fill(); c.stroke();
+    c.font = '10px "IBM Plex Mono", monospace'; c.textAlign = 'center';
+    c.fillStyle = '#000'; c.fillText(p.name, cx + 1, cy - 11); c.fillStyle = col; c.fillText(p.name, cx, cy - 12);
+    return;
+  }
   c.fillStyle = '#0006'; c.beginPath(); c.ellipse(p.x, p.y, 14, 5, 0, 0, 7); c.fill();
+  // vong sang de de nhin dong doi
+  c.strokeStyle = typeof campCol === 'function' ? campCol(p.fac) : '#8fe0b8'; c.lineWidth = 2; c.globalAlpha = 0.85;
+  c.beginPath(); c.ellipse(p.x, p.y, 18, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1;
   const hw = typeof heroGfx === 'function' ? heroGfx(p.fac, p.sex) : null;
   const act = p.act === 'at' || p.act === 'hurt' || p.act === 'die' ? p.act : (Math.hypot(p.tx - p._px, p.ty - p._py) > 2 ? 'run' : 'st');
   let h = 0;
