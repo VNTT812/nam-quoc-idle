@@ -88,8 +88,7 @@ function fieldIdle(e, dt) {
   const wd = e.wx != null ? Math.hypot(e.wx - e.x, e.wy - e.y) : 0;
   e.moving = wd > 4; if (e.moving) {
     obsMove(e, e.x + (e.wx - e.x) / wd * Math.min(wd, e.spd * 0.4 * dt), e.y + (e.wy - e.y) / wd * Math.min(wd, e.spd * 0.4 * dt));
-    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, e.wx);
-    else { e.face = e.wx >= e.x ? 1 : -1; e.dir = dirOf(e.wx - e.x, e.wy - e.y); }
+    e.face = e.wx >= e.x ? 1 : -1; e.dir = dirOf(e.wx - e.x, e.wy - e.y);
   }
   return true;
 }

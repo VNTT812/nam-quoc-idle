@@ -58,7 +58,3 @@ Font `IBM Plex Mono` được CSS tham chiếu nhưng file `.woff2` trên Pages 
 Một số sheet ngựa (`img/jx/m/ma_hh_*`, `ma_ht_*`) và vài file mp3 võ công đặt tên tiếng Trung cũng không có trên server gốc. Game bỏ qua và dùng hình / tiếng dự phòng.
 
 Icon `img/p/shaolin.png` không có trên host. File hiện tại là bản sao của chân dung môn phái `img/pl/shaolin.png` để manifest không bị gãy.
-
-## Credit sprite
-
-Quái map Yên Tử (id 2) dùng sprite **Spell of Mastery** (NancyGold), giấy phép [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
