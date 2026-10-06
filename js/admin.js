@@ -243,23 +243,32 @@ async function adminFindChar(name) {
   throw new Error('Không tìm thấy «' + name + '» (họ cần đặt tên + vào xếp hạng một lần)');
 }
 
-/** Gui mail admin: uu tien RPC admin_send_mail (SQL MAIL_FIX), fallback insert. */
-async function adminSendMailRow(to, item, kind, note, from) {
+/** Gui mail admin: uu tien RPC admin_send_mail (SQL MAIL_FIX), fallback insert. Khong sync chars. */
+async function adminSendMailRow(to, item, kind, note) {
+  const from = 'Admin';
+  const row = {
+    to_name: to, from_name: from, from_owner: NET.user.id,
+    kind: kind || 'gift', item: item || null, gold: 0, note: String(note || '').slice(0, 100)
+  };
   try {
     await netCall(sb => sb.rpc('admin_send_mail', {
-      p_to: to, p_item: item, p_gold: 0, p_note: note || '', p_kind: kind || 'gift', p_from: from || 'Admin'
+      p_to: to, p_item: item, p_gold: 0, p_note: note || '', p_kind: kind || 'gift', p_from: from
     }));
     return 'rpc';
   } catch (e) {
     const msg = (e && e.message) || '';
-    if (/Could not find the function|admin_send_mail|schema cache/i.test(msg)) {
-      await netCall(sb => sb.from('mail').insert({
-        to_name: to, from_name: from || 'Admin', from_owner: NET.user.id,
-        kind: kind || 'gift', item, gold: 0, note: String(note || '').slice(0, 100)
-      }));
+    // Chi tai khoan admin that su bi tu choi boi RPC (da cai SQL) — khong fallback
+    if (/Chỉ tài khoản admin/i.test(msg) && !/Could not find|schema cache|function/i.test(msg)) throw e;
+    try {
+      await netCall(sb => sb.from('mail').insert(row));
       return 'insert';
+    } catch (e2) {
+      const m2 = (e2 && e2.message) || msg;
+      if (/chars_name|duplicate key|đổi tên/i.test(m2)) {
+        throw new Error('Gửi thư lỗi máy chủ (không liên quan tên người nhận). Chạy sql/MAIL_FIX.sql trên Supabase rồi thử lại');
+      }
+      throw new Error('Gửi thư thất bại: ' + m2);
     }
-    throw e;
   }
 }
 
@@ -269,17 +278,15 @@ async function adminGrantPlayer(opts) {
   if (typeof netOn !== 'function' || !netOn() || !NET.user) throw new Error('Cần đăng nhập online');
   const to = String((opts && opts.to) || '').trim();
   const ch = await adminFindChar(to);
-  // Khong bat buoc netNeedChar — tranh loi ten admin chan viec gui
-  try { if (typeof netSyncChar === 'function' && S && S.fac && hasRealName()) await netSyncChar(true); } catch (e) { /* bo qua */ }
+  // KHONG goi netSyncChar/netNeedChar — ten NV admin trung se chan viec gui qua
   const note = String(opts.note || 'Quà từ Admin').slice(0, 100);
-  const from = (S && typeof hasRealName === 'function' && hasRealName() && S.name) ? S.name : 'Admin';
   const labels = [];
   let sent = 0;
 
   if (opts.gear && Array.isArray(opts.gear.base)) {
     const g = JSON.parse(JSON.stringify(opts.gear));
     delete g.uid; delete g.lock;
-    await adminSendMailRow(ch.name, g, 'gift', note, from);
+    await adminSendMailRow(ch.name, g, 'gift', note);
     labels.push(g.n || 'đồ'); sent++;
   }
 
@@ -298,13 +305,13 @@ async function adminGrantPlayer(opts) {
   if (opts.knb > 0) { payload.knb = Math.max(0, Math.floor(+opts.knb) || 0); hasStat = true; }
   if (hasStat) {
     payload.n = 'Quà Admin: ' + (typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp / điểm');
-    await adminSendMailRow(ch.name, payload, 'admin', note, from);
+    await adminSendMailRow(ch.name, payload, 'admin', note);
     labels.push(typeof netMailLabel === 'function' ? netMailLabel({ item: payload }) : 'cấp/điểm');
     sent++;
   }
   if (!sent) throw new Error('Chọn cấp, điểm, KNB hoặc đồ để cấp');
   const label = labels.join(' · ');
-  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)} — họ mở 🌐 Thư → Nhận (đúng tên <b>${esc(ch.name)}</b>)`);
+  log(`🛠 Admin cấp <b>${esc(ch.name)}</b> (Lv${ch.lvl}): ${esc(label)} — họ mở 🌐 Thư → Nhận`);
   toast('Đã gửi tới «' + ch.name + '» — bảo họ Ctrl+F5 → 🌐 Thư → Nhận');
   return { char: ch, label, payload: hasStat ? payload : null };
 }
