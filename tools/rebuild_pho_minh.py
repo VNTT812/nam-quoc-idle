@@ -156,27 +156,46 @@ def build_base() -> Image.Image:
     return ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.05)).enhance(1.06)
 
 
-def blend_stamp(ba: np.ndarray, stamp_img: Image.Image, xy, size, core=0.38, soft=0.92):
+def blend_stamp(
+    ba: np.ndarray,
+    stamp_img: Image.Image,
+    xy,
+    size,
+    core=0.38,
+    soft=0.92,
+    built_keep=1.0,
+    green_keep=0.22,
+    path_keep=0.55,
+    tw=None,
+    th=None,
+):
     """Giữ mái/đá/tượng; cỏ của stamp phai vào rừng nền — hết khung vuông."""
     H, W = ba.shape[:2]
-    s = stamp_img.resize((size, size), Image.LANCZOS).convert("RGB")
+    tw = int(tw or size)
+    th = int(th or size)
+    s = stamp_img.resize((tw, th), Image.LANCZOS).convert("RGB")
     sa = np.asarray(s, dtype=np.float32)
     bx, by = xy
     x0, y0 = max(0, bx), max(0, by)
-    x1, y1 = min(W, bx + size), min(H, by + size)
+    x1, y1 = min(W, bx + tw), min(H, by + th)
     sx0, sy0 = x0 - bx, y0 - by
     sw, sh = x1 - x0, y1 - y0
     patch = sa[sy0 : sy0 + sh, sx0 : sx0 + sw].copy()
     dest = ba[y0:y1, x0:x1]
     yy, xx = np.ogrid[:sh, :sw]
-    rad = np.sqrt((xx - (size / 2 - sx0)) ** 2 + (yy - (size / 2 - sy0)) ** 2) / (size / 2)
+    rad = np.sqrt(
+        ((xx - (tw / 2 - sx0)) / (tw / 2)) ** 2 + ((yy - (th / 2 - sy0)) / (th / 2)) ** 2
+    )
     a = np.clip((soft - rad) / max(1e-5, soft - core), 0, 1)
     a = a * a * (3 - 2 * a)
     r, g, b = patch[..., 0], patch[..., 1], patch[..., 2]
     greenish = (g > r + 6) & (g > b + 4) & (g > 55)
     pathish = (np.abs(r - g) < 35) & (r > 70) & (g > 55) & (b > 35) & ~greenish
-    built = ~greenish & ((r > g + 8) | (r + g + b < 140) | ((r > 90) & (g < 90) & (b < 80)))
-    keep = np.where(built, 1.0, np.where(pathish, 0.55, 0.22))
+    roof = (r > g + 10) & (r > b + 6) & (r > 85)
+    stone = (np.abs(r.astype(np.float32) - g) < 28) & (r > 70) & (r < 175) & (b > 55) & ~greenish
+    wood = (r > g + 5) & (g > b + 5) & (r > 60) & (r < 160) & ~greenish
+    built = roof | stone | wood | (~greenish & ((r > g + 8) | (r + g + b < 140)))
+    keep = np.where(built, built_keep, np.where(pathish, path_keep, green_keep))
     a = a * keep
     ring = (a > 0.05) & (a < 0.55)
     if ring.any():
@@ -198,17 +217,58 @@ def main() -> None:
     temple = Image.open(TILES / "tran-pho-minh-map.jpg")
     house = Image.open(TILES / "prop-tran-house.jpg")
     stele = Image.open(TILES / "prop-tran-stele.jpg")
+    # Crop điện chính + sư tử (bỏ ao/rừng thừa) — stamp rõ như chùa thật
+    hall = temple.crop((260, 160, 800, 740))
 
-    main_sz = 2000
-    ba = blend_stamp(ba, temple, (cx - main_sz // 2, cy - main_sz // 2 - 40), main_sz)
-    ba = blend_stamp(ba, house, (cx - 1050, cy + 240), 560, core=0.35, soft=0.85)
+    # Nền cảnh chùa rộng (ao + đường) rồi đè điện chính cứng hơn
+    main_sz = 2200
     ba = blend_stamp(
-        ba, house.transpose(Image.FLIP_LEFT_RIGHT), (cx + 540, cy + 20), 520, core=0.35, soft=0.85
+        ba,
+        temple,
+        (cx - main_sz // 2, cy - main_sz // 2 - 80),
+        main_sz,
+        core=0.42,
+        soft=0.94,
+        built_keep=1.0,
+        green_keep=0.18,
+        path_keep=0.62,
     )
-    ba = blend_stamp(ba, stele, (cx - 250, cy + 760), 300, core=0.3, soft=0.8)
+    hall_w, hall_h = 1180, 1280
+    ba = blend_stamp(
+        ba,
+        hall,
+        (cx - hall_w // 2, cy - hall_h // 2 - 220),
+        hall_w,
+        core=0.48,
+        soft=0.96,
+        built_keep=1.0,
+        green_keep=0.12,
+        path_keep=0.7,
+        tw=hall_w,
+        th=hall_h,
+    )
+    ba = blend_stamp(
+        ba, house, (cx - 1180, cy + 180), 640, core=0.4, soft=0.88, built_keep=1.0, green_keep=0.15
+    )
+    ba = blend_stamp(
+        ba,
+        house.transpose(Image.FLIP_LEFT_RIGHT),
+        (cx + 560, cy - 40),
+        600,
+        core=0.4,
+        soft=0.88,
+        built_keep=1.0,
+        green_keep=0.15,
+    )
+    ba = blend_stamp(
+        ba, stele, (cx - 280, cy + 820), 340, core=0.32, soft=0.82, built_keep=1.0, green_keep=0.12
+    )
+    ba = blend_stamp(
+        ba, stele, (cx + 40, cy + 860), 280, core=0.32, soft=0.82, built_keep=1.0, green_keep=0.12
+    )
 
     img = Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
-    img = ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.04)).enhance(1.05)
+    img = ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.05)).enhance(1.06)
     out_path = Z / "400.jpg"
     img.save(out_path, quality=90, optimize=True)
     print(f"saved {out_path} {out_path.stat().st_size // 1024}KB")
@@ -217,11 +277,11 @@ def main() -> None:
     meta2, _, _ = extract_zone(jmo, "2")
     gw, gh = meta2["gw"], meta2["gh"]
     blocked = decode_obs(meta2)
-    mark_rect(blocked, cx - 360, cy - 480, 720, 520, True, gw, gh)
-    mark_rect(blocked, cx - 1050 + 80, cy + 240 + 80, 400, 320, True, gw, gh)
-    mark_rect(blocked, cx + 540 + 60, cy + 20 + 80, 380, 300, True, gw, gh)
-    carve_path(blocked, [(cx, cy + 1000), (cx, cy + 320)], 80, gw, gh)
-    carve_path(blocked, [(cx - 240, cy + 560), (cx, cy + 320), (cx + 240, cy + 560)], 60, gw, gh)
+    mark_rect(blocked, cx - 420, cy - 560, 840, 620, True, gw, gh)
+    mark_rect(blocked, cx - 1180 + 80, cy + 180 + 80, 460, 360, True, gw, gh)
+    mark_rect(blocked, cx + 560 + 60, cy - 40 + 80, 440, 340, True, gw, gh)
+    carve_path(blocked, [(cx, cy + 1100), (cx, cy + 280)], 90, gw, gh)
+    carve_path(blocked, [(cx - 280, cy + 600), (cx, cy + 280), (cx + 280, cy + 600)], 70, gw, gh)
 
     meta = dict(meta2)
     meta["obs"] = encode_obs(blocked)
