@@ -8,9 +8,9 @@ const MP = {
   fieldSnap: null, waitHost: 0, applying: false, lastSend: 0, syncT: 0, trackT: 0,
   seq: 0, uiT: 0, joinedAt: 0, ensureT: 0, posN: 0, lastJx: '', leaving: null, retries: 0
 };
-/* Pos ~30Hz khi chay; delay thich ung (chay ~30ms / dung ~80ms) — live test RTT~31ms. */
+/* Pos ~30Hz khi chay; delay thich ung (chay ~0–16ms / dung ~50ms) — RTT~32ms, bot buffer de bot delay. */
 const MP_MAX = 6, MP_POS = 0.033, MP_POS_IDLE = 0.12, MP_SYNC = 10, MP_WAIT = 1600, MP_PEER_TTL = 45000;
-const MP_SNAP = 180, MP_HARD = 560, MP_DELAY = 30, MP_DELAY_IDLE = 80, MP_HIST = 40, MP_EXTRAP = 0.28, MP_MAX_SPD = 300;
+const MP_SNAP = 180, MP_HARD = 560, MP_DELAY = 12, MP_DELAY_IDLE = 50, MP_HIST = 40, MP_EXTRAP = 0.35, MP_MAX_SPD = 300;
 /* cid theo user dang nhap (2 tab / 2 TK cung may khong de chung chatCid localStorage) */
 const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
@@ -345,26 +345,37 @@ function mpJxFromPeer(p) {
   return Jo;
 }
 
+function mpPeerIncomplete(p) {
+  return !p || !p.fac || !p.name || p.name === 'Võ lâm' || !(p.lvl > 0) || !p.jx;
+}
 function mpPresenceSync() {
   if (!MP.ch) return;
   const st = MP.ch.presenceState() || {}, live = new Set();
+  let needWho = false;
   for (const k of Object.keys(st)) {
-    const row = Object.assign({}, (st[k] && st[k][0]) || {}, { cid: k });
+    const metas = st[k];
+    const raw = Array.isArray(metas) ? (metas[0] || {}) : (metas && metas.metas && metas.metas[0]) || metas || {};
+    const row = Object.assign({}, raw, { cid: k });
     live.add(k);
     if (k === mpCid()) continue;
     mpUpsertPeer(row, false); // presence: meta only, khong day pos cu vao hist
+    if (mpPeerIncomplete(MP.peers[k])) needWho = true;
   }
   // chi xoa peer khi mat presence LAU + khong con nhan pos (tranh nhap nhay khi sync nhip)
   for (const k of Object.keys(MP.peers)) {
     if (live.has(k)) continue;
     if (Date.now() - (MP.peers[k].seen || 0) > MP_PEER_TTL) delete MP.peers[k];
+    else if (mpPeerIncomplete(MP.peers[k])) needWho = true;
   }
+  if (needWho) mpAskWho();
   mpElect();
 }
 
 function mpOnPos(p) {
   if (!p || p.cid === mpCid()) return;
   mpUpsertPeer(p, true);
+  const peer = MP.peers[String(p.cid || '')];
+  if (peer && mpPeerIncomplete(peer)) mpAskWho();
 }
 
 function mpJxPack() {
@@ -398,29 +409,46 @@ function mpLocalVel() {
   MP._lvx = vx; MP._lvy = vy;
   return { vx, vy };
 }
+/* Meta nhe cho presence — tach khoi pos day du (tranh track fail / rot meta). */
+function mpMetaPayload() {
+  const tw = typeof titleWorn === 'function' && titleWorn();
+  const jx = mpJxPack();
+  return {
+    cid: mpCid(),
+    name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0,
+    jx,
+    title: tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '',
+    titleCol: tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '',
+    titleId: tw ? tw[0] : '',
+    x: Math.round(H.x), y: Math.round(H.y),
+    face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: H.act || 'st'
+  };
+}
 function mpPosPayload(full) {
   const tw = typeof titleWorn === 'function' && titleWorn();
   const jx = mpJxPack();
   const jxKey = jx ? (jx.h + ',' + jx.a + ',' + jx.w + ',' + jx.o) : '';
   const act = H.act || 'st';
+  const now = Date.now();
   const changed = full || jxKey !== MP.lastJx;
   const actChanged = act !== MP.lastAct;
+  // moi ~0.6s ep gui lai look (peer join muon / mat presence van nhan duoc)
+  const lookDue = full || changed || !MP._lookAt || (now - MP._lookAt > 600);
   if (changed) MP.lastJx = jxKey;
   if (actChanged) MP.lastAct = act;
+  if (lookDue) MP._lookAt = now;
   const vel = mpLocalVel();
-  // goi nhe: toa do + van toc + timestamp nguon + huong + act
   MP.posSeq = (MP.posSeq | 0) + 1;
+  // LUON kem name/fac/sex/lvl — goi nhe truoc day de peer = "Võ lâm Lv?" + bong trang (camp tan)
   const o = {
-    cid: mpCid(), seq: MP.posSeq, t: Date.now(),
+    cid: mpCid(), seq: MP.posSeq, t: now,
     x: Math.round(H.x * 10) / 10, y: Math.round(H.y * 10) / 10,
     vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
     face: H.face >= 0 ? 1 : -1,
-    dir: H.dir | 0, act, life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
+    dir: H.dir | 0, act, life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1,
+    name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0
   };
-  if (full || changed || actChanged) {
-    o.name = mpName(); o.fac = S.fac || ''; o.sex = S.sex | 0; o.lvl = S.lvl | 0;
-  }
-  if (changed || full) {
+  if (lookDue) {
     o.jx = jx;
     o.title = tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '';
     o.titleCol = tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '';
@@ -439,12 +467,20 @@ function mpTrackNow(forceBcast) {
   const act = H.act || 'st';
   const urgent = forceBcast || act === 'at' || act !== MP.lastAct;
   const p = mpPosPayload(!!forceBcast);
-  // presence track thua hon (meta): ~10 goi pos / 1 track — giam tai kenh
+  // presence: chi meta nhe, track thuong xuyen hon khi join/doi do
   MP.posN = (MP.posN || 0) + 1;
-  if (urgent || MP.posN % 10 === 0) {
-    try { MP.ch.track(Object.assign({}, p, { name: mpName(), fac: S.fac || '', sex: S.sex | 0, lvl: S.lvl | 0, jx: p.jx || mpJxPack() })); } catch (e) { /* bo qua */ }
+  if (urgent || MP.posN % 6 === 0 || !MP._metaAt || now - MP._metaAt > 2000) {
+    MP._metaAt = now;
+    try { MP.ch.track(mpMetaPayload()); } catch (e) { /* bo qua */ }
   }
   mpSend('pos', p);
+}
+function mpAskWho() {
+  if (!MP.ch || (MP.state !== 'ok' && MP.state !== 'retry')) return;
+  const now = Date.now();
+  if (MP._askWhoAt && now - MP._askWhoAt < 1200) return;
+  MP._askWhoAt = now;
+  mpSend('who', { want: mpCid() });
 }
 
 /* ---------- kenh map ---------- */
@@ -496,7 +532,13 @@ async function mpJoin(z) {
   if (!sameZone) MP.peers = {};
   const ch = MP.ch = MP.sb.channel(rid, { config: { broadcast: { self: false, ack: false }, presence: { key: mpCid() } } });
   ch.on('presence', { event: 'sync' }, () => { if (MP.ch === ch) mpPresenceSync(); })
-    .on('presence', { event: 'join' }, () => { if (MP.ch === ch) { mpPresenceSync(); if (mpIsHost()) mpSendField(true); } })
+    .on('presence', { event: 'join' }, () => {
+      if (MP.ch !== ch) return;
+      mpPresenceSync();
+      // peer moi vao: broadcast lai look ngay (tranh chi nhan pos nhe → bong trang)
+      mpTrackNow(true);
+      if (mpIsHost()) mpSendField(true);
+    })
     .on('presence', { event: 'leave' }, () => { if (MP.ch === ch) mpPresenceSync(); })
     .on('broadcast', { event: 'pos' }, ({ payload }) => { if (MP.ch === ch) mpOnPos(payload); })
     .on('broadcast', { event: 'field' }, ({ payload }) => {
@@ -508,13 +550,19 @@ async function mpJoin(z) {
     .on('broadcast', { event: 'hit' }, ({ payload }) => { if (MP.ch === ch) mpOnHit(payload); })
     .on('broadcast', { event: 'die' }, ({ payload }) => { if (MP.ch === ch) mpOnDie(payload); })
     .on('broadcast', { event: 'need' }, ({ payload }) => { if (MP.ch === ch && mpIsHost() && payload && payload.cid !== mpCid()) mpSendField(true); })
+    .on('broadcast', { event: 'who' }, ({ payload }) => {
+      if (MP.ch !== ch || !payload || payload.cid === mpCid()) return;
+      // ai do thieu look — tra loi bang pos day du + track meta
+      mpTrackNow(true);
+    })
     .subscribe(async st => {
       if (MP.ch !== ch || MP.leaving === ch) return;
       if (st === 'SUBSCRIBED') {
         MP.state = 'ok'; MP.err = ''; MP.joinBusy = false; MP.retries = 0; MP._nextJoin = 0; MP._subOkAt = Date.now();
-        try { await ch.track(mpPosPayload(true)); } catch (e) { /* bo qua */ }
+        try { await ch.track(mpMetaPayload()); } catch (e) { /* bo qua */ }
         mpPresenceSync();
         mpSend('need', { cid: mpCid() });
+        mpSend('who', { want: mpCid() });
         mpSend('pos', mpPosPayload(true));
         if (mpIsHost() && R.field) mpSendField(true);
         mpUi();
@@ -568,7 +616,7 @@ function mpInit() {
 }
 
 /* ---------- ve nguoi choi khac (hook render.js / combat.js) ---------- */
-/* Noi suy: delay thich ung — dang chay gan live + extrapolate, dung yen buffer muot. */
+/* Noi suy: chay gan live (delay ~RTT/2) + extrapolate; dung yen buffer muot. */
 function mpInterpAt(p, now) {
   const h = p.hist;
   if (!h || !h.length) return { x: p.tx, y: p.ty };
@@ -585,8 +633,8 @@ function mpInterpAt(p, now) {
   if (t >= last.t) {
     const vx = last.vx != null ? last.vx : (p.vx || 0), vy = last.vy != null ? last.vy : (p.vy || 0);
     if (Math.hypot(vx, vy) < 10) return { x: last.x, y: last.y };
-    // extrapolate + lead nhe khi dang chay (bu RTT ~30ms)
-    const lead = spd > 36 ? 0.025 : 0;
+    // extrapolate + lead ~ nua RTT khi dang chay
+    const lead = spd > 36 ? 0.04 : 0;
     const u = Math.min(MP_EXTRAP, (t - last.t) / 1000 + lead);
     return { x: last.x + vx * u, y: last.y + vy * u };
   }
@@ -620,12 +668,12 @@ function othSmoothRender(dt) {
     const dist = Math.hypot(goal.x - p.rx, goal.y - p.ry);
     const spd = Math.hypot(p.vx || 0, p.vy || 0);
     if (dist > MP_HARD) { p.rx = goal.x; p.ry = goal.y; }
-    else if (spd > 40 && dist > 12) {
-      // dang chay: bám goal nhanh (bot delay)
-      const a = 1 - Math.exp(-dt * 40);
+    else if (spd > 40 && dist > 8) {
+      // dang chay: bám goal rat nhanh (bot delay cam nhan)
+      const a = 1 - Math.exp(-dt * 55);
       p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     } else {
-      const rate = dist > MP_SNAP ? 20 : (dist > 28 ? 28 : 36);
+      const rate = dist > MP_SNAP ? 24 : (dist > 28 ? 32 : 42);
       const a = 1 - Math.exp(-dt * rate);
       p.rx += (goal.x - p.rx) * a; p.ry += (goal.y - p.ry) * a;
     }
@@ -697,13 +745,14 @@ function othDraw(c, p) {
   if (Jo && typeof drawJxHero === 'function' && mpJxBodyReady(Jo, act)) { drawJo = Jo; p._joReady = Jo; }
   else if (p._joReady && typeof drawJxHero === 'function' && mpJxBodyReady(p._joReady, act)) drawJo = p._joReady;
   if (drawJo) h = drawJxHero(act, p.dir || 0, p.actT || 0, px, py, sc, 1, hw && hw.anim, drawJo) || 0;
-  if (!h && !p._joReady && hw && hw.anim && typeof drawAnim === 'function') {
+  // fallback phai/anim khi JX chua load — tranh bong trang (#ececec tan thu)
+  if (!h && hw && hw.anim && typeof drawAnim === 'function') {
     h = drawAnim(hw.anim, act, p.dir || 0, p.actT || 0, px, py, sc) || 0;
-  } else if (!h && !p._joReady && hw && typeof drawSprite === 'function') {
+  } else if (!h && hw && typeof drawSprite === 'function') {
     drawSprite(img(hw.img), hw.sz, px, py, 0.85, p.face < 0, 0.92);
     h = 52;
   } else if (!h && !drawJo) {
-    c.fillStyle = typeof campCol === 'function' ? campCol(p.fac) : '#c8e6c0';
+    c.fillStyle = (p.fac && typeof campCol === 'function') ? campCol(p.fac) : '#7eb6ff';
     c.beginPath(); c.arc(px, py - 18, 12, 0, 7); c.fill();
     h = 40;
   }
