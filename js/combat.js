@@ -63,11 +63,13 @@ function makeEnemy(tid, L, cls, x, y) {
   const series = monSeries(tid);                                       // he co dinh theo loai quai (kieu JX1)
   // khang theo he: nguyen to cua he minh (rmax 90) +10, diem yeu (rmax 60) -10, tran = rmax cua quai (+-10 can doi: o cap cao +20 lam mat ~40% sat thuong)
   const res = {}; ELEM.forEach((e, i) => { const mx = m.rmax[i] || 75, b = mx > 75 ? 10 : mx < 75 ? -10 : 0; res[e] = clamp(L * 0.35 + (cls === 'boss' ? 10 : 0) + b, -20, mx); });
-  return { id: Math.random(), tid, n: m.n, img: m.img ? img(m.img) : null, sz: m.sz, L, cls, series, res,
+  const e = { id: Math.random(), tid, n: m.n, img: m.img ? img(m.img) : null, sz: m.sz, L, cls, series, res,
     hp: st.hp, max: st.hp, dmg: st.dmg, ar: st.ar, def: st.def, x, y, r: CLS[cls].r,
     spd: (30 + (m.run || 6) * 4) * (cls === 'boss' ? 0.7 : 1), atkCd: rnd(0.5, 1.5), cd: 1.2 + 18 / Math.max(8, m.spd || 18) * 0.5,
     reach: monReach(tid), ranged: monReach(tid) > 120, born: R.clock || 0, stun: 0, slowT: 0, poison: 0, poisonDmg: 0, hitT: 0, face: 1,
     act: 'st', actT: 0, dir: 0, moving: false };
+  if (typeof attachTranCostume === 'function') attachTranCostume(e);
+  return e;
 }
 /* Mat do quai luyen cong: moi dot DENS_MIN..DENS_MAX con (truoc 3-4), dot trum co them DENS_BOSS dan em.
    Quai thuong danh nhe hon (DENS_DMG) vi dong gap doi. DENS_REW: he so thuong / roi do moi con thuong (test/t2: 1 -> len cap

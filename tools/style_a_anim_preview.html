@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Style A · preview anim run/at</title>
+<style>
+  html,body{margin:0;background:#1a1c22;color:#e8e4d8;font:14px/1.4 system-ui,sans-serif}
+  h1{margin:12px 16px 4px;font-size:18px;color:#e6c878}
+  p{margin:0 16px 12px;color:#9aa0a8;font-size:13px}
+  #bar{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px;align-items:center}
+  button{background:#2a2e38;color:#e8e4d8;border:1px solid #4a5060;border-radius:6px;padding:6px 10px;cursor:pointer}
+  button.on{background:#3d5a40;border-color:#7fd0b0;color:#dff}
+  #err{display:none;margin:0 16px 12px;padding:10px 12px;background:#3a2020;border:1px solid #a05050;border-radius:6px;color:#ffb0b0;white-space:pre-wrap;font-size:12px}
+  #stage{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:0 16px 24px}
+  .card{background:#242830;border:1px solid #3a4050;border-radius:8px;padding:10px;text-align:center}
+  .card.bad{border-color:#a05050}
+  .card h3{margin:0 0 6px;font-size:13px;color:#c8c4b8}
+  canvas{image-rendering:pixelated;background:#16181e;border-radius:4px;width:100%;max-width:220px;aspect-ratio:1;display:block;margin:0 auto}
+  .meta{margin-top:6px;font-size:11px;color:#7a8088}
+</style>
+</head>
+<body>
+<h1>Style A · Áo giao lĩnh — preview st / run / at</h1>
+<p id="info">Sheet thật từ <code>img/a/pl_*</code> · zoom · 8 hướng · bấm act để xem</p>
+<div id="bar">
+  <button type="button" data-act="st" class="on">Đứng (st)</button>
+  <button type="button" data-act="run">Chạy (run)</button>
+  <button type="button" data-act="at">Đánh (at)</button>
+  <button type="button" id="spin" class="on">Xoay hướng: bật</button>
+</div>
+<div id="err"></div>
+<div id="stage"></div>
+<script>
+(function () {
+  const FAC = [
+    ['wudang', 'Võ Đang'], ['tianwang', 'Thiên Vương'], ['shaolin', 'Thiếu Lâm'], ['emei', 'Nga My'],
+    ['gaibang', 'Cái Bang'], ['wudu', 'Ngũ Độc'], ['cuiyan', 'Thúy Yên'], ['tangmen', 'Đường Môn'],
+  ];
+  const META = {
+    wudang: { st: { n: 11, d: 8, w: 65, h: 47, ms: 143 }, run: { n: 6, d: 8, w: 72, h: 47, ms: 75 }, at: { n: 8, d: 8, w: 97, h: 79, ms: 62 } },
+    tianwang: { st: { n: 11, d: 8, w: 74, h: 71, ms: 143 }, run: { n: 6, d: 8, w: 83, h: 73, ms: 75 }, at: { n: 6, d: 8, w: 113, h: 74, ms: 70 } },
+    shaolin: { st: { n: 11, d: 8, w: 64, h: 47, ms: 143 }, run: { n: 6, d: 8, w: 67, h: 47, ms: 75 }, at: { n: 7, d: 8, w: 118, h: 66, ms: 62 } },
+    emei: { st: { n: 12, d: 8, w: 50, h: 46, ms: 143 }, run: { n: 6, d: 8, w: 74, h: 44, ms: 75 }, at: { n: 7, d: 8, w: 98, h: 67, ms: 62 } },
+    gaibang: { st: { n: 11, d: 8, w: 58, h: 62, ms: 143 }, run: { n: 6, d: 8, w: 65, h: 65, ms: 75 }, at: { n: 6, d: 8, w: 82, h: 79, ms: 70 } },
+    wudu: { st: { n: 11, d: 8, w: 36, h: 61, ms: 143 }, run: { n: 6, d: 8, w: 72, h: 55, ms: 75 }, at: { n: 8, d: 8, w: 90, h: 79, ms: 62 } },
+    cuiyan: { st: { n: 8, d: 8, w: 32, h: 57, ms: 143 }, run: { n: 6, d: 8, w: 43, h: 59, ms: 75 }, at: { n: 8, d: 8, w: 80, h: 71, ms: 62 } },
+    tangmen: { st: { n: 11, d: 8, w: 26, h: 47, ms: 143 }, run: { n: 6, d: 8, w: 43, h: 47, ms: 75 }, at: { n: 8, d: 8, w: 39, h: 66, ms: 62 } },
+  };
+
+  // Root-absolute path — không phụ thuộc mở từ /tools/ hay file://
+  const IMG_BASE = new URL('../img/a/', location.href).href;
+  const VER = '321';
+  const DEMO = /[?&]demo=1\b/.test(location.search);
+  const ACTS = ['st', 'run', 'at'];
+
+  let act = 'st', spin = true, t0 = performance.now(), demoT0 = performance.now();
+  const cards = [];
+  const stage = document.getElementById('stage');
+  const errBox = document.getElementById('err');
+  const fails = [];
+
+  function showErr(msg) {
+    errBox.style.display = 'block';
+    errBox.textContent = (errBox.textContent ? errBox.textContent + '\n' : '') + msg;
+  }
+
+  function loadImg(src) {
+    return new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('Không tải được: ' + src));
+      i.src = src;
+    });
+  }
+
+  function setAct(a) {
+    act = a;
+    t0 = performance.now();
+    document.querySelectorAll('#bar button[data-act]').forEach(x => x.classList.toggle('on', x.dataset.act === act));
+  }
+
+  async function boot() {
+    document.getElementById('info').textContent +=
+      ' · base=' + IMG_BASE + (DEMO ? ' · DEMO tự xoay st→run→at' : '');
+
+    for (const [key, name] of FAC) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<h3>${name}</h3><canvas width="200" height="200"></canvas><div class="meta">đang tải…</div>`;
+      stage.appendChild(card);
+      const sheets = {};
+      let ok = true;
+      for (const a of ACTS) {
+        const url = IMG_BASE + `pl_${key}_${a}.webp?v=${VER}`;
+        try {
+          sheets[a] = await loadImg(url);
+        } catch (e) {
+          ok = false;
+          fails.push(url);
+          showErr(String(e.message || e));
+          break;
+        }
+      }
+      const metaEl = card.querySelector('.meta');
+      if (!ok) {
+        card.classList.add('bad');
+        metaEl.textContent = 'lỗi tải sheet';
+        continue;
+      }
+      metaEl.textContent = 'ok';
+      cards.push({
+        key, name,
+        canvas: card.querySelector('canvas'),
+        metaEl,
+        sheets,
+      });
+    }
+
+    if (!cards.length) {
+      showErr('Không load được sheet nào. Mở qua http server từ root repo, ví dụ:\n  python3 -m http.server 47291\n  http://127.0.0.1:47291/tools/style_a_anim_preview.html?demo=1');
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function tick(now) {
+    if (DEMO) {
+      const spans = [2500, 4000, 5000];
+      let t = (now - demoT0) % spans.reduce((a, b) => a + b, 0);
+      let acc = 0, idx = 0;
+      for (let i = 0; i < spans.length; i++) {
+        if (t < acc + spans[i]) { idx = i; break; }
+        acc += spans[i];
+      }
+      if (ACTS[idx] !== act) setAct(ACTS[idx]);
+    }
+    const elapsed = now - t0;
+    for (const c of cards) {
+      const m = META[c.key][act];
+      const im = c.sheets[act];
+      if (!m || !im || !im.naturalWidth) continue;
+      const dir = spin ? Math.floor(elapsed / 700) % m.d : 0;
+      const frame = Math.floor(elapsed / m.ms) % m.n;
+      const ctx = c.canvas.getContext('2d');
+      ctx.clearRect(0, 0, 200, 200);
+      ctx.imageSmoothingEnabled = false;
+      const sw = m.w, sh = m.h;
+      // clamp nếu sheet lệch meta
+      const maxF = Math.floor(im.naturalWidth / sw);
+      const maxD = Math.floor(im.naturalHeight / sh);
+      const fi = Math.min(frame, Math.max(0, maxF - 1));
+      const di = Math.min(dir, Math.max(0, maxD - 1));
+      const sc = Math.min(180 / sw, 180 / sh);
+      const dw = Math.floor(sw * sc), dh = Math.floor(sh * sc);
+      const dx = (200 - dw) / 2, dy = (200 - dh) / 2 + 8;
+      try {
+        ctx.drawImage(im, fi * sw, di * sh, sw, sh, dx, dy, dw, dh);
+      } catch (e) {
+        c.metaEl.textContent = 'draw lỗi';
+        continue;
+      }
+      c.metaEl.textContent = `${act} · dir ${di}/${m.d - 1} · f ${fi}/${m.n - 1} · ${sw}×${sh}`;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('bar').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.id === 'spin') {
+      spin = !spin;
+      b.textContent = 'Xoay hướng: ' + (spin ? 'bật' : 'tắt');
+      b.classList.toggle('on', spin);
+      return;
+    }
+    if (b.dataset.act) setAct(b.dataset.act);
+  });
+
+  boot().catch(e => showErr(String(e && e.stack || e)));
+})();
+</script>
+</body>
+</html>
