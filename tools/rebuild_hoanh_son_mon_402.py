@@ -1,248 +1,227 @@
 #!/usr/bin/env python3
-"""Dựng lại Hoành Sơn Môn (402) — map tân thủ đàng hoàng.
+"""Hoành Sơn Môn (402) — khớp footprint VLTK, không đè layout.
 
-Pipeline:
-1) Base = ảnh gốc (cờ cam còn nguyên, layout/collision khớp jmo)
-2) Xóa sạch cờ cam trong sân
-3) Ghép prop isometric chất lượng (generate) đã chroma-key
-4) Grade sân tập ấm nhẹ — chỉ ghi img/z/402.jpg
+Giữ nguyên bố cục/sàn đá zone 56 gốc (tránh patch đá lệch mạch gạch).
+Chỉ: recolor Trần rất nhẹ + stamp prop chroma-key sạch trên sân trống.
+Cờ gốc giữ lại (là một phần layout VLTK) — không inpaint/patch gây 'dè'.
 """
 from __future__ import annotations
 
 import argparse
-import shutil
+import subprocess
+import sys
+from collections import deque
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from rebuild_hoanh_son_56 import recolor_tran  # noqa: E402
+
 Z = ROOT / "img" / "z"
 REVIEW = ROOT / "assets/pack/map-style-review/402-hoanh-son-mon"
 ART = Path("/opt/cursor/artifacts/hoanh-son-mon-newbie")
 GEN = Path("/opt/cursor/artifacts/assets")
+ORIG_REV = "5f51470"
 BOX = (1750, 350, 3450, 2050)
 
-# Vị trí cờ cam trên crop BOX (local px)
-FLAG_SPOTS = [
-    (192, 704),
-    (417, 830),
-    (503, 550),
-    (700, 674),
-    (891, 353),
-    (1117, 458),
-    (1112, 250),
-    (1313, 357),
+# Sân đá trống — tránh giá vũ khí / cột cờ / tường
+PROP_SPOTS = [
+    (500, 760),
+    (640, 580),
+    (780, 460),
+    (900, 700),
+    (600, 980),
+    (1040, 880),
+    (1200, 640),
 ]
 
 
+def load_clean_vltk() -> Image.Image:
+    data = subprocess.check_output(["git", "show", f"{ORIG_REV}:img/z/56.jpg"])
+    return Image.open(BytesIO(data)).convert("RGB")
+
+
 def chroma_key_rgba(path: Path) -> Image.Image:
-    """Key nền hồng/magenta → RGBA, crop tight."""
+    """Flood-key magenta; bỏ pad sàn đáy; alpha cứng quanh silhouette."""
     im = Image.open(path).convert("RGB")
     a = np.asarray(im, dtype=np.float32)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    # magenta / hot pink backgrounds from generators (varied)
-    mag = (
-        ((r > 170) & (b > 110) & (g < 90) & (r + b > g * 3.2))
-        | ((r > 190) & (b > 150) & (g < 120) & (r > g + 60) & (b > g + 40))
-        | ((r > 200) & (b > 180) & (g < 160) & (np.abs(r - b) < 50))
-    )
-    # also pure-ish pink corners
+    h, w = r.shape
+    sat = a.max(2) - a.min(2)
     bright = (r + g + b) / 3.0
-    pink = (r > 200) & (b > 140) & (g < 100) & (bright > 120)
-    key = mag | pink
-    # grow key slightly to eat fringe
-    km = Image.fromarray((key.astype(np.uint8) * 255), "L")
-    km = km.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(0.8))
-    alpha = 255 - np.asarray(km, dtype=np.uint8)
-    # crush near-key fringe
-    alpha = np.where(alpha < 40, 0, alpha)
-    alpha = np.where(alpha > 220, 255, alpha)
-    rgba = np.dstack([a.astype(np.uint8), alpha])
-    out = Image.fromarray(rgba, "RGBA")
-    bb = out.split()[-1].getbbox()
+    border = np.concatenate([a[0, :], a[-1, :], a[:, 0], a[:, -1]], 0)
+    mag_border = border[(border[:, 0] > 160) & (border[:, 2] > 90) & (border[:, 1] < 130)]
+    bg_mean = mag_border.mean(0) if len(mag_border) > 8 else border.mean(0)
+
+    def is_bg_pixel(y: int, x: int) -> bool:
+        rr, gg, bb = float(r[y, x]), float(g[y, x]), float(b[y, x])
+        br, ss = float(bright[y, x]), float(sat[y, x])
+        if rr > 150 and bb > 90 and gg < 125 and (rr + bb) > gg * 2.5:
+            return True
+        if rr > 175 and bb > 125 and gg < 150:
+            return True
+        d = float(np.sqrt(((a[y, x] - bg_mean) ** 2).sum()))
+        if d < 52:
+            return True
+        if d < 80 and ss < 42:
+            return True
+        if ss < 22 and 28 < br < 210 and d < 105:
+            return True
+        return False
+
+    key = np.zeros((h, w), dtype=bool)
+    seen = np.zeros((h, w), dtype=bool)
+    q: deque[tuple[int, int]] = deque()
+    for x in range(w):
+        q.append((0, x))
+        q.append((h - 1, x))
+    for y in range(h):
+        q.append((y, 0))
+        q.append((y, w - 1))
+    while q:
+        y, x = q.popleft()
+        if seen[y, x]:
+            continue
+        seen[y, x] = True
+        if not is_bg_pixel(y, x):
+            continue
+        key[y, x] = True
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not seen[ny, nx]:
+                q.append((ny, nx))
+
+    alpha = np.where(key, 0, 255).astype(np.uint8)
+    pink = (r > 168) & (b > 110) & (g < 125) & (r + b > g * 2.6)
+    trans_d = Image.fromarray(((alpha == 0).astype(np.uint8) * 255), "L").filter(
+        ImageFilter.MaxFilter(5)
+    )
+    alpha = np.where(pink & (np.asarray(trans_d) > 0), 0, alpha)
+
+    near_t = np.asarray(trans_d) > 0
+    y_lo = int(h * 0.62)
+    cand = (alpha > 0) & (sat < 32) & (bright < 98) & (np.arange(h)[:, None] >= y_lo)
+    drop = np.zeros((h, w), dtype=bool)
+    seen2 = np.zeros((h, w), dtype=bool)
+    q2: deque[tuple[int, int]] = deque()
+    ys, xs = np.where(cand & (near_t | (np.arange(h)[:, None] >= h - 2)))
+    for y, x in zip(ys.tolist(), xs.tolist()):
+        q2.append((y, x))
+        seen2[y, x] = True
+    while q2:
+        y, x = q2.popleft()
+        if not cand[y, x]:
+            continue
+        drop[y, x] = True
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not seen2[ny, nx] and cand[ny, nx]:
+                seen2[ny, nx] = True
+                q2.append((ny, nx))
+    if drop.any():
+        dm = Image.fromarray(drop.astype(np.uint8) * 255, "L").filter(ImageFilter.MaxFilter(5))
+        alpha = np.where(np.asarray(dm) > 0, 0, alpha)
+
+    # erode nhẹ — hết AA nền nhưng giữ đế prop
+    al_im = Image.fromarray(alpha, "L").filter(ImageFilter.MinFilter(3)).filter(
+        ImageFilter.GaussianBlur(0.3)
+    )
+    alpha = np.asarray(al_im)
+    alpha = np.where(alpha < 48, 0, alpha)
+    alpha = np.where(alpha > 230, 255, alpha)
+
+    out = np.dstack([a.astype(np.uint8), alpha.astype(np.uint8)])
+    im_out = Image.fromarray(out, "RGBA")
+    bb = im_out.split()[-1].getbbox()
     if bb:
-        out = out.crop(bb)
-    # trim more: drop rows/cols almost empty
-    return out
+        im_out = im_out.crop(bb)
+    return im_out
 
 
-def detect_flag_regions(crop: np.ndarray) -> list[dict]:
-    ca = crop.astype(np.float32)
-    r, g, b = ca[..., 0], ca[..., 1], ca[..., 2]
+def soft_recolor_orange_banners(img: Image.Image, box: tuple[int, int, int, int] = BOX) -> Image.Image:
+    """Không xóa cờ — chỉ dịu màu cam → nâu gỗ để bớt chói, giữ layout gốc."""
+    arr = np.asarray(img, dtype=np.float32)
+    x0, y0, x1, y1 = box
+    crop = arr[y0:y1, x0:x1]
+    r, g, b = crop[..., 0], crop[..., 1], crop[..., 2]
     bright = (r + g + b) / 3.0
-    sat = ca.max(2) - ca.min(2)
-    target = np.array([165.0, 70.0, 40.0], dtype=np.float32)
-    dist = np.sqrt(((ca - target) ** 2).sum(2))
-    cloth = (
-        (dist < 58)
-        & (r > 118)
-        & (r > g + 35)
-        & (r > b + 45)
-        & (g < 125)
-        & (b < 105)
-        & (bright > 75)
-        & (bright < 205)
-        & (sat > 45)
+    sat = crop.max(2) - crop.min(2)
+    orange = (
+        (r > 140)
+        & (r > g + 28)
+        & (r > b + 40)
+        & (g < 160)
+        & (b < 110)
+        & (sat > 50)
+        & (bright > 85)
+        & (bright < 220)
     )
-    H0, W0 = cloth.shape
-    regions = []
-    for kx, ky in FLAG_SPOTS:
-        x0, x1 = max(0, kx - 26), min(W0 - 1, kx + 26)
-        y0, y1 = max(0, ky - 78), min(H0 - 1, ky + 42)
-        n = int(cloth[y0 : y1 + 1, x0 : x1 + 1].sum())
-        regions.append(dict(cx=kx, cy=ky, x0=x0, y0=y0, x1=x1, y1=y1, n=max(n, 1)))
-    # also auto-detect leftover tall cloth blobs
-    scale = 2
-    small = cloth[::scale, ::scale]
-    H, W = small.shape
-    visited = np.zeros_like(small, dtype=np.uint8)
-    dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    ys, xs = np.where(small)
-    for y0, x0 in zip(ys.tolist(), xs.tolist()):
-        if visited[y0, x0]:
-            continue
-        q = [(y0, x0)]
-        visited[y0, x0] = 1
-        pts = []
-        while q:
-            y, x = q.pop()
-            pts.append((y, x))
-            for dy, dx in dirs:
-                ny, nx = y + dy, x + dx
-                if 0 <= ny < H and 0 <= nx < W and small[ny, nx] and not visited[ny, nx]:
-                    visited[ny, nx] = 1
-                    q.append((ny, nx))
-        if len(pts) < 40:
-            continue
-        yy = np.array([p[0] for p in pts]) * scale
-        xx = np.array([p[1] for p in pts]) * scale
-        h = int(yy.max() - yy.min() + 1)
-        w = int(xx.max() - xx.min() + 1)
-        if w < 18 or w > 55 or h < 40 or h > 130:
-            continue
-        cx, cy = float(xx.mean()), float(yy.mean())
-        if any(abs(cx - r["cx"]) < 36 and abs(cy - r["cy"]) < 40 for r in regions):
-            continue
-        if cy < 40 or cx < 40 or cx > W0 - 40:
-            continue
-        regions.append(
-            dict(
-                cx=cx,
-                cy=cy,
-                x0=max(0, int(xx.min()) - 10),
-                y0=max(0, int(yy.min()) - 50),
-                x1=min(W0 - 1, int(xx.max()) + 10),
-                y1=min(H0 - 1, int(yy.max()) + 28),
-                n=len(pts),
-            )
-        )
-    return regions
-
-
-def inpaint_flags(img: Image.Image, regions: list[dict]) -> Image.Image:
-    arr = np.asarray(img, dtype=np.float32)
-    xB, yB, _, _ = BOX
-    H, W = arr.shape[:2]
-    rng = np.random.default_rng(402)
-    out = arr.copy()
-    for c in regions:
-        x0 = max(0, xB + int(c["x0"]) - 4)
-        y0 = max(0, yB + int(c["y0"]) - 4)
-        x1 = min(W - 1, xB + int(c["x1"]) + 4)
-        y1 = min(H - 1, yB + int(c["y1"]) + 4)
-        pad = 32
-        X0, Y0 = max(0, x0 - pad), max(0, y0 - pad)
-        X1, Y1 = min(W, x1 + pad + 1), min(H, y1 + pad + 1)
-        region = arr[Y0:Y1, X0:X1]
-        rr, gg, bb = region[..., 0], region[..., 1], region[..., 2]
-        bright = (rr + gg + bb) / 3.0
-        sat = region.max(2) - region.min(2)
-        hx0, hy0 = x0 - X0, y0 - Y0
-        hx1, hy1 = x1 - X0, y1 - Y0
-        local = np.ones(region.shape[:2], dtype=bool)
-        local[hy0 : hy1 + 1, hx0 : hx1 + 1] = False
-        stone = local & (sat < 45) & (bright > 60) & (bright < 185) & (np.abs(rr - gg) < 30)
-        src = region[stone] if stone.sum() > 40 else region[local]
-        if len(src) < 8:
-            continue
-        hh, ww = hy1 - hy0 + 1, hx1 - hx0 + 1
-        picks = src[rng.integers(0, len(src), size=hh * ww)].reshape(hh, ww, 3)
-        left = arr[y0 : y1 + 1, max(0, x0 - 1)]
-        right = arr[y0 : y1 + 1, min(W - 1, x1 + 1)]
-        up = arr[max(0, y0 - 1), x0 : x1 + 1]
-        down = arr[min(H - 1, y1 + 1), x0 : x1 + 1]
-        gy = np.linspace(0, 1, hh)[:, None, None]
-        gx = np.linspace(0, 1, ww)[None, :, None]
-        fill = left[:, None, :] * (1 - gx) * 0.35 + right[:, None, :] * gx * 0.35
-        fill = fill + up[None, :, :] * (1 - gy) * 0.35 + down[None, :, :] * gy * 0.35
-        fill = fill * 0.55 / 0.7 + picks * 0.45  # normalize-ish blend
-        # simpler stable blend:
-        fill = (
-            left[:, None, :] * (1 - gx) * 0.25
-            + right[:, None, :] * gx * 0.25
-            + up[None, :, :] * (1 - gy) * 0.25
-            + down[None, :, :] * gy * 0.25
-            + picks * 0.35
-        )
-        yy, xx = np.mgrid[0:hh, 0:ww]
-        edge = np.minimum(np.minimum(xx, ww - 1 - xx), np.minimum(yy, hh - 1 - yy)).astype(np.float32)
-        alpha = np.clip(edge / 4.5, 0, 1)[..., None]
-        patch = out[y0 : y1 + 1, x0 : x1 + 1]
-        out[y0 : y1 + 1, x0 : x1 + 1] = patch * (1 - alpha) + fill * alpha
-
-    mask = np.zeros((H, W), dtype=bool)
-    for c in regions:
-        x0 = max(0, xB + int(c["x0"]) - 2)
-        y0 = max(0, yB + int(c["y0"]) - 2)
-        x1 = min(W - 1, xB + int(c["x1"]) + 2)
-        y1 = min(H - 1, yB + int(c["y1"]) + 2)
-        mask[y0 : y1 + 1, x0 : x1 + 1] = True
-    if mask.any():
-        blur = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
-        ba = np.asarray(blur, dtype=np.float32)
-        feather = Image.fromarray(mask.astype(np.uint8) * 255, "L").filter(ImageFilter.GaussianBlur(1.4))
-        a = (np.asarray(feather, dtype=np.float32) / 255.0 * 0.35)[..., None]
-        out = out * (1 - a) + ba * a
-    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
-
-
-def warm_courtyard(img: Image.Image) -> Image.Image:
-    arr = np.asarray(img, dtype=np.float32)
-    x0, y0, x1, y1 = BOX
-    patch = arr[y0:y1, x0:x1]
-    r, g, b = patch[..., 0], patch[..., 1], patch[..., 2]
-    bright = (r + g + b) / 3.0
-    sat = patch.max(2) - patch.min(2)
-    stone = ((sat < 40) & (bright > 68) & (bright < 175) & (np.abs(r - g) < 28)).astype(np.float32)
-    sm = Image.fromarray((stone * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(2.0))
-    m = (np.asarray(sm, dtype=np.float32) / 255.0) * 0.22
-    warm = patch.copy()
-    warm[..., 0] = np.clip(warm[..., 0] * 1.04 + 3, 0, 255)
-    warm[..., 1] = np.clip(warm[..., 1] * 1.01, 0, 255)
-    warm[..., 2] = np.clip(warm[..., 2] * 0.95, 0, 255)
-    arr[y0:y1, x0:x1] = patch * (1 - m[..., None]) + warm * m[..., None]
+    if not orange.any():
+        return img
+    # kéo về nâu ấm gần gỗ cột
+    target = np.array([110.0, 78.0, 48.0], dtype=np.float32)
+    m = Image.fromarray(orange.astype(np.uint8) * 255, "L").filter(
+        ImageFilter.GaussianBlur(0.8)
+    )
+    a = (np.asarray(m, dtype=np.float32) / 255.0)[..., None] * 0.72
+    out = crop * (1 - a) + target * a
+    arr[y0:y1, x0:x1] = out
+    print(f"soft-recolor orange banner px={int(orange.sum())}")
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGB")
 
 
-def stamp(canvas: Image.Image, spr: Image.Image, cx: int, cy: int, scale: float) -> None:
-    w = max(12, int(spr.width * scale))
-    h = max(12, int(spr.height * scale))
+def stamp_matched(canvas: Image.Image, spr: Image.Image, cx: int, cy: int, scale: float) -> None:
+    w = max(16, int(spr.width * scale))
+    h = max(16, int(spr.height * scale))
     s = spr.resize((w, h), Image.LANCZOS)
-    # match map grade slightly
     arr = np.asarray(s).astype(np.float32)
-    arr[..., 0] = np.clip(arr[..., 0] * 0.96, 0, 255)
-    arr[..., 1] = np.clip(arr[..., 1] * 0.97, 0, 255)
-    arr[..., 2] = np.clip(arr[..., 2] * 0.94, 0, 255)
-    # soft contact shadow under feet
+
+    base = np.asarray(canvas.convert("RGB"), dtype=np.float32)
+    H, W = base.shape[:2]
+    floor = base[max(0, cy - 6) : min(H, cy + 14), max(0, cx - 18) : min(W, cx + 18)]
+    if floor.size:
+        fmean = floor.reshape(-1, 3).mean(0)
+        opaque = arr[..., 3] > 200
+        pmean = (
+            arr[..., :3][opaque].mean(0)
+            if opaque.any()
+            else np.array([128.0, 128.0, 128.0])
+        )
+        scale_rgb = np.clip(0.65 + 0.35 * (fmean / (pmean + 1e-5)), 0.74, 1.04)
+        arr[..., 0] = np.clip(arr[..., 0] * scale_rgb[0] * 0.93, 0, 255)
+        arr[..., 1] = np.clip(arr[..., 1] * scale_rgb[1] * 0.96, 0, 255)
+        arr[..., 2] = np.clip(arr[..., 2] * scale_rgb[2] * 0.99, 0, 255)
+
+    sat = arr[..., :3].max(2) - arr[..., :3].min(2)
+    bright = arr[..., :3].mean(2)
+    yy = np.arange(h)[:, None] >= int(h * 0.72)
+    arr[..., 3] = np.where((arr[..., 3] > 0) & (sat < 20) & (bright < 85) & yy, 0, arr[..., 3])
+
+    al = Image.fromarray(arr[..., 3].astype(np.uint8), "L")
+    al = al.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.35))
+    arr[..., 3] = np.asarray(al)
+    arr[..., 3] = np.where(arr[..., 3] < 50, 0, arr[..., 3])
+
+    rr, gg, bb = arr[..., 0], arr[..., 1], arr[..., 2]
+    pink = (arr[..., 3] > 40) & (rr > 175) & (bb > 120) & (gg < 130)
+    if pink.mean() > 0.008:
+        print("skip stamp: residual pink")
+        return
+    arr[..., 3] = np.where(pink, 0, arr[..., 3])
+
+    s = Image.fromarray(arr.astype(np.uint8), "RGBA")
+    # bóng tiếp xúc cực nhẹ — ellipse nhỏ, không hộp
     sh = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(sh)
-    d.ellipse([w * 0.22, h * 0.86, w * 0.78, h * 0.98], fill=(20, 18, 14, 75))
-    s = Image.fromarray(arr.astype(np.uint8), "RGBA")
-    r, g, b, a = s.split()
-    a = a.filter(ImageFilter.GaussianBlur(0.35))
-    s = Image.merge("RGBA", (r, g, b, a))
-    dest = (int(cx - w // 2), int(cy - h + 12))
+    d.ellipse(
+        [int(w * 0.40), int(h * 0.95), int(w * 0.60), int(h * 0.995)],
+        fill=(12, 10, 8, 24),
+    )
+    dest = (int(cx - w // 2), int(cy - h + 3))
     canvas.alpha_composite(sh, dest=dest)
     canvas.alpha_composite(s, dest=dest)
 
@@ -251,112 +230,126 @@ def load_props() -> dict[str, Image.Image]:
     files = {
         "dummy": GEN / "prop-moc-nhan.jpg",
         "lantern": GEN / "prop-den-da.jpg",
-        "bamboo": GEN / "prop-coc-tre.jpg",
-        "stele": GEN / "prop-bia-da.jpg",
     }
-    # also copy into review pack for reproducibility
     prop_dir = REVIEW / "props"
     prop_dir.mkdir(parents=True, exist_ok=True)
     out = {}
     for k, p in files.items():
-        if not p.exists():
-            raise FileNotFoundError(p)
         rgba = chroma_key_rgba(p)
-        # save keyed png
         rgba.save(prop_dir / f"{k}.png")
+        al = np.asarray(rgba.split()[-1])
+        print(f"prop {k}: {rgba.size} opaque%={(al > 0).mean()*100:.1f}")
         out[k] = rgba
-        print(f"prop {k}: {rgba.size} alpha>0={(np.asarray(rgba.split()[-1]) > 0).mean()*100:.1f}%")
     return out
 
 
-def rebuild(src: Image.Image) -> tuple[Image.Image, list[dict]]:
+def light_tran_recolor(orig: Image.Image) -> Image.Image:
+    warm = recolor_tran(orig)
+    a = np.asarray(orig, dtype=np.float32)
+    b = np.asarray(warm, dtype=np.float32)
+    r, g, bl = a[..., 0], a[..., 1], a[..., 2]
+    bright = (r + g + bl) / 3.0
+    sat = a.max(2) - a.min(2)
+    stone = ((sat < 42) & (bright > 65) & (bright < 175) & (np.abs(r - g) < 30)).astype(
+        np.float32
+    )
+    stone = (
+        np.asarray(
+            Image.fromarray((stone * 255).astype(np.uint8), "L").filter(
+                ImageFilter.GaussianBlur(2.5)
+            ),
+            dtype=np.float32,
+        )
+        / 255.0
+    )
+    foliage = ((g > r + 12) & (g > bl + 8) & (sat > 35) & (bright > 50)).astype(np.float32)
+    foliage = (
+        np.asarray(
+            Image.fromarray((foliage * 255).astype(np.uint8), "L").filter(
+                ImageFilter.GaussianBlur(1.5)
+            ),
+            dtype=np.float32,
+        )
+        / 255.0
+    )
+    w = 0.24 * (1.0 - stone) * (1.0 - foliage) + 0.04 * stone + 0.03 * foliage
+    out = a * (1 - w[..., None]) + b * w[..., None]
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
+
+
+def rebuild() -> tuple[Image.Image, list[tuple[int, int]]]:
+    clean = load_clean_vltk()
     x0, y0, _, _ = BOX
-    crop = np.asarray(src.crop(BOX))
-    regions = detect_flag_regions(crop)
-    img = inpaint_flags(src, regions)
-    img = warm_courtyard(img)
+    # giữ footprint: chỉ dịu cờ cam + recolor nhẹ — không patch sàn
+    img = soft_recolor_orange_banners(clean)
+    img = light_tran_recolor(img)
+
     props = load_props()
     canvas = img.convert("RGBA")
-
-    # order spots for variety
-    spots = sorted(regions, key=lambda c: (c["cy"], c["cx"]))
-    cycle = ["dummy", "bamboo", "lantern", "dummy", "bamboo", "lantern", "dummy", "bamboo"]
-    scales = {
-        "dummy": 0.118,
-        "bamboo": 0.105,
-        "lantern": 0.112,
-        "stele": 0.155,
-    }
-    for i, c in enumerate(spots):
+    cycle = ["dummy", "lantern", "dummy", "lantern", "dummy", "lantern", "dummy"]
+    scales = {"dummy": 0.115, "lantern": 0.108}
+    for i, (cx, cy) in enumerate(PROP_SPOTS):
         kind = cycle[i % len(cycle)]
-        gx = x0 + int(c["cx"])
-        gy = y0 + int(c["y1"])
-        stamp(canvas, props[kind], gx, gy, scales[kind] * (1.0 + (i % 3) * 0.04))
-
-    # landmark stele front-center courtyard
-    stamp(canvas, props["stele"], x0 + 760, y0 + 1120, scales["stele"])
+        stamp_matched(
+            canvas,
+            props[kind],
+            x0 + int(cx),
+            y0 + int(cy),
+            scales[kind] * (1.0 + (i % 2) * 0.025),
+        )
 
     out = canvas.convert("RGB")
-    out = ImageEnhance.Contrast(out).enhance(1.02)
-    out = ImageEnhance.Color(out).enhance(1.03)
-    out = ImageEnhance.Sharpness(out).enhance(1.08)
-    return out, spots
+    out = ImageEnhance.Contrast(out).enhance(1.01)
+    out = ImageEnhance.Sharpness(out).enhance(1.02)
+    return out, PROP_SPOTS
 
 
-def save_previews(img: Image.Image, before: Image.Image, spots: list[dict]) -> None:
+def save_previews(img: Image.Image, spots: list[tuple[int, int]]) -> None:
     REVIEW.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
-    img.save(REVIEW / "402-preview.jpg", quality=91, optimize=True)
     crop = img.crop(BOX).resize((960, 960), Image.LANCZOS)
     crop.save(REVIEW / "courtyard.jpg", quality=90)
     crop.save(ART / "courtyard.jpg", quality=90)
     img.resize((1024, 1024), Image.LANCZOS).save(REVIEW / "thumb-1024.jpg", quality=88)
 
-    a = before.crop(BOX).resize((480, 480), Image.LANCZOS)
-    b = crop.resize((480, 480), Image.LANCZOS)
-    strip = Image.new("RGB", (960, 520), (24, 22, 18))
-    strip.paste(a, (0, 40))
-    strip.paste(b, (480, 40))
-    d = ImageDraw.Draw(strip)
-    d.text((16, 10), "Truoc: co cam", fill=(220, 200, 160))
-    d.text((496, 10), "Sau: moc nhan / tre / den da / bia (prop generate)", fill=(220, 200, 160))
-    strip.save(ART / "before-after.jpg", quality=90)
-    strip.save(REVIEW / "before-after.jpg", quality=90)
+    clean = load_clean_vltk()
+    side = Image.new("RGB", (960, 500), (20, 18, 16))
+    side.paste(clean.crop(BOX).resize((470, 470)), (10, 20))
+    side.paste(crop.resize((470, 470)), (490, 20))
+    d = ImageDraw.Draw(side)
+    d.text((20, 2), "VLTK clean", fill=(200, 200, 160))
+    d.text((500, 2), "402 no overlay", fill=(160, 220, 160))
+    side.save(ART / "footprint-match.jpg", quality=90)
+    side.save(REVIEW / "footprint-match.jpg", quality=90)
 
-    # spot grid
-    grid = Image.new("RGB", (900, 620), (20, 18, 16))
-    d = ImageDraw.Draw(grid)
-    bc = before.crop(BOX)
-    cc = img.crop(BOX)
-    for i, c in enumerate(spots[:6]):
-        x, y = int(c["cx"]), int(c["cy"])
-        aa = bc.crop((x - 45, y - 85, x + 45, y + 45)).resize((140, 180))
-        bb = cc.crop((x - 45, y - 85, x + 45, y + 45)).resize((140, 180))
-        col, row = i % 3, i // 3
-        grid.paste(aa, (col * 300 + 10, row * 300 + 30))
-        grid.paste(bb, (col * 300 + 155, row * 300 + 30))
-        d.text((col * 300 + 10, row * 300 + 10), f"{i} before", fill=(200, 180, 140))
-        d.text((col * 300 + 155, row * 300 + 10), f"{i} after", fill=(140, 200, 140))
-    grid.save(ART / "spots-compare.jpg", quality=92)
-    print("spots", len(spots))
+    zooms = Image.new("RGB", (800, 220), (18, 16, 14))
+    for i, (cx, cy) in enumerate(spots[:4]):
+        patch = img.crop(BOX).crop((cx - 70, cy - 140, cx + 70, cy + 30)).resize((190, 200))
+        zooms.paste(patch, (10 + i * 195, 10))
+    zooms.save(ART / "stamp-zooms.jpg", quality=90)
+
+    ca = np.asarray(clean.crop(BOX), dtype=float)
+    ba = np.asarray(img.crop(BOX), dtype=float)
+    pink = (
+        (ba[..., 0] > 180)
+        & (ba[..., 2] > 130)
+        & (ba[..., 1] < 140)
+        & (ba[..., 0] + ba[..., 2] > ba[..., 1] * 2.3)
+    )
+    print(
+        f"metrics: mean_diff={np.abs(ba-ca).mean():.2f} pink_px={int(pink.sum())} spots={len(spots)}"
+    )
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
-    ap.add_argument("--src", default="/tmp/402-orig.jpg")
     args = ap.parse_args()
-    src_path = Path(args.src)
-    if not src_path.exists():
-        # fallback: extract clean from git if possible
-        src_path = Z / "402.jpg"
-    src = Image.open(src_path).convert("RGB")
-    before = src.copy()
-    out, spots = rebuild(src)
-    save_previews(out, before, spots)
+    out, spots = rebuild()
+    save_previews(out, spots)
     if args.apply:
         out.save(Z / "402.jpg", quality=91, optimize=True)
-        print("applied ->", Z / "402.jpg", (Z / "402.jpg").stat().st_size)
+        print("applied", Z / "402.jpg", (Z / "402.jpg").stat().st_size)
     else:
         print("preview only")
 
