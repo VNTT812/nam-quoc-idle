@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-"""Dựng lại Phổ Minh Tự (400): nền liền mạch + cụm chùa rõ nét.
+"""Phổ Minh Tự (400): khôi phục bố cục map gốc rồi dựng lại bối cảnh.
 
-- Base: layout Yên Tử (VLTK) reskin tông ấm — không lát tile AI.
-- Điểm nhấn: blend grass-aware 1 cảnh chùa lớn + 2 nhà/bia (không lặp lưới).
+- Layout gốc = tran-pho-minh-map.jpg (điện, ao sen, sư tử, đường, tre) — không lấy Yên Tử.
+- Không lát tile AI (tránh ghép mảnh lặp chùa).
+- Reskin HSV tông Trần ấm trên đúng pixel bố cục gốc.
 """
 from __future__ import annotations
 
 import base64
 import json
 import re
-import subprocess
 import sys
-from io import BytesIO
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from reskin_tran_layout import (  # noqa: E402
-    ORIG_REV,
     TILES,
     Z,
     bias_params,
@@ -34,6 +32,7 @@ from reskin_tran_layout import (  # noqa: E402
 )
 
 CW, CH = 32, 16
+SIZE = 3584
 
 
 def extract_zone(js_text: str, stem: str):
@@ -106,186 +105,181 @@ def carve_path(blocked, pts, radius, gw, gh):
                         blocked[gy * gw + gx] = 0
 
 
-def build_base() -> Image.Image:
-    data = subprocess.check_output(["git", "show", f"{ORIG_REV}:img/z/2.jpg"])
-    orig = Image.open(BytesIO(data)).convert("RGB")
-    W, H = orig.size
-    og = np.asarray(orig, dtype=np.float32)
-    p = bias_params("warm")
+def load_layout_orig() -> Image.Image:
+    """Map gốc Phổ Minh — asset bố cục điện/ao/đường (không Yên Tử)."""
+    p = TILES / "tran-pho-minh-map.jpg"
+    if not p.exists():
+        raise SystemExit(f"missing layout orig {p}")
+    return Image.open(p).convert("RGB")
+
+
+def build_canvas_from_layout(src: Image.Image, size: int = SIZE) -> Image.Image:
+    """Phóng bố cục gốc lên full map, mép liền (không lát lặp cả cảnh chùa)."""
+    # Nền: phóng cả cảnh + blur nhẹ — cùng DNA bố cục, mép không đường cắt
+    base = src.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2))
+    ba = np.asarray(base, dtype=np.float32)
+
+    # Lõi nét: cùng bố cục, chiếm phần lớn khung (giữ vị trí điện/ao/đường)
+    core_sz = 3300
+    core = src.resize((core_sz, core_sz), Image.LANCZOS)
+    ca = np.asarray(core, dtype=np.float32)
+    ox = (size - core_sz) // 2
+    oy = (size - core_sz) // 2 - 40  # hơi lệch lên như bố cục gốc (điện lệch trên)
+
+    # Feather mép lõi vào nền phóng — hết khung cứng, vẫn đúng bố cục
+    yy, xx = np.ogrid[:core_sz, :core_sz]
+    margin = 160.0
+    dx = np.minimum(xx, core_sz - 1 - xx)
+    dy = np.minimum(yy, core_sz - 1 - yy)
+    edge = np.minimum(dx, dy).astype(np.float32)
+    alpha = np.clip(edge / margin, 0, 1)
+    alpha = alpha * alpha * (3 - 2 * alpha)
+
+    x0, y0 = max(0, ox), max(0, oy)
+    x1, y1 = min(size, ox + core_sz), min(size, oy + core_sz)
+    sx0, sy0 = x0 - ox, y0 - oy
+    sw, sh = x1 - x0, y1 - y0
+    a = alpha[sy0 : sy0 + sh, sx0 : sx0 + sw][..., None]
+    patch = ca[sy0 : sy0 + sh, sx0 : sx0 + sw]
+    ba[y0:y1, x0:x1] = patch * a + ba[y0:y1, x0:x1] * (1.0 - a)
+
+    return Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
+
+
+def reskin_scenery(img: Image.Image, bias: str = "warm") -> Image.Image:
+    """Dựng lại bối cảnh Trần trên đúng bố cục — giữ mái ngói đỏ/cam gốc."""
+    W, H = img.size
+    og = np.asarray(img, dtype=np.float32)
     c = classify(og)
+    p = bias_params(bias)
     h, s, v = rgb_to_hsv(og)
+    r, g, b = og[..., 0], og[..., 1], og[..., 2]
+
+    # Mái ngói đỏ/cam gốc — khóa trước khi canopy (lá vàng) nuốt mất
+    roof_raw = (
+        (r > g + 6)
+        & (r > b + 8)
+        & (r > 75)
+        & (g < 175)
+        & (c["bright"] > 55)
+        & (c["bright"] < 210)
+    ).astype(np.float32)
+    m_roof = blur_mask(roof_raw, 0.7)
+
     m_path = blur_mask(c["path"], 0.9)
-    m_grass = blur_mask(c["grass"], 1.1)
-    m_tree = blur_mask(c["canopy"], 0.9)
+    m_grass = blur_mask(c["grass"], 1.0)
+    m_tree = blur_mask(c["canopy"] * (1.0 - roof_raw), 0.9)  # đừng coi mái là tán
     m_rock = blur_mask(c["rock"], 0.8)
-    m_built = blur_mask(c["built"], 1.1)
+    m_built = blur_mask(np.clip(c["built"] + roof_raw, 0, 1), 1.0)
+
     stack = np.stack(
-        [m_built * 1.35, m_tree * 1.3, m_path * 1.15, m_grass * 1.0, m_rock * 1.05],
+        [
+            m_roof * 2.2,
+            m_built * 1.35,
+            m_tree * 1.15,
+            m_path * 1.15,
+            m_grass * 1.0,
+            m_rock * 1.05,
+        ],
         axis=-1,
     )
     w = stack / (stack.sum(-1, keepdims=True) + 1e-5)
-    mb, mt, mp, mg, mr = [w[..., i] for i in range(5)]
-    h, s = mix_hue_sat(h, s, mb, p["built"][0], p["built"][1], hue_w=0.92, sat_w=0.6)
-    h, s = mix_hue_sat(h, s, mt, p["canopy"][0], p["canopy"][1], hue_w=0.95, sat_w=0.65)
-    h, s = mix_hue_sat(h, s, mp, p["path"][0], p["path"][1], hue_w=0.75, sat_w=0.45)
-    h, s = mix_hue_sat(h, s, mg, p["grass"][0], p["grass"][1], hue_w=0.8, sat_w=0.5)
-    h, s = mix_hue_sat(h, s, mr, p["rock"][0], p["rock"][1], hue_w=0.7, sat_w=0.4)
-    roof = mb * np.clip((c["bright"] - 115.0) / 70.0, 0, 1)
-    h = h * (1.0 - 0.45 * roof) + 0.04 * (0.45 * roof)
-    s = np.clip(s + 0.14 * roof, 0, 1)
-    body = mb * np.clip((130.0 - c["bright"]) / 70.0, 0, 1)
-    h = h * (1.0 - 0.35 * body) + 0.075 * (0.35 * body)
-    s = np.clip(s * (1.0 - 0.2 * body) + 0.22 * body, 0, 1)
+    mrf, mb, mt, mp, mg, mr = [w[..., i] for i in range(6)]
+
+    # Remap nhẹ — giữ palette bố cục gốc, chỉ chỉnh bối cảnh
+    h, s = mix_hue_sat(h, s, mb * (1.0 - mrf), p["built"][0], p["built"][1], hue_w=0.55, sat_w=0.35)
+    h, s = mix_hue_sat(h, s, mt, p["canopy"][0], p["canopy"][1], hue_w=0.55, sat_w=0.4)
+    h, s = mix_hue_sat(h, s, mp, p["path"][0], p["path"][1], hue_w=0.4, sat_w=0.28)
+    h, s = mix_hue_sat(h, s, mg, p["grass"][0], p["grass"][1], hue_w=0.45, sat_w=0.32)
+    h, s = mix_hue_sat(h, s, mr, p["rock"][0], p["rock"][1], hue_w=0.4, sat_w=0.25)
+
+    # Khóa hue mái về ngói đỏ-cam (không cho thành xanh)
+    h = h * (1.0 - 0.85 * mrf) + 0.04 * (0.85 * mrf)
+    s = np.clip(s * (1.0 - 0.35 * mrf) + 0.48 * mrf, 0, 1)
+    v = np.clip(v * (1.0 + 0.04 * mrf), 0, 1)
+
+    body = mb * (1.0 - mrf) * np.clip((130.0 - c["bright"]) / 70.0, 0, 1)
+    h = h * (1.0 - 0.28 * body) + 0.07 * (0.28 * body)
+    s = np.clip(s * (1.0 - 0.15 * body) + 0.18 * body, 0, 1)
+
+    # Ao sen: xanh nước nhẹ, không đè cỏ
+    water = (
+        (b > r + 10) & (b >= g - 2) & (c["bright"] < 100) & (c["bright"] > 20) & (g < 140)
+    ).astype(np.float32)
+    mw = blur_mask(water, 1.0) * (1.0 - mrf)
+    h = h * (1.0 - 0.45 * mw) + 0.56 * (0.45 * mw)
+    s = np.clip(s * (1.0 - 0.2 * mw) + 0.32 * mw, 0, 1)
+
     out = hsv_to_rgb(h, s, v)
-    warm_mul = np.array([1.18, 1.02, 0.82], dtype=np.float32)
-    warm_add = np.array([14.0, 6.0, -4.0], dtype=np.float32)
-    out = out * (1.0 - 0.55 * mb[..., None]) + np.clip(out * warm_mul + warm_add, 0, 255) * (
-        0.55 * mb[..., None]
-    )
+    warm_mul = np.array([1.12, 1.02, 0.88], dtype=np.float32)
+    warm_add = np.array([8.0, 3.0, -2.0], dtype=np.float32)
+    warm_m = (mb * 0.35 + mrf * 0.55)[..., None]
+    out = out * (1.0 - warm_m) + np.clip(out * warm_mul + warm_add, 0, 255) * warm_m
+
     grain = ground_grain(W, H, seed=400)
     if grain is not None:
-        gmask = (mp * 0.28 + mg * 0.16)[..., None]
+        gmask = ((mp * 0.22 + mg * 0.12) * (1.0 - mrf))[..., None]
         gL = grain.mean(2) + 1e-5
         oL = out.mean(2) + 1e-5
         grain2 = grain * (oL / gL)[..., None]
         out = out * (1.0 - gmask) + grain2 * gmask
-    out[..., 0] = np.clip(out[..., 0] * 1.04 + 3, 0, 255)
-    out[..., 1] = np.clip(out[..., 1] * 1.02 + 1, 0, 255)
-    out[..., 2] = np.clip(out[..., 2] * 0.94, 0, 255)
-    img = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
-    return ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.05)).enhance(1.06)
+
+    out[..., 0] = np.clip(out[..., 0] * 1.02 + 1, 0, 255)
+    out[..., 1] = np.clip(out[..., 1] * 1.01, 0, 255)
+    out[..., 2] = np.clip(out[..., 2] * 0.97, 0, 255)
+
+    img2 = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
+    img2 = ImageEnhance.Contrast(img2).enhance(1.05)
+    img2 = ImageEnhance.Color(img2).enhance(1.03)
+    img2 = ImageEnhance.Sharpness(img2).enhance(1.15)
+    return img2
 
 
-def blend_stamp(
-    ba: np.ndarray,
-    stamp_img: Image.Image,
-    xy,
-    size,
-    core=0.38,
-    soft=0.92,
-    built_keep=1.0,
-    green_keep=0.22,
-    path_keep=0.55,
-    tw=None,
-    th=None,
-):
-    """Giữ mái/đá/tượng; cỏ của stamp phai vào rừng nền — hết khung vuông."""
-    H, W = ba.shape[:2]
-    tw = int(tw or size)
-    th = int(th or size)
-    s = stamp_img.resize((tw, th), Image.LANCZOS).convert("RGB")
-    sa = np.asarray(s, dtype=np.float32)
-    bx, by = xy
-    x0, y0 = max(0, bx), max(0, by)
-    x1, y1 = min(W, bx + tw), min(H, by + th)
-    sx0, sy0 = x0 - bx, y0 - by
-    sw, sh = x1 - x0, y1 - y0
-    patch = sa[sy0 : sy0 + sh, sx0 : sx0 + sw].copy()
-    dest = ba[y0:y1, x0:x1]
-    yy, xx = np.ogrid[:sh, :sw]
-    rad = np.sqrt(
-        ((xx - (tw / 2 - sx0)) / (tw / 2)) ** 2 + ((yy - (th / 2 - sy0)) / (th / 2)) ** 2
-    )
-    a = np.clip((soft - rad) / max(1e-5, soft - core), 0, 1)
-    a = a * a * (3 - 2 * a)
-    r, g, b = patch[..., 0], patch[..., 1], patch[..., 2]
-    greenish = (g > r + 6) & (g > b + 4) & (g > 55)
-    pathish = (np.abs(r - g) < 35) & (r > 70) & (g > 55) & (b > 35) & ~greenish
-    roof = (r > g + 10) & (r > b + 6) & (r > 85)
-    stone = (np.abs(r.astype(np.float32) - g) < 28) & (r > 70) & (r < 175) & (b > 55) & ~greenish
-    wood = (r > g + 5) & (g > b + 5) & (r > 60) & (r < 160) & ~greenish
-    built = roof | stone | wood | (~greenish & ((r > g + 8) | (r + g + b < 140)))
-    keep = np.where(built, built_keep, np.where(pathish, path_keep, green_keep))
-    a = a * keep
-    ring = (a > 0.05) & (a < 0.55)
-    if ring.any():
-        sL = float(patch[ring].mean())
-        dL = float(dest[ring].mean())
-        if sL > 1:
-            patch = np.clip(patch * (0.65 + 0.35 * (dL / sL)), 0, 255)
-    a3 = a[..., None]
-    ba[y0:y1, x0:x1] = patch * a3 + dest * (1.0 - a3)
-    return ba
+def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
+    """Vật cản khớp bố cục Phổ Minh: chặn điện/sư tử, mở đường vào chùa."""
+    gw, gh = meta2["gw"], meta2["gh"]
+    blocked = decode_obs(meta2)
+    cx, cy = size // 2, size // 2
+    # Điện chính + nền đá (lệch trên như layout gốc)
+    mark_rect(blocked, cx - 280, cy - 520, 560, 420, True, gw, gh)
+    # Sư tử / bậc thềm
+    mark_rect(blocked, cx - 320, cy - 160, 200, 140, True, gw, gh)
+    mark_rect(blocked, cx + 80, cy - 140, 220, 140, True, gw, gh)
+    # Ao sen (trái dưới điện)
+    mark_rect(blocked, cx - 720, cy - 80, 280, 260, True, gw, gh)
+    # Đường chính từ dưới lên thềm
+    carve_path(blocked, [(cx - 200, cy + 1100), (cx, cy + 200), (cx, cy - 80)], 95, gw, gh)
+    carve_path(blocked, [(cx - 600, cy + 400), (cx - 200, cy + 200), (cx, cy + 80)], 70, gw, gh)
+    carve_path(blocked, [(cx + 500, cy + 500), (cx + 120, cy + 160)], 65, gw, gh)
+    meta = dict(meta2)
+    meta["obs"] = encode_obs(blocked)
+    meta["blocked"] = int(sum(blocked))
+    return meta
 
 
 def main() -> None:
-    base = build_base()
-    W, H = base.size
-    cx, cy = W // 2, H // 2
-    ba = np.asarray(base, dtype=np.float32)
+    src = load_layout_orig()
+    print(f"layout orig {src.size} from {TILES / 'tran-pho-minh-map.jpg'}")
 
-    temple = Image.open(TILES / "tran-pho-minh-map.jpg")
-    house = Image.open(TILES / "prop-tran-house.jpg")
-    stele = Image.open(TILES / "prop-tran-stele.jpg")
-    # Crop điện chính + sư tử (bỏ ao/rừng thừa) — stamp rõ như chùa thật
-    hall = temple.crop((260, 160, 800, 740))
+    canvas = build_canvas_from_layout(src, SIZE)
+    img = reskin_scenery(canvas, bias="warm")
 
-    # Nền cảnh chùa rộng (ao + đường) rồi đè điện chính cứng hơn
-    main_sz = 2200
-    ba = blend_stamp(
-        ba,
-        temple,
-        (cx - main_sz // 2, cy - main_sz // 2 - 80),
-        main_sz,
-        core=0.42,
-        soft=0.94,
-        built_keep=1.0,
-        green_keep=0.18,
-        path_keep=0.62,
-    )
-    hall_w, hall_h = 1180, 1280
-    ba = blend_stamp(
-        ba,
-        hall,
-        (cx - hall_w // 2, cy - hall_h // 2 - 220),
-        hall_w,
-        core=0.48,
-        soft=0.96,
-        built_keep=1.0,
-        green_keep=0.12,
-        path_keep=0.7,
-        tw=hall_w,
-        th=hall_h,
-    )
-    ba = blend_stamp(
-        ba, house, (cx - 1180, cy + 180), 640, core=0.4, soft=0.88, built_keep=1.0, green_keep=0.15
-    )
-    ba = blend_stamp(
-        ba,
-        house.transpose(Image.FLIP_LEFT_RIGHT),
-        (cx + 560, cy - 40),
-        600,
-        core=0.4,
-        soft=0.88,
-        built_keep=1.0,
-        green_keep=0.15,
-    )
-    ba = blend_stamp(
-        ba, stele, (cx - 280, cy + 820), 340, core=0.32, soft=0.82, built_keep=1.0, green_keep=0.12
-    )
-    ba = blend_stamp(
-        ba, stele, (cx + 40, cy + 860), 280, core=0.32, soft=0.82, built_keep=1.0, green_keep=0.12
-    )
-
-    img = Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
-    img = ImageEnhance.Contrast(ImageEnhance.Color(img).enhance(1.05)).enhance(1.06)
     out_path = Z / "400.jpg"
     img.save(out_path, quality=90, optimize=True)
     print(f"saved {out_path} {out_path.stat().st_size // 1024}KB")
 
+    # Preview artifacts
+    art = Path("/opt/cursor/artifacts")
+    art.mkdir(parents=True, exist_ok=True)
+    img.resize((800, 800), Image.LANCZOS).save(art / "pho-minh-layout-full.jpg", quality=88)
+    cx = cy = SIZE // 2
+    img.crop((cx - 420, cy - 620, cx + 420, cy + 80)).save(
+        art / "pho-minh-layout-temple.jpg", quality=92
+    )
+
     jmo = (ROOT / "jmo.js").read_text(encoding="utf-8")
     meta2, _, _ = extract_zone(jmo, "2")
-    gw, gh = meta2["gw"], meta2["gh"]
-    blocked = decode_obs(meta2)
-    mark_rect(blocked, cx - 420, cy - 560, 840, 620, True, gw, gh)
-    mark_rect(blocked, cx - 1180 + 80, cy + 180 + 80, 460, 360, True, gw, gh)
-    mark_rect(blocked, cx + 560 + 60, cy - 40 + 80, 440, 340, True, gw, gh)
-    carve_path(blocked, [(cx, cy + 1100), (cx, cy + 280)], 90, gw, gh)
-    carve_path(blocked, [(cx - 280, cy + 600), (cx, cy + 280), (cx + 280, cy + 600)], 70, gw, gh)
-
-    meta = dict(meta2)
-    meta["obs"] = encode_obs(blocked)
-    meta["blocked"] = int(sum(blocked))
+    meta = obs_for_layout(meta2, SIZE)
 
     jmo2_path = ROOT / "jmo2.js"
     jmo2 = jmo2_path.read_text(encoding="utf-8")
@@ -300,7 +294,7 @@ def main() -> None:
     (ROOT / "zones2.js").write_text(
         re.sub(r"img/z/400\.jpg(?:\?v=\d+)?", f"img/z/400.jpg?v={ver}", z2), encoding="utf-8"
     )
-    print(f"Done v{ver}")
+    print(f"Done v{ver} — bố cục Phổ Minh gốc + bối cảnh Trần")
 
 
 if __name__ == "__main__":
