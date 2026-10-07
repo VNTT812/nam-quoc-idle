@@ -32,6 +32,12 @@ Reply key muốn **giữ** / **bỏ** / **đưa vào spawn**, ví dụ:
 | `thao` | Áo thảo | Dân dã | `#7a6a38` | `#4a4020` |
 | `huyen` | Áo huyền | Đặc sứ | `#3a2a3a` | `#1e1620` |
 | `ngoc` | Áo ngọc | Cận vệ | `#2a5a55` | `#163832` |
+| `hoang` | Áo hoàng | Cận thần | `#c4a035` | `#6e5818` |
+| `tu` | Áo tử | Quan võ | `#6a3a58` | `#3a2030` |
+| `dong` | Áo đồng | Lính cung | `#8a5a32` | `#4a3018` |
+| `lua` | Áo lửa | Cảm tử | `#b04828` | `#5c2414` |
+| `sam` | Áo sẫm | Đêm | `#1e2a3a` | `#101820` |
+| `ho` | Áo hổ | Dũng sĩ | `#8a5228` | `#4a2c14` |
 
 ## Gán spawn hiện tại
 

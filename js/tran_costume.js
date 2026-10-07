@@ -19,7 +19,14 @@ const TRAN_COSTUMES = {
   dat:   { n: 'Áo đất',   note: 'Nâu đất đậm · nông binh', body: { c: '#5a3a22', a: 0.44 }, head: { c: '#2e1e12', a: 0.30 }, status: 'candidate' },
   thao:  { n: 'Áo thảo',  note: 'Vàng cỏ · dân dã',        body: { c: '#7a6a38', a: 0.40 }, head: { c: '#4a4020', a: 0.28 }, status: 'candidate' },
   huyen: { n: 'Áo huyền', note: 'Than tối · đặc sứ',       body: { c: '#3a2a3a', a: 0.42 }, head: { c: '#1e1620', a: 0.32 }, status: 'candidate' },
-  ngoc:  { n: 'Áo ngọc',  note: 'Xanh ngọc · cận vệ',      body: { c: '#2a5a55', a: 0.42 }, head: { c: '#163832', a: 0.30 }, status: 'candidate' }
+  ngoc:  { n: 'Áo ngọc',  note: 'Xanh ngọc · cận vệ',      body: { c: '#2a5a55', a: 0.42 }, head: { c: '#163832', a: 0.30 }, status: 'candidate' },
+  /* —— đợt duyệt thêm —— */
+  hoang: { n: 'Áo hoàng', note: 'Hoàng y · cận thần',      body: { c: '#c4a035', a: 0.44 }, head: { c: '#6e5818', a: 0.30 }, status: 'candidate' },
+  tu:    { n: 'Áo tử',    note: 'Tía dâu · quan võ',       body: { c: '#6a3a58', a: 0.42 }, head: { c: '#3a2030', a: 0.30 }, status: 'candidate' },
+  dong:  { n: 'Áo đồng',  note: 'Đồng hun · lính cung',    body: { c: '#8a5a32', a: 0.44 }, head: { c: '#4a3018', a: 0.30 }, status: 'candidate' },
+  lua:   { n: 'Áo lửa',   note: 'Cam lửa · cảm tử',        body: { c: '#b04828', a: 0.44 }, head: { c: '#5c2414', a: 0.30 }, status: 'candidate' },
+  sam:   { n: 'Áo sẫm',   note: 'Chàm sẫm · đêm',          body: { c: '#1e2a3a', a: 0.46 }, head: { c: '#101820', a: 0.34 }, status: 'candidate' },
+  ho:    { n: 'Áo hổ',    note: 'Nâu hổ · dũng sĩ',        body: { c: '#8a5228', a: 0.42 }, head: { c: '#4a2c14', a: 0.30 }, status: 'candidate' }
 };
 
 const TRAN_COSTUME_KEYS = Object.keys(TRAN_COSTUMES);

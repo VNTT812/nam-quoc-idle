@@ -115,5 +115,59 @@
     "head": "#163832",
     "file": "costume_ngoc.png",
     "status": "candidate"
+  },
+  {
+    "key": "hoang",
+    "n": "Áo hoàng",
+    "note": "Hoàng y · cận thần",
+    "body": "#c4a035",
+    "head": "#6e5818",
+    "file": "costume_hoang.png",
+    "status": "candidate"
+  },
+  {
+    "key": "tu",
+    "n": "Áo tử",
+    "note": "Tía dâu · quan võ",
+    "body": "#6a3a58",
+    "head": "#3a2030",
+    "file": "costume_tu.png",
+    "status": "candidate"
+  },
+  {
+    "key": "dong",
+    "n": "Áo đồng",
+    "note": "Đồng hun · lính cung",
+    "body": "#8a5a32",
+    "head": "#4a3018",
+    "file": "costume_dong.png",
+    "status": "candidate"
+  },
+  {
+    "key": "lua",
+    "n": "Áo lửa",
+    "note": "Cam lửa · cảm tử",
+    "body": "#b04828",
+    "head": "#5c2414",
+    "file": "costume_lua.png",
+    "status": "candidate"
+  },
+  {
+    "key": "sam",
+    "n": "Áo sẫm",
+    "note": "Chàm sẫm · đêm",
+    "body": "#1e2a3a",
+    "head": "#101820",
+    "file": "costume_sam.png",
+    "status": "candidate"
+  },
+  {
+    "key": "ho",
+    "n": "Áo hổ",
+    "note": "Nâu hổ · dũng sĩ",
+    "body": "#8a5228",
+    "head": "#4a2c14",
+    "file": "costume_ho.png",
+    "status": "candidate"
   }
 ]

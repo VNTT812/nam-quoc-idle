@@ -27,6 +27,13 @@ COSTUMES = {
     "thao": {"n": "Áo thảo", "note": "Vàng cỏ · dân dã", "body": ("#7a6a38", 0.40), "head": ("#4a4020", 0.28)},
     "huyen": {"n": "Áo huyền", "note": "Than tối · đặc sứ", "body": ("#3a2a3a", 0.42), "head": ("#1e1620", 0.32)},
     "ngoc": {"n": "Áo ngọc", "note": "Xanh ngọc · cận vệ", "body": ("#2a5a55", 0.42), "head": ("#163832", 0.30)},
+    # đợt duyệt thêm
+    "hoang": {"n": "Áo hoàng", "note": "Hoàng y · cận thần", "body": ("#c4a035", 0.44), "head": ("#6e5818", 0.30)},
+    "tu": {"n": "Áo tử", "note": "Tía dâu · quan võ", "body": ("#6a3a58", 0.42), "head": ("#3a2030", 0.30)},
+    "dong": {"n": "Áo đồng", "note": "Đồng hun · lính cung", "body": ("#8a5a32", 0.44), "head": ("#4a3018", 0.30)},
+    "lua": {"n": "Áo lửa", "note": "Cam lửa · cảm tử", "body": ("#b04828", 0.44), "head": ("#5c2414", 0.30)},
+    "sam": {"n": "Áo sẫm", "note": "Chàm sẫm · đêm", "body": ("#1e2a3a", 0.46), "head": ("#101820", 0.34)},
+    "ho": {"n": "Áo hổ", "note": "Nâu hổ · dũng sĩ", "body": ("#8a5228", 0.42), "head": ("#4a2c14", 0.30)},
 }
 
 
