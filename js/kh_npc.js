@@ -7,8 +7,8 @@
 const KH_NPC_ZONE = 402;
 const KH_TALK_R = 48;   // ban kinh bat dau noi chuyen
 const KH_HIT_R = 42;    // ban kinh click trung sprite
-/* PNG kiem_hiep ~158px cao; hero st ~51×HERO_SCALE(1.35) ≈ 69px → scale ~0.44 cho ngang tầm */
-const KH_NPC_SCALE = 0.44;
+/* PNG kiem_hiep ~158px cao; 0.44 ngang hero st nhưng sprite có khoảng trống nên nhìn nhỏ — 0.58 gần tầm người chơi hơn */
+const KH_NPC_SCALE = 0.58;
 /* Mot NPC dung truoc nha / canh gia vu khi trong san luyen */
 const KH_ZONE_NPC = [
   /* kh20 = pose mặt sân (xoay ngược khỏi nhà); đứng sát cột (ô walk gần chân cột) */
