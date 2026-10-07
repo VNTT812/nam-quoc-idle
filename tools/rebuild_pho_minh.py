@@ -546,20 +546,29 @@ def reskin_scenery(img: Image.Image, bias: str = "warm") -> Image.Image:
 
 
 def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
-    """Vật cản khớp bố cục Phổ Minh (đã thu nhỏ): chặn điện/sư tử, mở đường."""
+    """Vật cản Phổ Minh: trong lõi mở rộng (không kế thừa núi Yên Tử).
+
+    Chỉ chặn điện / sư tử / ao; đường + cỏ + khúc gỗ đi xuyên được.
+    Ngoài lõi vẫn chặn để giữ người chơi trong khu chùa.
+    """
     gw, gh = meta2["gw"], meta2["gh"]
-    blocked = decode_obs(meta2)
-    # block toàn bộ mép rừng ngoài lõi — giữ người chơi trong khu chùa
+    # bỏ obs zone 2 — footprint Phổ Minh khác hẳn
+    blocked = [0] * (gw * gh)
     ox, oy = core_origin(size, CORE_SZ)
-    # mặc định: mở trong lõi, chặn ngoài
+    margin = 36
     for gy in range(gh):
         for gx in range(gw):
             wx, wy = (gx + 0.5) * CW, (gy + 0.5) * CH
-            if wx < ox + 40 or wy < oy + 40 or wx > ox + CORE_SZ - 40 or wy > oy + CORE_SZ - 40:
+            if (
+                wx < ox + margin
+                or wy < oy + margin
+                or wx > ox + CORE_SZ - margin
+                or wy > oy + CORE_SZ - margin
+            ):
                 blocked[gy * gw + gx] = 1
 
     s = LAYOUT_SCALE
-    cx0, cy0 = size // 2, size // 2  # tâm cũ dùng trong số liệu legacy
+    cx0, cy0 = size // 2, size // 2
 
     def R(dx, dy, w, h):
         x, y = layout_to_world(cx0 + dx, cy0 + dy, size, CORE_SZ)
@@ -567,18 +576,30 @@ def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
 
     def P(pts, radius):
         world = [layout_to_world(cx0 + dx, cy0 + dy, size, CORE_SZ) for dx, dy in pts]
-        carve_path(blocked, world, max(28, int(radius * s)), gw, gh)
+        carve_path(blocked, world, max(36, int(radius * s)), gw, gh)
 
-    # số liệu legacy: offset từ tâm map khi core≈3300
-    R(-280, -520, 560, 420)  # điện
-    R(-320, -160, 200, 140)  # sư tử L
-    R(80, -140, 220, 140)  # sư tử R
-    R(-720, -80, 280, 260)  # ao
-    P([(-200, 1100), (0, 200), (0, -80)], 95)
-    P([(-600, 400), (-200, 200), (0, 80)], 70)
-    P([(500, 500), (120, 160)], 65)
+    # chỉ khối kiến trúc / nước — không chặn khúc gỗ / cỏ
+    R(-260, -500, 520, 380)  # điện chính (hẹp hơn — chừa thềm đi)
+    R(-300, -140, 160, 120)  # sư tử L
+    R(100, -120, 160, 120)  # sư tử R
+    R(-700, -60, 240, 220)  # ao sen
+
+    # mạng đường rộng (gồm nhánh qua khu khúc gỗ bên trái điện)
+    P([(-200, 1100), (0, 220), (0, -40)], 110)
+    P([(-600, 400), (-280, 220), (-80, 80)], 90)
+    P([(500, 500), (160, 180), (40, 40)], 80)
+    P([(-450, 80), (-200, 40), (0, 60)], 85)  # ngang qua logs → sân
+    P([(-120, 400), (-80, 160), (200, 200)], 75)
+    # vòng sau điện
+    P([(-200, -80), (-400, -200), (-100, -360), (200, -200), (80, -40)], 70)
 
     meta = dict(meta2)
+    meta["w"] = size
+    meta["h"] = size
+    meta["gw"] = gw
+    meta["gh"] = gh
+    meta["cw"] = CW
+    meta["ch"] = CH
     meta["obs"] = encode_obs(blocked)
     meta["blocked"] = int(sum(blocked))
     return meta
