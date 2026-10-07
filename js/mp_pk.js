@@ -34,12 +34,15 @@ function mpPkToggle() {
 }
 
 function mpPkEmitFlag() {
+  if (!MP.pk) MP.pkTarget = null; // tat PK → bo khoa muc tieu (moi duong goi)
   const payload = { pk: MP.pk ? 1 : 0 };
+  let via = false;
   if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
     && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {
-    try { mpaSend(Object.assign({ t: 'pkflag' }, payload)); } catch (e) { /* bo qua */ }
+    try { mpaSend(Object.assign({ t: 'pkflag' }, payload)); via = true; } catch (e) { /* bo qua */ }
   }
-  if (typeof mpSend === 'function') {
+  // Chi fallback SB khi auth khong gui duoc — tranh double flag
+  if (!via && typeof mpSend === 'function') {
     try { mpSend('pkflag', payload); } catch (e) { /* bo qua */ }
   }
 }
@@ -47,15 +50,37 @@ function mpPkEmitFlag() {
 function mpPkEmitHit(payload) {
   if (!payload) return;
   if (payload.t0 == null) payload.t0 = Date.now();
+  // id goi de victim dedupe (auth + SB co the trung)
+  if (payload.hid == null) payload.hid = ((MP._pkHid = (MP._pkHid | 0) + 1) % 1e9);
   let via = false;
   if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
     && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {
     try { mpaSend(Object.assign({ t: 'pkhit' }, payload)); via = true; } catch (e) { /* bo qua */ }
   }
+  // PK damage: uu tien 1 kenh. Auth ok → khong gui SB (truoc day dual → x2 mau).
   if (!via && typeof mpSend === 'function') mpSend('pkhit', payload);
-  else if (via && typeof mpSend === 'function' && MP.ch && (MP.state === 'ok' || MP.state === 'retry')) {
-    try { mpSend('pkhit', payload); } catch (e) { /* bo qua */ }
+}
+
+/** Chong ap dung 2 lan cung 1 don (auth + SB / replay). */
+function mpPkHitDedupe(p) {
+  if (!p) return true;
+  const cid = String(p.cid || '');
+  const hid = p.hid != null ? String(p.hid) : '';
+  const t0 = p.t0 != null ? String(p.t0) : '';
+  const key = hid ? (cid + ':h' + hid) : (cid + ':t' + t0 + ':' + (p.dmg | 0) + ':' + (p.id | 0));
+  if (!key || key === ':t::0:0') return false;
+  const now = Date.now();
+  if (!MP._pkHitSeen) MP._pkHitSeen = new Map();
+  const prev = MP._pkHitSeen.get(key);
+  if (prev && now - prev < 2500) return true;
+  MP._pkHitSeen.set(key, now);
+  // don dep map
+  if (MP._pkHitSeen.size > 80) {
+    for (const [k, t] of MP._pkHitSeen) {
+      if (now - t > 2500) MP._pkHitSeen.delete(k);
+    }
   }
+  return false;
 }
 
 function mpPkPeerXY(p) {
@@ -214,6 +239,9 @@ function mpOnPkFlag(p) {
 
 function mpOnPkHit(p) {
   if (!p || !p.to) return;
+  // Goi qua tre (giu luc victim tat PK roi bat lai) — bo
+  if (p.t0 != null && Number.isFinite(+p.t0) && Date.now() - (+p.t0) > 1800) return;
+  if (mpPkHitDedupe(p)) return; // trung goi (auth+SB / replay) → bo
   const my = mpCid();
   const atk = MP.peers[String(p.cid || '')];
   const vic = p.to === my ? null : MP.peers[String(p.to)];
@@ -293,17 +321,26 @@ function mpOnPkHit(p) {
     const killer = (atk && atk.name) || 'Đối thủ';
     if (typeof log === 'function') log('<span class="bad">Bạn bị ' + killer + ' hạ gục (PK).</span>');
     if (typeof toast === 'function') toast('Bị ' + killer + ' PK hạ!');
-    // thong bao kill
+    // thong bao kill — 1 kenh (tranh double toast/log)
     const killPayload = { victim: my, by: p.cid };
-    if (typeof mpaSend === 'function' && typeof MPA !== 'undefined' && MPA.state === 'ok') {
-      try { mpaSend(Object.assign({ t: 'pkkill' }, killPayload)); } catch (e) { /* bo qua */ }
+    let viaKill = false;
+    if (typeof mpaSend === 'function' && typeof MPA !== 'undefined' && MPA.state === 'ok'
+      && MPA.ws && MPA.ws.readyState === 1) {
+      try { mpaSend(Object.assign({ t: 'pkkill' }, killPayload)); viaKill = true; } catch (e) { /* bo qua */ }
     }
-    if (typeof mpSend === 'function') mpSend('pkkill', killPayload);
+    if (!viaKill && typeof mpSend === 'function') mpSend('pkkill', killPayload);
   }
 }
 
 function mpOnPkKill(p) {
   if (!p) return;
+  const kkey = String(p.victim || '') + ':' + String(p.by || p.cid || '') + ':' + String(p.serverT || p.t0 || '');
+  if (kkey && kkey !== '::') {
+    if (!MP._pkKillSeen) MP._pkKillSeen = new Map();
+    const now = Date.now();
+    if (MP._pkKillSeen.has(kkey) && now - MP._pkKillSeen.get(kkey) < 2500) return;
+    MP._pkKillSeen.set(kkey, now);
+  }
   if (p.victim && MP.peers[String(p.victim)]) {
     const v = MP.peers[String(p.victim)];
     v.life = 0; v.act = 'die'; v.actT = 0;

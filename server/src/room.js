@@ -213,6 +213,7 @@ export class Room {
       face: p.face,
       dir: p.dir,
       crit: msg.crit ? 1 : 0,
+      hid: msg.hid != null ? (msg.hid | 0) : undefined,
       t0: Number.isFinite(+msg.t0) ? +msg.t0 : undefined,
       serverT: now
     });
