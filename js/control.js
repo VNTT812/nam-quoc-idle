@@ -113,6 +113,7 @@ function goTown() {
   obsLoad('town'); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera();
   R.bgImg = img(W.town.bg); uiSfx('use');
   playMusic(W.town.id);
+  R.khNpcs = null;                                                          // NPC tinh o Hoành Sơn Môn, khong ve Thăng Long
   $('#townName').textContent = W.town.n; $('#townBar').classList.remove('hidden');
   R.banner = { t: 2.2, text: W.town.n, sub: 'Hồi phục · bán đồ · trở lại bãi' };
   log(`Dùng Thổ Địa Phù về <b>${esc(W.town.n)}</b>.`);
