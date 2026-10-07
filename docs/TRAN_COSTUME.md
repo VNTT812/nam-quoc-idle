@@ -2,14 +2,16 @@
 
 Nhuộm màu thân + đầu trên sheet `enemy*` / `boss*`. Thú `ani*` không đổi.
 
-- Code: `js/tran_costume.js` (hook `makeEnemy` + `drawMonAnim`)
-- **Remaster pixel:** `tools/remaster_human_mobs.py` · backup gốc `assets/pack/mobs-goc/` · preview `assets/pack/mobs-remaster-review/before-after.png`
+- Code: `js/tran_costume.js` (hook `makeEnemy` + `drawMonAnim`, tint nhẹ vì sheet đã bake)
+- **Remaster pixel:** `tools/remaster_human_mobs.py` · `assets/pack/mobs-goc/` · `assets/pack/mobs-remaster/`
+- **Dựng áo Trần:** `tools/rebuild_tran_mob_costume.py` · preview [`mobs-tran-costume-review/remaster-vs-tran.png`](../assets/pack/mobs-tran-costume-review/remaster-vs-tran.png)
 - Gallery màu: [`tran_costume_preview/index.html`](tran_costume_preview/index.html)
 - Field quái: [`tran_costume_preview/mobs_field.png`](tran_costume_preview/mobs_field.png)
 
-Rollback remaster:
 ```bash
-cp assets/pack/mobs-goc/*.webp img/a/
+cp assets/pack/mobs-goc/*.webp img/a/           # về gốc
+cp assets/pack/mobs-remaster/*.webp img/a/     # về remaster (chưa áo)
+python3 tools/rebuild_tran_mob_costume.py      # bake lại áo Trần
 ```
 
 ## Spawn pool (đã gắn)
