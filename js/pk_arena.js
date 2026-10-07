@@ -7,12 +7,12 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=339',
+  bg: 'img/z/403.jpg?v=342',
   music: 400,
   limit: 180,
-  // Gan nhau de melee/tam xa danh duoc ngay (truoc ~620px → khong cham duoc)
-  spawnA: [1720, 1780],
-  spawnB: [1880, 1780]
+  // Plaza giua san (obs 403 mo) — ~384px, melee/tam xa cham duoc, khong bip tuong
+  spawnA: [1616, 1800],
+  spawnB: [2000, 1800]
 };
 const PKA = { pending: {}, inbox: null, lastInvite: 0, seen: null, cool: {}, lastEnter: 0 };
 
@@ -237,7 +237,7 @@ async function pkArenaAccept(from, room) {
   // Clear wait TRUOC enter — khong de pending treo → poll vao lai
   pkArenaClearWait(from);
   PKA.inbox = null;
-  // Vao san truoc de khong miss peer join; gui OK song song
+  // Nguoi dong y = guest (spawn B); nguoi moi = host khi nhan ok
   pkArenaEnter(room, from, false);
   const okSent = await pkArenaSend(from, 'ok', { room });
   if (!okSent) toast('Đã vào sàn — gửi đồng ý lỗi, đối thủ có thể cần mời lại');
@@ -279,8 +279,14 @@ function pkArenaEnter(room, foe, asHost) {
   if (PKA.pollT) { clearInterval(PKA.pollT); PKA.pollT = null; }
   if (typeof obsLoad === 'function') obsLoad(PK_ARENA.id);
   const [sx, sy] = R.pkArena.host ? PK_ARENA.spawnA : PK_ARENA.spawnB;
-  [H.x, H.y] = inWorld(sx, sy);
+  // Dat spawn truc tiep — plaza da walkable; tranh obsSnap keo xa
+  if (typeof obsWalk === 'function' && obsWalk(sx, sy)) {
+    H.x = sx; H.y = sy;
+  } else {
+    [H.x, H.y] = typeof inWorld === 'function' ? inWorld(sx, sy) : [sx, sy];
+  }
   H.act = 'st'; H.actT = 0;
+  R.moveTo = null; R.pickTarget = null;
   if (typeof snapCamera === 'function') snapCamera();
   R.bgImg = typeof img === 'function' ? img(PK_ARENA.bg) : null;
   if (typeof playMusic === 'function') playMusic(PK_ARENA.music);
