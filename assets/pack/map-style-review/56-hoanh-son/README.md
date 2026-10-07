@@ -18,3 +18,20 @@ Layout và `jmo.js` zone `56` **không đổi** cho tới khi bạn chọn varia
 Mở `index.html` để xem lưới thumb.
 
 Deploy (sau khi duyệt): copy variant → `img/z/56.jpg`, bump cache trong `index.html` / `sw.js` / `world.js`.
+
+## Architecture Trần (v2)
+| Slug | Mô tả |
+|------|--------|
+| `10-arch-recolor.jpg` | Đổi màu mái/tường/cờ → ngói đất nung (không stamp) |
+| `11-arch-accent.jpg` | Recolor + vẽ mái/đầu đao nhẹ |
+| `12-arch-stamp-soft.jpg` | Recolor + stamp nhà Trần (mềm) |
+| `13-arch-stamp-strong.jpg` | Recolor + stamp mạnh + đầu đao |
+| `14-arch-stamp-warm.jpg` | Recolor + stamp + grade ấm hơn |
+
+## Architecture Trần v3 (AI compound)
+| Slug | Mô tả |
+|------|--------|
+| `15-tran-arch-A.jpg` | AI Trần compound A · ngói đất nung |
+| `16-tran-arch-B.jpg` | AI Trần compound B · tông ấm |
+| `17-tran-arch-C.jpg` | AI Trần compound C · giữ sân xám |
+| `18-tran-arch-AB.jpg` | Pha A+B · mái đất nung + bố cục |
