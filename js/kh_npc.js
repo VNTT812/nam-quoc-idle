@@ -7,7 +7,7 @@
 const KH_NPC_ZONE = 402;
 /* Mot NPC dung truoc nha / canh gia vu khi trong san luyen */
 const KH_ZONE_NPC = [
-  { kh: 1, n: 'Thanh Kiếm Nữ', x: 0.531, y: 0.176, face: 1 },
+  { kh: 1, n: 'Thanh Kiếm Nữ', x: 0.524, y: 0.158, face: -1 },
 ];
 
 function khNpcImg(kh) {
