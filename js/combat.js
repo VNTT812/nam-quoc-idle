@@ -333,7 +333,8 @@ function tick(dt) {
   const looting = updateGround(dt);                       // di nhat do (cham tay, hoac het quai + khop bo loc)
   if (fieldMode()) fieldTick(dt);                          // bai luyen cong kieu JX1: quai dat san, hoi sinh tai cho (field.js)
   if (!R.enemies.length) {
-    if (fieldMode()) return;
+    /* Map khong quai (vd Hoanh Son Mon) van phai cho di chuyen — truoc day return som cat mat moveManual */
+    if (fieldMode()) { if (manual()) moveManual(dt); return; }
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
