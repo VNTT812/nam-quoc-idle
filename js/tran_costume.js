@@ -1,10 +1,15 @@
-/* Trang phục quái người — vài bảng màu gợi thời Trần (áo giao lĩnh / khăn vấn).
-   Không đổi sheet: nhuộm thân + đầu giống look.js, chỉ áp quái anim enemy* / boss*. */
+/* Trang phục quái người thời Trần — áo giao lĩnh / khăn vấn.
+   Sheet enemy*/boss* đã bake remap cloth (tools/rebuild_tran_mob_costume.py).
+   Runtime chỉ nhuộm nhẹ thêm theo lớp (thường/tinh anh/boss). Thú ani* không đụng. */
 'use strict';
 
+/** true = sheet đã dựng áo Trần; tint runtime dùng alpha nhẹ để khỏi đè màu. */
+const TRAN_COSTUME_BAKED = true;
+const TRAN_BAKE_TINT = 0.38; // hệ số alpha runtime khi đã bake
+
 /** Bảng trang phục. body/head: { c, a } — màu + độ phủ source-atop.
- *  active = đang xoay spawn · candidate = chờ duyệt (vẫn gọi được qua override).
- *  Gallery duyệt: docs/tran_costume_preview/  hoặc  python3 tools/gen_tran_costume_preview.py */
+ *  Bake stem→áo: assets/pack/mobs-tran-costume-review/stem_costume.json
+ *  Gallery: docs/tran_costume_preview/ · python3 tools/rebuild_tran_mob_costume.py */
 const TRAN_COSTUMES = {
   /* —— đang dùng —— */
   day:   { n: 'Áo đay',   note: 'Sơn dân · nâu đay',        body: { c: '#6b4e2e', a: 0.40 }, head: { c: '#3f3224', a: 0.28 }, status: 'active' },
@@ -66,7 +71,7 @@ function attachTranCostume(e) {
 
 const TRAN_LOOK_CACHE = new Map();
 function tranTintedFrame(im, m, fr, d, L) {
-  const k = `${m.f}|${fr}|${d}|${L.n}|${L.body.c}|${L.head.c}`;
+  const k = `${m.f}|${fr}|${d}|${L.n}|${L.body.c}|${L.head.c}|${TRAN_COSTUME_BAKED ? 1 : 0}`;
   let cv = TRAN_LOOK_CACHE.get(k);
   if (cv) return cv;
   cv = document.createElement('canvas'); cv.width = m.w; cv.height = m.h;
@@ -74,12 +79,13 @@ function tranTintedFrame(im, m, fr, d, L) {
   c.drawImage(im, fr * m.w, d * m.h, m.w, m.h, 0, 0, m.w, m.h);
   c.globalCompositeOperation = 'source-atop';
   const headY = Math.max(0, m.ay - m.h * 0.8), split = headY + (m.ay - headY) * 0.28;
+  const mul = TRAN_COSTUME_BAKED ? TRAN_BAKE_TINT : 1;
   if (L.body) {
     const g = c.createLinearGradient(0, split - 4, 0, split + 6);
     g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, L.body.c);
-    c.globalAlpha = L.body.a; c.fillStyle = g; c.fillRect(0, split - 4, m.w, m.h);
+    c.globalAlpha = L.body.a * mul; c.fillStyle = g; c.fillRect(0, split - 4, m.w, m.h);
   }
-  if (L.head) { c.globalAlpha = L.head.a; c.fillStyle = L.head.c; c.fillRect(0, 0, m.w, split); }
+  if (L.head) { c.globalAlpha = L.head.a * mul; c.fillStyle = L.head.c; c.fillRect(0, 0, m.w, split); }
   if (TRAN_LOOK_CACHE.size > 800) TRAN_LOOK_CACHE.clear();
   TRAN_LOOK_CACHE.set(k, cv);
   return cv;
