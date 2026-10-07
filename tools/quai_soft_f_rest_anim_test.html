@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<title>Soft+F quái thú còn lại · anim test</title>
+<style>
+  html,body{margin:0;background:#12141a;color:#f0e6c8;font:14px/1.4 system-ui,sans-serif}
+  h1{font-size:16px;margin:12px 16px 4px;font-weight:600}
+  p{margin:0 16px 10px;opacity:.75;font-size:12px}
+  #wrap{display:flex;flex-wrap:wrap;gap:12px;padding:8px 16px 24px}
+  .card{background:#1b2030;border:1px solid #2c3348;border-radius:8px;padding:10px 12px;min-width:280px}
+  .card h2{margin:0 0 6px;font-size:13px;color:#ffd27a}
+  canvas{image-rendering:pixelated;background:#1f5a32;border-radius:4px;display:block}
+  .acts{display:flex;gap:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>Quái thú còn lại — Soft+F · mẫu duyệt anim</h1>
+<p>16/38 stem · sheet <code>?v=312</code> · giữ n/d/w/h · boss người xem board riêng</p>
+<div id="wrap"></div>
+<script>
+const MONS = [
+  {
+    "n": "Đông Bắc hổ · Kim Soft+F",
+    "stem": "ani001",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani001_st.webp",
+        "bytes": 160702,
+        "n": 12,
+        "d": 8,
+        "w": 76,
+        "h": 55,
+        "ax": 38,
+        "ay": 52,
+        "ms": 143,
+        "f": "ani001_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani001_run.webp",
+        "bytes": 112010,
+        "n": 8,
+        "d": 8,
+        "w": 83,
+        "h": 58,
+        "ax": 41,
+        "ay": 54,
+        "ms": 71,
+        "f": "ani001_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani001_at.webp",
+        "bytes": 85286,
+        "n": 6,
+        "d": 8,
+        "w": 122,
+        "h": 83,
+        "ax": 61,
+        "ay": 76,
+        "ms": 62,
+        "f": "ani001_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani001_hurt.webp",
+        "bytes": 55796,
+        "n": 4,
+        "d": 8,
+        "w": 84,
+        "h": 60,
+        "ax": 42,
+        "ay": 54,
+        "ms": 83,
+        "f": "ani001_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani001_die.webp",
+        "bytes": 65320,
+        "n": 5,
+        "d": 8,
+        "w": 107,
+        "h": 65,
+        "ax": 53,
+        "ay": 52,
+        "ms": 100,
+        "f": "ani001_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Hoa Nam hổ · Hỏa Soft+F",
+    "stem": "ani002",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani002_st.webp",
+        "bytes": 133126,
+        "n": 12,
+        "d": 8,
+        "w": 74,
+        "h": 50,
+        "ax": 37,
+        "ay": 48,
+        "ms": 143,
+        "f": "ani002_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani002_run.webp",
+        "bytes": 92246,
+        "n": 8,
+        "d": 8,
+        "w": 77,
+        "h": 50,
+        "ax": 38,
+        "ay": 48,
+        "ms": 71,
+        "f": "ani002_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani002_at.webp",
+        "bytes": 83560,
+        "n": 7,
+        "d": 8,
+        "w": 94,
+        "h": 76,
+        "ax": 47,
+        "ay": 70,
+        "ms": 62,
+        "f": "ani002_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani002_hurt.webp",
+        "bytes": 34358,
+        "n": 3,
+        "d": 8,
+        "w": 85,
+        "h": 50,
+        "ax": 43,
+        "ay": 48,
+        "ms": 83,
+        "f": "ani002_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani002_die.webp",
+        "bytes": 77376,
+        "n": 7,
+        "d": 8,
+        "w": 94,
+        "h": 59,
+        "ax": 47,
+        "ay": 48,
+        "ms": 100,
+        "f": "ani002_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Bạch Hổ · Băng Soft+F",
+    "stem": "ani003",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani003_st.webp",
+        "bytes": 132022,
+        "n": 12,
+        "d": 8,
+        "w": 74,
+        "h": 50,
+        "ax": 37,
+        "ay": 48,
+        "ms": 143,
+        "f": "ani003_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani003_run.webp",
+        "bytes": 91666,
+        "n": 8,
+        "d": 8,
+        "w": 77,
+        "h": 50,
+        "ax": 38,
+        "ay": 48,
+        "ms": 71,
+        "f": "ani003_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani003_at.webp",
+        "bytes": 68356,
+        "n": 6,
+        "d": 8,
+        "w": 95,
+        "h": 76,
+        "ax": 47,
+        "ay": 70,
+        "ms": 62,
+        "f": "ani003_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani003_hurt.webp",
+        "bytes": 57180,
+        "n": 5,
+        "d": 8,
+        "w": 89,
+        "h": 55,
+        "ax": 44,
+        "ay": 48,
+        "ms": 83,
+        "f": "ani003_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani003_die.webp",
+        "bytes": 77114,
+        "n": 7,
+        "d": 8,
+        "w": 100,
+        "h": 59,
+        "ax": 50,
+        "ay": 48,
+        "ms": 100,
+        "f": "ani003_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Sói tuyết · Băng Soft+F",
+    "stem": "ani012",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani012_st.webp",
+        "bytes": 52182,
+        "n": 6,
+        "d": 8,
+        "w": 47,
+        "h": 40,
+        "ax": 23,
+        "ay": 38,
+        "ms": 143,
+        "f": "ani012_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani012_run.webp",
+        "bytes": 70788,
+        "n": 8,
+        "d": 8,
+        "w": 50,
+        "h": 43,
+        "ax": 25,
+        "ay": 40,
+        "ms": 71,
+        "f": "ani012_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani012_at.webp",
+        "bytes": 61104,
+        "n": 7,
+        "d": 8,
+        "w": 70,
+        "h": 53,
+        "ax": 35,
+        "ay": 49,
+        "ms": 62,
+        "f": "ani012_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani012_hurt.webp",
+        "bytes": 27122,
+        "n": 3,
+        "d": 8,
+        "w": 69,
+        "h": 44,
+        "ax": 35,
+        "ay": 39,
+        "ms": 83,
+        "f": "ani012_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani012_die.webp",
+        "bytes": 40064,
+        "n": 5,
+        "d": 8,
+        "w": 71,
+        "h": 49,
+        "ax": 35,
+        "ay": 38,
+        "ms": 100,
+        "f": "ani012_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Hồ ly · Hồng Ngọc Soft+F",
+    "stem": "ani013",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani013_st.webp",
+        "bytes": 44180,
+        "n": 8,
+        "d": 8,
+        "w": 59,
+        "h": 33,
+        "ax": 29,
+        "ay": 31,
+        "ms": 143,
+        "f": "ani013_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani013_run.webp",
+        "bytes": 45514,
+        "n": 8,
+        "d": 8,
+        "w": 61,
+        "h": 36,
+        "ax": 31,
+        "ay": 38,
+        "ms": 71,
+        "f": "ani013_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani013_at.webp",
+        "bytes": 39560,
+        "n": 7,
+        "d": 8,
+        "w": 58,
+        "h": 51,
+        "ax": 29,
+        "ay": 49,
+        "ms": 62,
+        "f": "ani013_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani013_hurt.webp",
+        "bytes": 16578,
+        "n": 3,
+        "d": 8,
+        "w": 58,
+        "h": 32,
+        "ax": 29,
+        "ay": 31,
+        "ms": 83,
+        "f": "ani013_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani013_die.webp",
+        "bytes": 27134,
+        "n": 5,
+        "d": 8,
+        "w": 62,
+        "h": 37,
+        "ax": 31,
+        "ay": 36,
+        "ms": 100,
+        "f": "ani013_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Hỏa Hồ · Hỏa Soft+F",
+    "stem": "ani015",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani015_st.webp",
+        "bytes": 55354,
+        "n": 8,
+        "d": 8,
+        "w": 68,
+        "h": 41,
+        "ax": 34,
+        "ay": 39,
+        "ms": 143,
+        "f": "ani015_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani015_run.webp",
+        "bytes": 57894,
+        "n": 8,
+        "d": 8,
+        "w": 72,
+        "h": 43,
+        "ax": 36,
+        "ay": 45,
+        "ms": 71,
+        "f": "ani015_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani015_at.webp",
+        "bytes": 48782,
+        "n": 7,
+        "d": 8,
+        "w": 67,
+        "h": 62,
+        "ax": 34,
+        "ay": 60,
+        "ms": 62,
+        "f": "ani015_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani015_hurt.webp",
+        "bytes": 20262,
+        "n": 3,
+        "d": 8,
+        "w": 67,
+        "h": 40,
+        "ax": 34,
+        "ay": 39,
+        "ms": 83,
+        "f": "ani015_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani015_die.webp",
+        "bytes": 34268,
+        "n": 5,
+        "d": 8,
+        "w": 74,
+        "h": 43,
+        "ax": 37,
+        "ay": 42,
+        "ms": 100,
+        "f": "ani015_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Gấu nâu · Kim Soft+F",
+    "stem": "ani025",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani025_st.webp",
+        "bytes": 59562,
+        "n": 6,
+        "d": 8,
+        "w": 73,
+        "h": 47,
+        "ax": 37,
+        "ay": 45,
+        "ms": 143,
+        "f": "ani025_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani025_run.webp",
+        "bytes": 80768,
+        "n": 8,
+        "d": 8,
+        "w": 74,
+        "h": 50,
+        "ax": 37,
+        "ay": 48,
+        "ms": 71,
+        "f": "ani025_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani025_at.webp",
+        "bytes": 62340,
+        "n": 6,
+        "d": 8,
+        "w": 98,
+        "h": 75,
+        "ax": 49,
+        "ay": 68,
+        "ms": 62,
+        "f": "ani025_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani025_hurt.webp",
+        "bytes": 29942,
+        "n": 3,
+        "d": 8,
+        "w": 73,
+        "h": 47,
+        "ax": 37,
+        "ay": 45,
+        "ms": 83,
+        "f": "ani025_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani025_die.webp",
+        "bytes": 57888,
+        "n": 6,
+        "d": 8,
+        "w": 72,
+        "h": 50,
+        "ax": 36,
+        "ay": 43,
+        "ms": 100,
+        "f": "ani025_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Nhãn Kính Mãng xà · Độc Soft+F",
+    "stem": "ani037",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani037_st.webp",
+        "bytes": 59740,
+        "n": 10,
+        "d": 8,
+        "w": 60,
+        "h": 41,
+        "ax": 30,
+        "ay": 39,
+        "ms": 143,
+        "f": "ani037_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani037_run.webp",
+        "bytes": 53856,
+        "n": 7,
+        "d": 8,
+        "w": 112,
+        "h": 54,
+        "ax": 56,
+        "ay": 39,
+        "ms": 71,
+        "f": "ani037_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani037_at.webp",
+        "bytes": 51670,
+        "n": 7,
+        "d": 8,
+        "w": 61,
+        "h": 49,
+        "ax": 31,
+        "ay": 46,
+        "ms": 62,
+        "f": "ani037_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani037_hurt.webp",
+        "bytes": 26356,
+        "n": 4,
+        "d": 8,
+        "w": 60,
+        "h": 41,
+        "ax": 30,
+        "ay": 38,
+        "ms": 83,
+        "f": "ani037_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani037_die.webp",
+        "bytes": 45172,
+        "n": 6,
+        "d": 8,
+        "w": 60,
+        "h": 47,
+        "ax": 30,
+        "ay": 45,
+        "ms": 100,
+        "f": "ani037_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Dơi chúa · Ám Soft+F",
+    "stem": "ani045",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani045_st.webp",
+        "bytes": 24924,
+        "n": 10,
+        "d": 8,
+        "w": 25,
+        "h": 22,
+        "ax": 13,
+        "ay": 21,
+        "ms": 143,
+        "f": "ani045_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani045_run.webp",
+        "bytes": 12560,
+        "n": 5,
+        "d": 8,
+        "w": 28,
+        "h": 23,
+        "ax": 14,
+        "ay": 20,
+        "ms": 71,
+        "f": "ani045_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani045_at.webp",
+        "bytes": 15990,
+        "n": 6,
+        "d": 8,
+        "w": 35,
+        "h": 28,
+        "ax": 17,
+        "ay": 21,
+        "ms": 62,
+        "f": "ani045_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani045_hurt.webp",
+        "bytes": 8004,
+        "n": 3,
+        "d": 8,
+        "w": 32,
+        "h": 25,
+        "ax": 16,
+        "ay": 20,
+        "ms": 83,
+        "f": "ani045_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani045_die.webp",
+        "bytes": 15790,
+        "n": 6,
+        "d": 8,
+        "w": 24,
+        "h": 61,
+        "ax": 12,
+        "ay": 20,
+        "ms": 100,
+        "f": "ani045_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Kim Miêu · Kim Soft+F",
+    "stem": "ani049",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani049_st.webp",
+        "bytes": 35386,
+        "n": 8,
+        "d": 8,
+        "w": 26,
+        "h": 25,
+        "ax": 13,
+        "ay": 24,
+        "ms": 143,
+        "f": "ani049_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani049_run.webp",
+        "bytes": 33924,
+        "n": 6,
+        "d": 8,
+        "w": 46,
+        "h": 29,
+        "ax": 21,
+        "ay": 23,
+        "ms": 71,
+        "f": "ani049_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani049_at.webp",
+        "bytes": 23900,
+        "n": 5,
+        "d": 8,
+        "w": 42,
+        "h": 37,
+        "ax": 21,
+        "ay": 33,
+        "ms": 62,
+        "f": "ani049_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani049_hurt.webp",
+        "bytes": 14410,
+        "n": 3,
+        "d": 8,
+        "w": 31,
+        "h": 28,
+        "ax": 16,
+        "ay": 27,
+        "ms": 83,
+        "f": "ani049_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani049_die.webp",
+        "bytes": 28986,
+        "n": 6,
+        "d": 8,
+        "w": 48,
+        "h": 27,
+        "ax": 24,
+        "ay": 23,
+        "ms": 100,
+        "f": "ani049_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Khỉ xám · Lục Bảo Soft+F",
+    "stem": "ani054",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani054_st.webp",
+        "bytes": 71674,
+        "n": 15,
+        "d": 8,
+        "w": 40,
+        "h": 29,
+        "ax": 20,
+        "ay": 28,
+        "ms": 143,
+        "f": "ani054_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani054_run.webp",
+        "bytes": 42074,
+        "n": 7,
+        "d": 8,
+        "w": 46,
+        "h": 35,
+        "ax": 23,
+        "ay": 31,
+        "ms": 71,
+        "f": "ani054_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani054_at.webp",
+        "bytes": 43902,
+        "n": 8,
+        "d": 8,
+        "w": 46,
+        "h": 52,
+        "ax": 23,
+        "ay": 49,
+        "ms": 62,
+        "f": "ani054_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani054_hurt.webp",
+        "bytes": 15682,
+        "n": 3,
+        "d": 8,
+        "w": 43,
+        "h": 29,
+        "ax": 22,
+        "ay": 28,
+        "ms": 83,
+        "f": "ani054_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani054_die.webp",
+        "bytes": 40554,
+        "n": 7,
+        "d": 8,
+        "w": 82,
+        "h": 50,
+        "ax": 41,
+        "ay": 39,
+        "ms": 100,
+        "f": "ani054_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Hươu đốm · Lục Bảo Soft+F",
+    "stem": "ani061",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani061_st.webp",
+        "bytes": 125578,
+        "n": 14,
+        "d": 8,
+        "w": 40,
+        "h": 44,
+        "ax": 20,
+        "ay": 42,
+        "ms": 143,
+        "f": "ani061_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani061_run.webp",
+        "bytes": 57260,
+        "n": 6,
+        "d": 8,
+        "w": 41,
+        "h": 46,
+        "ax": 20,
+        "ay": 42,
+        "ms": 71,
+        "f": "ani061_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani061_at.webp",
+        "bytes": 66744,
+        "n": 7,
+        "d": 8,
+        "w": 66,
+        "h": 57,
+        "ax": 33,
+        "ay": 48,
+        "ms": 62,
+        "f": "ani061_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani061_hurt.webp",
+        "bytes": 28340,
+        "n": 3,
+        "d": 8,
+        "w": 43,
+        "h": 44,
+        "ax": 22,
+        "ay": 42,
+        "ms": 83,
+        "f": "ani061_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani061_die.webp",
+        "bytes": 64546,
+        "n": 7,
+        "d": 8,
+        "w": 79,
+        "h": 55,
+        "ax": 40,
+        "ay": 43,
+        "ms": 100,
+        "f": "ani061_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Bọ cạp · Độc Soft+F",
+    "stem": "ani065",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani065_st.webp",
+        "bytes": 36940,
+        "n": 6,
+        "d": 8,
+        "w": 35,
+        "h": 31,
+        "ax": 17,
+        "ay": 29,
+        "ms": 143,
+        "f": "ani065_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani065_run.webp",
+        "bytes": 24338,
+        "n": 4,
+        "d": 8,
+        "w": 36,
+        "h": 32,
+        "ax": 18,
+        "ay": 30,
+        "ms": 71,
+        "f": "ani065_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani065_at.webp",
+        "bytes": 25658,
+        "n": 4,
+        "d": 8,
+        "w": 55,
+        "h": 40,
+        "ax": 28,
+        "ay": 37,
+        "ms": 62,
+        "f": "ani065_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani065_hurt.webp",
+        "bytes": 19494,
+        "n": 3,
+        "d": 8,
+        "w": 48,
+        "h": 39,
+        "ax": 24,
+        "ay": 36,
+        "ms": 83,
+        "f": "ani065_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani065_die.webp",
+        "bytes": 24676,
+        "n": 4,
+        "d": 8,
+        "w": 48,
+        "h": 40,
+        "ax": 24,
+        "ay": 36,
+        "ms": 100,
+        "f": "ani065_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Nhện · Ám Soft+F",
+    "stem": "ani066",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani066_st.webp",
+        "bytes": 108114,
+        "n": 10,
+        "d": 8,
+        "w": 51,
+        "h": 37,
+        "ax": 25,
+        "ay": 35,
+        "ms": 143,
+        "f": "ani066_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani066_run.webp",
+        "bytes": 45292,
+        "n": 4,
+        "d": 8,
+        "w": 54,
+        "h": 37,
+        "ax": 27,
+        "ay": 34,
+        "ms": 71,
+        "f": "ani066_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani066_at.webp",
+        "bytes": 56128,
+        "n": 5,
+        "d": 8,
+        "w": 66,
+        "h": 46,
+        "ax": 33,
+        "ay": 44,
+        "ms": 62,
+        "f": "ani066_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani066_hurt.webp",
+        "bytes": 21528,
+        "n": 2,
+        "d": 8,
+        "w": 54,
+        "h": 38,
+        "ax": 27,
+        "ay": 37,
+        "ms": 83,
+        "f": "ani066_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani066_die.webp",
+        "bytes": 60874,
+        "n": 5,
+        "d": 8,
+        "w": 72,
+        "h": 44,
+        "ax": 36,
+        "ay": 38,
+        "ms": 100,
+        "f": "ani066_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Rết · Huyết Soft+F",
+    "stem": "ani067",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani067_st.webp",
+        "bytes": 35048,
+        "n": 6,
+        "d": 8,
+        "w": 77,
+        "h": 38,
+        "ax": 38,
+        "ay": 36,
+        "ms": 143,
+        "f": "ani067_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani067_run.webp",
+        "bytes": 17854,
+        "n": 3,
+        "d": 8,
+        "w": 77,
+        "h": 38,
+        "ax": 38,
+        "ay": 36,
+        "ms": 71,
+        "f": "ani067_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani067_at.webp",
+        "bytes": 35618,
+        "n": 6,
+        "d": 8,
+        "w": 77,
+        "h": 50,
+        "ax": 38,
+        "ay": 47,
+        "ms": 62,
+        "f": "ani067_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani067_hurt.webp",
+        "bytes": 17712,
+        "n": 3,
+        "d": 8,
+        "w": 76,
+        "h": 38,
+        "ax": 38,
+        "ay": 36,
+        "ms": 83,
+        "f": "ani067_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani067_die.webp",
+        "bytes": 38108,
+        "n": 6,
+        "d": 8,
+        "w": 77,
+        "h": 46,
+        "ax": 38,
+        "ay": 43,
+        "ms": 100,
+        "f": "ani067_die.webp?v=312"
+      }
+    }
+  },
+  {
+    "n": "Đại Tượng · Kim Soft+F",
+    "stem": "ani021",
+    "anim": {
+      "st": {
+        "file": "st.webp",
+        "src": "img/a/ani021_st.webp",
+        "bytes": 380768,
+        "n": 14,
+        "d": 8,
+        "w": 139,
+        "h": 96,
+        "ax": 70,
+        "ay": 91,
+        "ms": 143,
+        "f": "ani021_st.webp?v=312"
+      },
+      "run": {
+        "file": "run.webp",
+        "src": "img/a/ani021_run.webp",
+        "bytes": 202896,
+        "n": 7,
+        "d": 8,
+        "w": 131,
+        "h": 99,
+        "ax": 65,
+        "ay": 91,
+        "ms": 71,
+        "f": "ani021_run.webp?v=312"
+      },
+      "at": {
+        "file": "at.webp",
+        "src": "img/a/ani021_at.webp",
+        "bytes": 200396,
+        "n": 7,
+        "d": 8,
+        "w": 158,
+        "h": 127,
+        "ax": 79,
+        "ay": 121,
+        "ms": 62,
+        "f": "ani021_at.webp?v=312"
+      },
+      "hurt": {
+        "file": "hurt.webp",
+        "src": "img/a/ani021_hurt.webp",
+        "bytes": 84756,
+        "n": 3,
+        "d": 8,
+        "w": 130,
+        "h": 97,
+        "ax": 65,
+        "ay": 91,
+        "ms": 83,
+        "f": "ani021_hurt.webp?v=312"
+      },
+      "die": {
+        "file": "die.webp",
+        "src": "img/a/ani021_die.webp",
+        "bytes": 185548,
+        "n": 7,
+        "d": 8,
+        "w": 150,
+        "h": 101,
+        "ax": 75,
+        "ay": 91,
+        "ms": 100,
+        "f": "ani021_die.webp?v=312"
+      }
+    }
+  }
+];
+const ACTS = ['st','run','at','hurt','die'];
+const IMG = {};
+function img(src){ let i=IMG[src]; if(!i){ i=new Image(); i.src='img/a/'+src; IMG[src]=i; } return i; }
+function draw(cx, m, act, dir, t, x, y, sc){
+  const meta = m.anim[act]; if(!meta) return;
+  const im = img(meta.f); if(!im.complete || !im.naturalWidth) return;
+  let fr = Math.floor(t*1000/meta.ms);
+  if(act==='at'||act==='hurt'||act==='die') fr=Math.min(fr, meta.n-1); else fr%=meta.n;
+  const d = dir % meta.d;
+  cx.drawImage(im, fr*meta.w, d*meta.h, meta.w, meta.h, x-meta.ax*sc, y-meta.ay*sc, meta.w*sc, meta.h*sc);
+}
+const wrap = document.getElementById('wrap');
+const cards = MONS.map(m => {
+  const el = document.createElement('div'); el.className='card';
+  el.innerHTML = `<h2>${m.n} · ${m.stem}</h2><div class="acts"></div>`;
+  const row = el.querySelector('.acts');
+  const cvs = ACTS.map(act => {
+    const c = document.createElement('canvas');
+    c.width = 120; c.height = 110; c.dataset.act = act;
+    const lab = document.createElement('div');
+    lab.style.cssText='text-align:center;font-size:11px;opacity:.7;margin-top:2px';
+    lab.textContent = act;
+    const box = document.createElement('div');
+    box.appendChild(c); box.appendChild(lab);
+    row.appendChild(box);
+    return c;
+  });
+  wrap.appendChild(el);
+  return { m, cvs };
+});
+MONS.forEach(m => ACTS.forEach(a => img(m.anim[a].f)));
+let t0 = performance.now();
+function tick(now){
+  const t = (now - t0)/1000;
+  const dir = Math.floor(t*1.2) % 8;
+  for(const {m, cvs} of cards){
+    cvs.forEach((c,i) => {
+      const cx = c.getContext('2d');
+      cx.clearRect(0,0,c.width,c.height);
+      cx.fillStyle = '#1f5a32'; cx.fillRect(0,0,c.width,c.height);
+      const act = ACTS[i];
+      const once = (act==='at'||act==='hurt'||act==='die');
+      draw(cx, m, act, dir, once ? (t % 1.6) : t, 60, 95, 1.6);
+    });
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

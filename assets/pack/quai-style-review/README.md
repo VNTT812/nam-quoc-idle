@@ -35,3 +35,16 @@ Chọn 1 (hoặc mix) → dựng lại full sheet 8 hướng × 5 act.
 - Sói xám `ani009` = Ám · Sói đỏ `ani010` = Hỏa · Sói xanh `ani011` = Lôi
 - Tool: `tools/quai_remaster_jf_map2.py` (J Mythic + F remaster)
 - Cache `?v=307` · backup trong `assets/pack/quai-orig-backup/`
+
+## Soft+F map2 (đã chốt)
+- Tool: Soft → Pixel remaster · cache `?v=308` (Pages sau đó bump `v=311`)
+
+## Soft+F quái thú còn lại (ani*)
+- Tool: `tools/quai_remaster_soft_f_rest.py` + `tools/quai_soft_f_lib.py`
+- 38 stem còn lại · board: `rest-animals/` · anim test: `/quai_soft_f_rest_anim_test.html`
+- Cache `?v=312` · **chưa deploy Pages** (chờ duyệt)
+
+## Boss / địch dạng người (chỉ duyệt)
+- Tool: `tools/quai_boss_human_review.py`
+- Board Soft / Soft+F / J+F / Neon / Ember: `boss-human/`
+- **Chưa apply** vào `img/` — chọn style rồi bảo apply
