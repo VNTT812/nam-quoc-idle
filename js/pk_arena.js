@@ -7,7 +7,7 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=342',
+  bg: 'img/z/403.jpg?v=343',
   music: 400,
   limit: 180,
   // Plaza giua san (obs 403 mo) — ~384px, melee/tam xa cham duoc, khong bip tuong
