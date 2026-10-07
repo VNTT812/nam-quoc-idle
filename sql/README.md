@@ -15,7 +15,8 @@ Project: https://supabase.com/dashboard/project/khwkokiflhzwxuzoilux
    Dán toàn bộ nội dung `sql/NET_SETUP.sql` → **Run**  
    Rồi chạy thêm `sql/MAIL_FIX.sql` (vá hộp thư / Admin cấp đồ — bắt buộc nếu Thư luôn trống)  
    Project đã có sẵn schema: chạy thêm `sql/CHAT_TTL.sql` để bật xóa chat log sau 24 giờ (RPC `chat_purge_old`)  
-   Chat bạn bè: chạy `sql/FRIEND_CHAT.sql` rồi bật **Realtime** cho bảng `public.fchat` (Database → Replication)
+   Chat bạn bè: chạy `sql/FRIEND_CHAT.sql` rồi bật **Realtime** cho bảng `public.fchat` (Database → Replication)  
+   Hộp thư 24h: chạy `sql/MAIL_TTL.sql` (RPC `mail_purge_old` + `list_mail` chỉ trả thư còn hạn)
 
 3. **Tắt Confirm email**  
    Dashboard → **Authentication** → **Providers** → **Email**  

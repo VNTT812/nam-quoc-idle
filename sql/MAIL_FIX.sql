@@ -20,7 +20,7 @@ as $$
   ) x;
 $$;
 
--- Liệt kê thư (bỏ qua RLS hẹp)
+-- Liệt kê thư (bỏ qua RLS hẹp) — chỉ thư trong 24 giờ (xem thêm MAIL_TTL.sql)
 create or replace function public.list_mail()
 returns setof public.mail
 language sql
@@ -31,6 +31,7 @@ as $$
   select m.* from public.mail m
   where auth.uid() is not null
     and m.to_name in (select name from public.my_mail_names())
+    and m.created >= now() - interval '24 hours'
   order by m.id desc
   limit 50;
 $$;

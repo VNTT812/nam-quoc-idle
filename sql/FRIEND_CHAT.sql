@@ -32,7 +32,7 @@ create policy fchat_insert on public.fchat for insert with check (
   and from_name in (select name from public.chars where owner = auth.uid())
 );
 
--- Xoa tin > 24h (goi kem chat_purge_old neu muon)
+-- Xoa tin ban be > 24h (client goi dinh ky; co the gan pg_cron)
 create or replace function public.fchat_purge_old()
 returns int
 language plpgsql
@@ -50,3 +50,6 @@ $$;
 grant execute on function public.fchat_purge_old() to anon, authenticated;
 grant select, insert on public.fchat to authenticated;
 grant usage, select on sequence public.fchat_id_seq to authenticated;
+
+-- Neu bat pg_cron:
+-- select cron.schedule('fchat-purge-24h', '30 * * * *', $$select public.fchat_purge_old()$$);

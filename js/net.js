@@ -2,8 +2,9 @@
    Tai khoan (ten dang nhap + mat khau), Luu dam may, Bang xep hang, Xem trang bi nguoi khac, Thu (gui qua), Cho (bay ban).
    May chu: NET_SETUP.sql. Moi mon trong Thu chi nhan duoc 1 lan (may chu kiem tra); mua o Cho: 1 nguoi mua, tien 95% ve Thu nguoi ban. */
 'use strict';
-const NET = { sb: null, user: null, tab: 'acc', mkt: 'buy', rank: 'lvl', rfac: '', mailN: 0, lastChar: 0, lastUp: 0, sel: null, q: '', offline: false };
+const NET = { sb: null, user: null, tab: 'acc', mkt: 'buy', rank: 'lvl', rfac: '', mailN: 0, lastChar: 0, lastUp: 0, sel: null, q: '', offline: false, mailPurged: 0 };
 const NET_DOMAIN = '@volamidle.com', NET_TAX = 0.05;   // v198: supabase moi chan TLD .game (email_address_invalid)
+const MAIL_TTL_MS = 24 * 60 * 60 * 1000;
 /* v182: moi ban (web, launcher tren may) deu phai dang nhap, chi luu dam may. NET_LOCAL chi cho bo thu tu dong (?offline_test=1). */
 const NET_LOCAL = /[?&]offline_test=1\b/.test(location.search);
 const netOn = () => { const c = window.CHAT_CFG || {}; return !!(c.url && c.key) && !NET_LOCAL && !NET.offline; };
@@ -238,19 +239,44 @@ async function netAfterLogin() {
   else if (typeof mpJoin === 'function') try { mpJoin(zoneOf(Math.min(S.stage, STAGES))); } catch (e) { /* bo qua */ }
 }
 
-/* ---------- thu ---------- */
+/* ---------- thu (chi giu 24h: loc client + RPC mail_purge_old) ---------- */
+const mailAgeMs = m => {
+  const t = m && (m.created || m.ts || m.created_at);
+  const ms = t ? +new Date(t) : 0;
+  return ms > 0 ? Date.now() - ms : 0;
+};
+const mailFresh = m => !m || mailAgeMs(m) < MAIL_TTL_MS;
+async function netMailPurgeServer() {
+  if (!NET.user || Date.now() - (NET.mailPurged || 0) < 10 * 60 * 1000) return;
+  NET.mailPurged = Date.now();
+  try { await netCall(sb => sb.rpc('mail_purge_old')); } catch (e) { /* chua cai MAIL_TTL.sql */ }
+}
 async function netFetchMail() {
   // Dong bo ten len chars truoc — RLS thu chi hien thu gui dung ten xep hang
   if (NET.user && S && S.fac && typeof hasRealName === 'function' && hasRealName()) {
     try { await netSyncChar(true); } catch (e) { /* van thu list */ }
   }
+  netMailPurgeServer().catch(() => {});
+  let list = [];
   try {
     const r = await netCall(sb => sb.rpc('list_mail'));
-    return Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+    list = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
   } catch (e) {
-    const r = await netCall(sb => sb.from('mail').select('*').order('id', { ascending: false }).limit(50));
-    return r.data || [];
+    const since = new Date(Date.now() - MAIL_TTL_MS).toISOString();
+    try {
+      const r = await netCall(sb => sb.from('mail').select('*').gte('created', since).order('id', { ascending: false }).limit(50));
+      list = r.data || [];
+    } catch (e2) {
+      const r = await netCall(sb => sb.from('mail').select('*').order('id', { ascending: false }).limit(50));
+      list = r.data || [];
+    }
   }
+  return (list || []).filter(mailFresh);
+}
+if (typeof window !== 'undefined') {
+  window.MAIL_TTL_MS = MAIL_TTL_MS;
+  window.mailFresh = mailFresh;
+  window.netMailPurgeServer = netMailPurgeServer;
 }
 async function netMailCount() {
   if (!NET.user) { NET.mailN = 0; netDot(); return; }
@@ -536,9 +562,9 @@ async function netMailBody(el) {
   const emptyHint = myName
     ? `<p class="dim small">Không có thư.<br>Tên nhận thư của bạn: <b class="cp">${esc(myName)}</b> — Admin phải gửi đúng tên này. Bấm <b>Đồng bộ tên</b> nếu vừa đổi tên.</p><div class="btnrow"><button class="btn sm" id="nmSync">Đồng bộ tên lên xếp hạng</button></div>`
     : `<p class="dim small">Không có thư. Đặt tên nhân vật rồi mở lại Thư.</p>`;
-  el.innerHTML = `<div class="card"><b>📥 Hộp thư</b> ${list.length ? `<button class="btn sm" id="nmAll">Nhận tất cả</button>` : ''}
+  el.innerHTML = `<div class="card"><b>📥 Hộp thư</b> <small class="dim">thư tự xóa sau 24 giờ</small> ${list.length ? `<button class="btn sm" id="nmAll">Nhận tất cả</button>` : ''}
       ${list.map(rowHtml).join('') || emptyHint}</div>
-    ${S.fac ? `<div class="card"><b>📤 Gửi thư</b> <small class="dim">từ ${esc(hasRealName() ? S.name : '(chưa đặt tên)')} · tối đa 30 thư / ngày</small>
+    ${S.fac ? `<div class="card"><b>📤 Gửi thư</b> <small class="dim">từ ${esc(hasRealName() ? S.name : '(chưa đặt tên)')} · tối đa 30 thư / ngày · hết hạn 24h</small>
       <div class="row">Gửi cho <input id="nmTo" maxlength="14" placeholder="Tên nhân vật" value="${esc(NET.mailTo || '')}"></div>
       <div class="row">Ngân lượng <input id="nmGold" type="number" min="0" placeholder="0"> <small class="dim">có ${fmt(S.gold)}</small></div>
       <div class="row">Lời nhắn <input id="nmNote" maxlength="100" placeholder="(không bắt buộc)"></div>
