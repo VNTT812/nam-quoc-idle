@@ -26,12 +26,13 @@ function netAdminHintSync() {
     return /^admin@/i.test(String(email));
   } catch (e) { return false; }
 }
-const isAdmin = () => {
+function isAdmin() {
+  if (typeof window !== 'undefined' && window.__forceAdmin) return true;     // live test / debug
   const u = typeof netUname === 'function' ? netUname() : '';
   if (u === 'admin') { netAdminSticky(true); return true; }
   if (u) { netAdminSticky(false); return false; }                             // da dang nhap TK khac
   return netAdminHintSync();
-};
+}
 
 function adminApply() {
   if (!S || !S.fac) return;
@@ -586,12 +587,8 @@ function adminInjectMore() {
 function friendsInjectMore() {
   if (!S || !S.fac) return;
   const t = $('#t-more'); if (!t || t.querySelector('#bFriends')) return;
-  const card = `<h3>👥 Bạn bè</h3><div class="card"><p class="dim small">Danh sách bạn, mời kết bạn, gửi thư nhanh.</p><div class="btnrow"><button class="btn" id="bFriends">Mở bạn bè${S.friends && S.friends.length ? ` (${S.friends.length})` : ''}</button></div></div>`;
-  const adm = t.querySelector('#bAdmin');
-  if (adm) adm.closest('.card')?.previousElementSibling?.insertAdjacentHTML?.('beforebegin', card);
-  else t.insertAdjacentHTML('afterbegin', card);
-  if (!t.querySelector('#bFriends')) t.insertAdjacentHTML('afterbegin', card);
-  const b = $('#bFriends'); if (b) b.onclick = () => typeof friendsModal === 'function' && friendsModal();
+  t.insertAdjacentHTML('afterbegin', `<h3>👥 Bạn bè</h3><div class="card"><p class="dim small">Danh sách bạn, mời kết bạn, gửi thư nhanh.</p><div class="btnrow"><button class="btn" id="bFriends">Mở bạn bè${S.friends && S.friends.length ? ` (${S.friends.length})` : ''}</button></div></div>`);
+  $('#bFriends').onclick = () => typeof friendsModal === 'function' && friendsModal();
 }
 
 /* ---------- hook UI + combat ---------- */
