@@ -112,7 +112,7 @@ def structure_mask(orig: Image.Image) -> Image.Image:
     return im.filter(ImageFilter.GaussianBlur(8))
 
 
-def compose(stem: str, tile_name: str) -> Path:
+def compose(stem: str, tile_name: str, out_path: Path | None = None) -> Path:
     orig = load_orig(stem)
     W, H = orig.size
     tile = Image.open(TILES / f"{tile_name}.jpg").convert("RGB")
@@ -163,9 +163,10 @@ def compose(stem: str, tile_name: str) -> Path:
         base.alpha_composite(s.convert("RGBA"), dest=pos)
     img = base.convert("RGB")
 
-    out_path = Z / f"{stem}.jpg"
-    img.save(out_path, quality=85, optimize=True)
-    return out_path
+    dest = out_path or (Z / f"{stem}.jpg")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    img.save(dest, quality=85, optimize=True)
+    return dest
 
 
 def bump_cache():
