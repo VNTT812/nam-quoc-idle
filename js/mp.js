@@ -259,6 +259,7 @@ function mpSkillPayload(extra) {
 }
 function mpEmitSkill(payload) {
   if (!payload) return;
+  if (payload.t0 == null) payload.t0 = Date.now();
   let viaAuth = false;
   if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
     && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {

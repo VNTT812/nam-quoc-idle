@@ -43,6 +43,7 @@ function mpPkEmitFlag() {
 
 function mpPkEmitHit(payload) {
   if (!payload) return;
+  if (payload.t0 == null) payload.t0 = Date.now();
   let via = false;
   if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
     && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {

@@ -161,6 +161,7 @@ export class Room {
       by: msg.by != null ? +msg.by : Math.round(p.y),
       face: p.face,
       dir: p.dir,
+      t0: Number.isFinite(+msg.t0) ? +msg.t0 : undefined,
       serverT: now
     });
     for (const o of this.players.values()) {
@@ -212,6 +213,7 @@ export class Room {
       face: p.face,
       dir: p.dir,
       crit: msg.crit ? 1 : 0,
+      t0: Number.isFinite(+msg.t0) ? +msg.t0 : undefined,
       serverT: now
     });
     for (const o of this.players.values()) {
