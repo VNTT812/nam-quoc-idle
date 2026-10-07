@@ -615,6 +615,7 @@ if (typeof window !== 'undefined') {
   window.pkArenaExit = pkArenaExit;
   window.pkArenaFinish = pkArenaFinish;
   window.pkArenaFlee = pkArenaFlee;
+  window.pkArenaEnsureHud = pkArenaEnsureHud;
   window.pkArenaTick = pkArenaTick;
   window.pkArenaInit = pkArenaInit;
   window.pkArenaPollInbox = pkArenaPollInbox;
