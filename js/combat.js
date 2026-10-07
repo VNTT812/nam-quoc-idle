@@ -82,15 +82,11 @@ const densK = e => (e && e.dens ? DENS_REW : 1);
 function spawnWave() {
   R.enemies = []; R.stall = 0;
   const z = zoneOf(S.stage), L = stageLevel(S.stage);
-  if (!(z.m && z.m.length)) {
-    if (z.id !== R.zoneShown) { R.zoneShown = z.id; R.banner = { t: 2.4, text: z.n, sub: `Cấp ${z.lo}–${z.hi}` }; if (typeof onZoneChange === 'function') onZoneChange(z); }
-    return;
-  }
   // quai xuat hien quanh nhan vat (ngoai tam nhin mot chut) roi tien lai
   const around = (r0, r1) => { const a = rnd(0, Math.PI * 2), r = rnd(r0, r1); return inWorld(H.x + Math.cos(a) * r, H.y + Math.sin(a) * r); };
   const sx = () => (R.sp = around(140, 300))[0], sy = () => R.sp[1];
   const mob = cls => { const e = makeEnemy(pick(z.m), L, cls, sx(), sy()); if (cls === 'normal') { e.dens = true; e.dmg *= DENS_DMG; } R.enemies.push(e); };   // quai thuong dong: thuong / roi do moi con giam (DENS_REW)
-  if (S.wave === WAVES && bossRoundDue() && z.boss) {   // luyen cong: trum ban do moi 3 vong (mode.js) + tinh anh + dan em
+  if (S.wave === WAVES && bossRoundDue()) {   // luyen cong: trum ban do moi 3 vong (mode.js) + tinh anh + dan em
     const bp = around(220, 260), be = makeEnemy(z.boss, L + 1, 'boss', bp[0], bp[1]); be.n = bossName(z.boss, z.n); R.enemies.push(be);
     mob('elite'); for (let i = 0; i < densRange()[3]; i++) mob('normal');
     log(`<b class="boss">${esc(bossName(z.boss, z.n))}</b> xuất hiện!`);
@@ -313,10 +309,11 @@ function enemyAI(e, dt) {
 }
 function tick(dt) {
   obsFrame(); recTick(dt);
+  if (typeof pkArenaTick === 'function') pkArenaTick(dt);
   if ((R.sweepT = (R.sweepT || 0) + dt) > 30) { R.sweepT = 0; autoEquipAll(); if (typeof autoFuse === 'function') autoFuse(); if (typeof autoHut === 'function') autoHut(); sweepJunk(); autoBuyWeapon(); autoForge(); checkHints(); }
   if (R.dirty) recalc();
   const P = R.P;
-  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode()) spawnWave(); } return; }
+  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode() && !R.pkArena) spawnWave(); } return; }
   R.life = Math.min(P.life, R.life + P.regen * dt); R.mana = Math.min(P.mana, R.mana + P.manaRegen * dt);
   autoPotion(dt); rideTick(dt);
   if (R.hpDotT > 0) { const k = Math.min(dt, R.hpDotT) / R.hpDotT; R.life -= R.hpDot * k; R.hpDot -= R.hpDot * k; R.hpDotT -= dt; }   // trung doc
@@ -332,16 +329,17 @@ function tick(dt) {
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (khong tinh tab an, trong thanh, Luyen Cong) -> S.kps
   const looting = updateGround(dt);                       // di nhat do (cham tay, hoac het quai + khop bo loc)
   if (fieldMode()) fieldTick(dt);                          // bai luyen cong kieu JX1: quai dat san, hoi sinh tai cho (field.js)
+  if (R.pkArena) {                                         // san dau: khong spawn quai, chi PK nguoi
+    if (R.enemies.length) R.enemies = [];
+    R.field = null;
+  }
   if (!R.enemies.length) {
-    /* Map khong quai (vd Hoanh Son Mon) van phai cho di chuyen — truoc day return som cat mat moveManual */
-    if (fieldMode()) { if (manual()) moveManual(dt); return; }
+    /* Map khong quai (Hoanh Son Mon / san dau) van cho di chuyen — khong return som cat moveManual */
+    if (fieldMode() || R.pkArena) { if (manual()) moveManual(dt); return; }
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
-    if (R.dg) dgSpawn(); else if (R.tower) towerSpawn(); else {
-      const zz = zoneOf(S.stage); spawnWave();
-      if (goldBossDue() && zz.m && zz.m.length && zz.boss) spawnGoldBoss();
-    }
+    if (R.dg) dgSpawn(); else if (R.tower) towerSpawn(); else { spawnWave(); if (goldBossDue()) spawnGoldBoss(); }
     return;
   }
   if (manual()) moveManual(dt);                             // tu dieu khien: joystick / phim / diem cham

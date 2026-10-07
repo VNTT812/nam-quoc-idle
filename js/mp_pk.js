@@ -8,6 +8,9 @@ const MP_PK_HIT_GAP = 0.12;
 const MP_PK_MAX_FRAC = 0.32; // toi da ~32% mau max / don (chong 1-shot hack)
 
 function mpPkReady() {
+  if (R && R.pkArena) {
+    return !!(typeof mpCid === 'function' && S && S.fac && R.deadT <= 0);
+  }
   return !!(typeof mpCid === 'function' && typeof fieldMode === 'function' && fieldMode()
     && S && S.fac && R && !R.town && !R.dg && !R.tower && R.deadT <= 0
     && typeof mpSkillNetOk === 'function' && mpSkillNetOk());
@@ -500,6 +503,9 @@ function mpPkHookNet() {
           MP.ch.on('broadcast', { event: 'pkflag' }, ({ payload }) => { if (MP.ch) mpOnPkFlag(payload); });
           MP.ch.on('broadcast', { event: 'pkhit' }, ({ payload }) => { if (MP.ch) mpOnPkHit(payload); });
           MP.ch.on('broadcast', { event: 'pkkill' }, ({ payload }) => { if (MP.ch) mpOnPkKill(payload); });
+          MP.ch.on('broadcast', { event: 'duelend' }, ({ payload }) => {
+            try { document.dispatchEvent(new CustomEvent('mp:duelend', { detail: payload || {} })); } catch (e) { /* bo qua */ }
+          });
         }
       } catch (e) { /* bo qua */ }
       if (MP.pk) mpPkEmitFlag();

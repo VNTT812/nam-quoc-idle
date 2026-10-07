@@ -170,6 +170,7 @@ async function netFriendsBody(el) {
         <small class="dim">Lv${r.lvl || '?'} · ${esc(fac)}${r.power ? ' · ' + fmt(r.power) : ''}</small> ${st}</span>
         <span class="btnrow">
           <button class="btn sm" data-fchat="${esc(r.name)}">Chat</button>
+          <button class="btn sm" data-fpk="${esc(r.name)}" title="Mời PK sàn đấu">PK</button>
           <button class="btn sm" data-fmail="${esc(r.name)}">Thư</button>
           <button class="btn sm red" data-frm="${esc(r.name)}">Xóa</button>
         </span></div>`;
@@ -214,6 +215,11 @@ async function netFriendsBody(el) {
     closeModal(true);
     if (typeof chatOpenFriend === 'function') chatOpenFriend(b.dataset.fchat);
     else toast('Chat chưa sẵn sàng');
+  });
+  el.querySelectorAll('[data-fpk]').forEach(b => b.onclick = () => {
+    closeModal(true);
+    if (typeof pkArenaInvite === 'function') pkArenaInvite(b.dataset.fpk);
+    else toast('Sàn đấu chưa sẵn sàng');
   });
   el.querySelectorAll('[data-fmail]').forEach(b => b.onclick = () => { NET.mailTo = b.dataset.fmail; netModal('mail'); });
   el.querySelectorAll('[data-frm]').forEach(b => b.onclick = () => {

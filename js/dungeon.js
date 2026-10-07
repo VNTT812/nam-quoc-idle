@@ -52,7 +52,7 @@ function dgMap(d) {
   R.zoneShown = 'dg'; obsLoad(id); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera();
   R.bgImg = img(`img/z/${id}.jpg`); playMusic(id);
 }
-const dgBusy = () => R.dg || R.tower || R.deadT > 0;
+const dgBusy = () => R.dg || R.tower || R.deadT > 0 || !!R.pkArena;
 
 /* ---------- vao / ra ---------- */
 function dgEnterCommon() {
