@@ -34,11 +34,18 @@ function fieldPoints(n, gap, avoid) {
 }
 function fieldBuild() {
   const z = zoneOf(Math.min(S.stage, STAGES)), dr = densRange();
+  /* Map an / khong quai (vd Hoanh Son Mon): chi banner, khong spawn */
+  if (!(z.m && z.m.length)) {
+    R.field = { key: fieldKey(), pts: [], kills: 0, empty: 1 };
+    R.enemies = R.enemies.filter(e => (e.goldBoss || e.sat || e.satG) && !e.dead);
+    if (z.id !== R.zoneShown) { R.zoneShown = z.id; R.banner = { t: 2.4, text: z.n, sub: `Cấp ${z.lo}–${z.hi}` }; if (typeof onZoneChange === 'function') onZoneChange(z); }
+    return;
+  }
   const centers = fieldPoints(FLD_CLUSTERS + 1, FLD_GAP, [H.x, H.y]);
   const pts = [];
   const eliteC = new Set(); while (eliteC.size < Math.min(4, centers.length - 1)) eliteC.add(irnd(1, centers.length - 1));   // it nhat 4 cum co tinh anh (nhiem vu Da Tau)
   centers.forEach(([cx, cy], ci) => {
-    if (ci === 0) { pts.push({ x: cx, y: cy, cls: 'boss', tid: z.boss, t: FLD_BOSS_FIRST }); return; }   // diem trum: xuat hien sau 1 phut
+    if (ci === 0) { if (z.boss) pts.push({ x: cx, y: cy, cls: 'boss', tid: z.boss, t: FLD_BOSS_FIRST }); return; }   // diem trum: xuat hien sau 1 phut
     const n = Math.max(2, Math.round(irnd(dr[1], dr[2]) / 2)), tid = pick(z.m);   // moi cum 1 loai quai (kieu JX1)
     for (let i = 0; i < n; i++) {
       const [x, y] = inWorld(cx + rnd(-FLD_SPREAD, FLD_SPREAD), cy + rnd(-FLD_SPREAD, FLD_SPREAD) * 0.6);
@@ -70,7 +77,8 @@ function fieldTick(dt) {
     }
   }
   if (R.enemies.length > 80 || R.enemies.some(e => e.dead)) R.enemies = R.enemies.filter(e => !e.dead);
-  if (goldBossDue()) spawnGoldBoss();
+  const zz = zoneOf(Math.min(S.stage, STAGES));
+  if (goldBossDue() && zz.m && zz.m.length && zz.boss) spawnGoldBoss();
 }
 /* hanh vi quai chua giao chien: dung / di loanh quanh diem goc; thay nguoi thi duoi */
 function fieldIdle(e, dt) {

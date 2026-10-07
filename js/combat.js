@@ -82,11 +82,15 @@ const densK = e => (e && e.dens ? DENS_REW : 1);
 function spawnWave() {
   R.enemies = []; R.stall = 0;
   const z = zoneOf(S.stage), L = stageLevel(S.stage);
+  if (!(z.m && z.m.length)) {
+    if (z.id !== R.zoneShown) { R.zoneShown = z.id; R.banner = { t: 2.4, text: z.n, sub: `Cấp ${z.lo}–${z.hi}` }; if (typeof onZoneChange === 'function') onZoneChange(z); }
+    return;
+  }
   // quai xuat hien quanh nhan vat (ngoai tam nhin mot chut) roi tien lai
   const around = (r0, r1) => { const a = rnd(0, Math.PI * 2), r = rnd(r0, r1); return inWorld(H.x + Math.cos(a) * r, H.y + Math.sin(a) * r); };
   const sx = () => (R.sp = around(140, 300))[0], sy = () => R.sp[1];
   const mob = cls => { const e = makeEnemy(pick(z.m), L, cls, sx(), sy()); if (cls === 'normal') { e.dens = true; e.dmg *= DENS_DMG; } R.enemies.push(e); };   // quai thuong dong: thuong / roi do moi con giam (DENS_REW)
-  if (S.wave === WAVES && bossRoundDue()) {   // luyen cong: trum ban do moi 3 vong (mode.js) + tinh anh + dan em
+  if (S.wave === WAVES && bossRoundDue() && z.boss) {   // luyen cong: trum ban do moi 3 vong (mode.js) + tinh anh + dan em
     const bp = around(220, 260), be = makeEnemy(z.boss, L + 1, 'boss', bp[0], bp[1]); be.n = bossName(z.boss, z.n); R.enemies.push(be);
     mob('elite'); for (let i = 0; i < densRange()[3]; i++) mob('normal');
     log(`<b class="boss">${esc(bossName(z.boss, z.n))}</b> xuất hiện!`);
@@ -333,7 +337,10 @@ function tick(dt) {
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
-    if (R.dg) dgSpawn(); else if (R.tower) towerSpawn(); else { spawnWave(); if (goldBossDue()) spawnGoldBoss(); }
+    if (R.dg) dgSpawn(); else if (R.tower) towerSpawn(); else {
+      const zz = zoneOf(S.stage); spawnWave();
+      if (goldBossDue() && zz.m && zz.m.length && zz.boss) spawnGoldBoss();
+    }
     return;
   }
   if (manual()) moveManual(dt);                             // tu dieu khien: joystick / phim / diem cham
