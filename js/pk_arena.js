@@ -1,13 +1,13 @@
 /* ======================= SAN DAU PK (thoi Tran) =======================
-   Ban do rieng id 402 — KHONG nam trong ZONES (khong hien o luyen cong).
+   Ban do rieng id 403 — KHONG nam trong ZONES (khong hien o luyen cong).
    Moi PK: A moi B, B dong y (hoac doi ben moi nhau) → ca hai dich chuyen vao san,
    danh PK; het tran (thang/thua/hoa) → ve cho dung cu. */
 'use strict';
 
 const PK_ARENA = {
-  id: 402,
+  id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/402.jpg?v=330',
+  bg: 'img/z/403.jpg?v=330',
   music: 400,
   limit: 180,
   spawnA: [1480, 1780],
