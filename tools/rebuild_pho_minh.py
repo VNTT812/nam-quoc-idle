@@ -35,12 +35,15 @@ from reskin_tran_layout import (  # noqa: E402
 
 CW, CH = 32, 16
 SIZE = 3584
+# Lõi bố cục gốc — nhỏ hơn trước (3300) để điện/đường không chiếm full map
+CORE_SZ = 2600  # ~79% bản cũ (3300) — điện nhỏ vừa phải
+CORE_OY_BIAS = -28  # hơi lệch lên
 ART = Path("/opt/cursor/artifacts/pho-minh-scenery")
 REVIEW = ROOT / "assets/pack/map-style-review/400-pho-minh"
 
-# Điện chính trên canvas 3584 — khớp footprint layout gốc (lệch trên)
-# Chỉ 1 điện (tránh stamp phụ tạo khung card như Hoành Sơn từng lỗi)
-MAIN_HALL = (1792, 1410, 560, 460)  # cx, cy, w, h
+# Tỉ lệ so với bản cũ core≈3300 (obs/crop cũ viết theo scale đó)
+LEGACY_CORE = 3300.0
+LAYOUT_SCALE = CORE_SZ / LEGACY_CORE
 
 
 def extract_zone(js_text: str, stem: str):
@@ -121,33 +124,86 @@ def load_layout_orig() -> Image.Image:
     return Image.open(p).convert("RGB")
 
 
-def build_canvas_from_layout(src: Image.Image, size: int = SIZE) -> Image.Image:
-    """Phóng bố cục gốc lên full map, mép liền (không lát lặp cả cảnh chùa)."""
-    base = src.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2))
-    ba = np.asarray(base, dtype=np.float32)
+def core_origin(size: int = SIZE, core_sz: int = CORE_SZ) -> tuple[int, int]:
+    ox = (size - core_sz) // 2
+    oy = (size - core_sz) // 2 + CORE_OY_BIAS
+    return ox, oy
 
-    core_sz = 3300
+
+def layout_to_world(lx: float, ly: float, size: int = SIZE, core_sz: int = CORE_SZ) -> tuple[int, int]:
+    """Đổi offset cũ (theo core≈3300, tâm map) → tọa độ world khi core nhỏ hơn."""
+    ox, oy = core_origin(size, core_sz)
+    old_ox = (size - int(LEGACY_CORE)) // 2
+    old_oy = (size - int(LEGACY_CORE)) // 2 - 40
+    rx = (lx - old_ox) * (core_sz / LEGACY_CORE)
+    ry = (ly - old_oy) * (core_sz / LEGACY_CORE)
+    return int(ox + rx), int(oy + ry)
+
+
+def _margin_forest(size: int, src: Image.Image) -> np.ndarray:
+    """Rừng mép khớp tông layout — không mirror, không ô tile lộ."""
+    sa = np.asarray(src.convert("RGB"), dtype=np.float32)
+    h, w = sa.shape[:2]
+    # lấy màu trung bình vành đai ngoài (tán cây layout)
+    band = max(8, h // 10)
+    rim = np.concatenate(
+        [sa[:band].reshape(-1, 3), sa[-band:].reshape(-1, 3), sa[:, :band].reshape(-1, 3), sa[:, -band:].reshape(-1, 3)],
+        0,
+    )
+    mean = rim.mean(0)
+    rng = np.random.default_rng(400)
+    yy, xx = np.mgrid[0:size, 0:size]
+    base = np.zeros((size, size, 3), dtype=np.float32)
+    for i in range(3):
+        base[..., i] = mean[i] + rng.normal(0, 4.0, (size, size))
+    wave = (4.0 * np.sin(xx / 200.0) * np.cos(yy / 240.0)).astype(np.float32)
+    base = base + wave[..., None]
+
+    bamboo = open_tile("tran-bamboo-trees.jpg", "tran-ground.jpg")
+    if bamboo is not None:
+        b = bamboo.resize((1500, 1500), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2))
+        b0 = np.asarray(b, dtype=np.float32)
+        b1 = np.asarray(b.transpose(Image.FLIP_LEFT_RIGHT), dtype=np.float32)
+        bpix = 0.55 * b0[yy % 1500, xx % 1500] + 0.45 * b1[(yy + 380) % 1500, (xx + 290) % 1500]
+        # kéo về tông rim layout
+        bL = bpix.mean(axis=2, keepdims=True) + 1e-5
+        tL = float(mean.mean()) + 1e-5
+        bpix = bpix * (0.55 + 0.45 * (tL / bL))  # giữ texture tre, chỉ kéo luminance vừa
+        bpix = bpix * 0.82 + mean.reshape(1, 1, 3) * 0.18
+        dens = (0.78 + 0.14 * np.sin(xx / 120.0 + yy / 150.0)).astype(np.float32)[..., None]
+        base = base * (1.0 - dens) + bpix * dens
+    # blur nhẹ phá đường may, vẫn giữ chi tiết tán
+    out = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8), "RGB").filter(
+        ImageFilter.GaussianBlur(0.8)
+    )
+    return np.asarray(out, dtype=np.float32)
+
+
+def build_canvas_from_layout(src: Image.Image, size: int = SIZE) -> Image.Image:
+    """Thu nhỏ bố cục giữa map; mép rừng tông khớp, feather rộng."""
+    core_sz = CORE_SZ
     core = src.resize((core_sz, core_sz), Image.LANCZOS)
     ca = np.asarray(core, dtype=np.float32)
-    ox = (size - core_sz) // 2
-    oy = (size - core_sz) // 2 - 40  # hơi lệch lên như bố cục gốc
+    ox, oy = core_origin(size, core_sz)
+    forest = _margin_forest(size, src)
+    sharp = forest.copy()
+    sharp[oy : oy + core_sz, ox : ox + core_sz] = ca
 
-    yy, xx = np.ogrid[:core_sz, :core_sz]
-    margin = 160.0
-    dx = np.minimum(xx, core_sz - 1 - xx)
-    dy = np.minimum(yy, core_sz - 1 - yy)
-    edge = np.minimum(dx, dy).astype(np.float32)
-    alpha = np.clip(edge / margin, 0, 1)
-    alpha = alpha * alpha * (3 - 2 * alpha)
+    mask = np.zeros((size, size), dtype=np.float32)
+    mask[oy : oy + core_sz, ox : ox + core_sz] = 1.0
+    mask = (
+        np.asarray(
+            Image.fromarray((mask * 255).astype(np.uint8), "L").filter(
+                ImageFilter.GaussianBlur(48)
+            ),
+            dtype=np.float32,
+        )
+        / 255.0
+    )
+    ba = forest * (1.0 - mask[..., None]) + sharp * mask[..., None]
+    ba[oy : oy + core_sz, ox : ox + core_sz] = ca
 
-    x0, y0 = max(0, ox), max(0, oy)
-    x1, y1 = min(size, ox + core_sz), min(size, oy + core_sz)
-    sx0, sy0 = x0 - ox, y0 - oy
-    sw, sh = x1 - x0, y1 - y0
-    a = alpha[sy0 : sy0 + sh, sx0 : sx0 + sw][..., None]
-    patch = ca[sy0 : sy0 + sh, sx0 : sx0 + sw]
-    ba[y0:y1, x0:x1] = patch * a + ba[y0:y1, x0:x1] * (1.0 - a)
-
+    print(f"core {core_sz} at ({ox},{oy}) scale={LAYOUT_SCALE:.2f} vs legacy {int(LEGACY_CORE)}")
     return Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
 
 
@@ -490,17 +546,38 @@ def reskin_scenery(img: Image.Image, bias: str = "warm") -> Image.Image:
 
 
 def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
-    """Vật cản khớp bố cục Phổ Minh: chặn điện/sư tử, mở đường vào chùa."""
+    """Vật cản khớp bố cục Phổ Minh (đã thu nhỏ): chặn điện/sư tử, mở đường."""
     gw, gh = meta2["gw"], meta2["gh"]
     blocked = decode_obs(meta2)
-    cx, cy = size // 2, size // 2
-    mark_rect(blocked, cx - 280, cy - 520, 560, 420, True, gw, gh)
-    mark_rect(blocked, cx - 320, cy - 160, 200, 140, True, gw, gh)
-    mark_rect(blocked, cx + 80, cy - 140, 220, 140, True, gw, gh)
-    mark_rect(blocked, cx - 720, cy - 80, 280, 260, True, gw, gh)
-    carve_path(blocked, [(cx - 200, cy + 1100), (cx, cy + 200), (cx, cy - 80)], 95, gw, gh)
-    carve_path(blocked, [(cx - 600, cy + 400), (cx - 200, cy + 200), (cx, cy + 80)], 70, gw, gh)
-    carve_path(blocked, [(cx + 500, cy + 500), (cx + 120, cy + 160)], 65, gw, gh)
+    # block toàn bộ mép rừng ngoài lõi — giữ người chơi trong khu chùa
+    ox, oy = core_origin(size, CORE_SZ)
+    # mặc định: mở trong lõi, chặn ngoài
+    for gy in range(gh):
+        for gx in range(gw):
+            wx, wy = (gx + 0.5) * CW, (gy + 0.5) * CH
+            if wx < ox + 40 or wy < oy + 40 or wx > ox + CORE_SZ - 40 or wy > oy + CORE_SZ - 40:
+                blocked[gy * gw + gx] = 1
+
+    s = LAYOUT_SCALE
+    cx0, cy0 = size // 2, size // 2  # tâm cũ dùng trong số liệu legacy
+
+    def R(dx, dy, w, h):
+        x, y = layout_to_world(cx0 + dx, cy0 + dy, size, CORE_SZ)
+        mark_rect(blocked, x, y, max(32, int(w * s)), max(16, int(h * s)), True, gw, gh)
+
+    def P(pts, radius):
+        world = [layout_to_world(cx0 + dx, cy0 + dy, size, CORE_SZ) for dx, dy in pts]
+        carve_path(blocked, world, max(28, int(radius * s)), gw, gh)
+
+    # số liệu legacy: offset từ tâm map khi core≈3300
+    R(-280, -520, 560, 420)  # điện
+    R(-320, -160, 200, 140)  # sư tử L
+    R(80, -140, 220, 140)  # sư tử R
+    R(-720, -80, 280, 260)  # ao
+    P([(-200, 1100), (0, 200), (0, -80)], 95)
+    P([(-600, 400), (-200, 200), (0, 80)], 70)
+    P([(500, 500), (120, 160)], 65)
+
     meta = dict(meta2)
     meta["obs"] = encode_obs(blocked)
     meta["blocked"] = int(sum(blocked))
@@ -535,10 +612,15 @@ def rebuild() -> Image.Image:
 def save_previews(img: Image.Image, before: Image.Image | None = None) -> None:
     ART.mkdir(parents=True, exist_ok=True)
     img.resize((800, 800), Image.LANCZOS).save(ART / "pho-minh-full.jpg", quality=88)
-    cx = cy = SIZE // 2
-    img.crop((cx - 420, cy - 620, cx + 420, cy + 80)).save(ART / "pho-minh-temple.jpg", quality=92)
-    img.crop((cx - 900, cy - 200, cx - 200, cy + 500)).save(ART / "pho-minh-pond-trees.jpg", quality=90)
-    img.crop((200, 200, 1100, 1100)).save(ART / "pho-minh-corner-trees.jpg", quality=90)
+    # crop quanh điện theo lõi mới
+    tx, ty = layout_to_world(SIZE // 2, SIZE // 2 - 380, SIZE, CORE_SZ)
+    half = int(420 * LAYOUT_SCALE) + 40
+    img.crop((tx - half, ty - half, tx + half, ty + int(half * 0.85))).save(
+        ART / "pho-minh-temple.jpg", quality=92
+    )
+    px, py = layout_to_world(SIZE // 2 - 550, SIZE // 2 + 150, SIZE, CORE_SZ)
+    img.crop((px - 350, py - 350, px + 350, py + 350)).save(ART / "pho-minh-pond-trees.jpg", quality=90)
+    img.crop((80, 80, 900, 900)).save(ART / "pho-minh-corner-trees.jpg", quality=90)
     if before is not None:
         side = Image.new("RGB", (1600, 820), (18, 16, 14))
         side.paste(before.resize((800, 800), Image.LANCZOS), (0, 20))
