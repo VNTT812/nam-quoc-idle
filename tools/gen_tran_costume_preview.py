@@ -142,7 +142,7 @@ def main():
                 "body": None if key == "goc" else c["body"][0],
                 "head": None if key == "goc" else c["head"][0],
                 "file": f"costume_{key}.png",
-                "status": "reference" if key == "goc" else ("active" if key in {"day", "cham", "reu", "muc", "son", "kim"} else "candidate"),
+                "status": "reference" if key == "goc" else "active",
             }
         )
 

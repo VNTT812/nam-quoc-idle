@@ -69,7 +69,7 @@
     "body": "#d8d2c4",
     "head": "#8a8478",
     "file": "costume_bach.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "lam",
@@ -78,7 +78,7 @@
     "body": "#4a6d8c",
     "head": "#2c4458",
     "file": "costume_lam.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "dat",
@@ -87,7 +87,7 @@
     "body": "#5a3a22",
     "head": "#2e1e12",
     "file": "costume_dat.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "thao",
@@ -96,7 +96,7 @@
     "body": "#7a6a38",
     "head": "#4a4020",
     "file": "costume_thao.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "huyen",
@@ -105,7 +105,7 @@
     "body": "#3a2a3a",
     "head": "#1e1620",
     "file": "costume_huyen.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "ngoc",
@@ -114,7 +114,7 @@
     "body": "#2a5a55",
     "head": "#163832",
     "file": "costume_ngoc.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "hoang",
@@ -123,7 +123,7 @@
     "body": "#c4a035",
     "head": "#6e5818",
     "file": "costume_hoang.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "tu",
@@ -132,7 +132,7 @@
     "body": "#6a3a58",
     "head": "#3a2030",
     "file": "costume_tu.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "dong",
@@ -141,7 +141,7 @@
     "body": "#8a5a32",
     "head": "#4a3018",
     "file": "costume_dong.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "lua",
@@ -150,7 +150,7 @@
     "body": "#b04828",
     "head": "#5c2414",
     "file": "costume_lua.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "sam",
@@ -159,7 +159,7 @@
     "body": "#1e2a3a",
     "head": "#101820",
     "file": "costume_sam.png",
-    "status": "candidate"
+    "status": "active"
   },
   {
     "key": "ho",
@@ -168,6 +168,6 @@
     "body": "#8a5228",
     "head": "#4a2c14",
     "file": "costume_ho.png",
-    "status": "candidate"
+    "status": "active"
   }
 ]
