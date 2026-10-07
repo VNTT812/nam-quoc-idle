@@ -309,10 +309,11 @@ function enemyAI(e, dt) {
 }
 function tick(dt) {
   obsFrame(); recTick(dt);
+  if (typeof pkArenaTick === 'function') pkArenaTick(dt);
   if ((R.sweepT = (R.sweepT || 0) + dt) > 30) { R.sweepT = 0; autoEquipAll(); if (typeof autoFuse === 'function') autoFuse(); if (typeof autoHut === 'function') autoHut(); sweepJunk(); autoBuyWeapon(); autoForge(); checkHints(); }
   if (R.dirty) recalc();
   const P = R.P;
-  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode()) spawnWave(); } return; }
+  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode() && !R.pkArena) spawnWave(); } return; }
   R.life = Math.min(P.life, R.life + P.regen * dt); R.mana = Math.min(P.mana, R.mana + P.manaRegen * dt);
   autoPotion(dt); rideTick(dt);
   if (R.hpDotT > 0) { const k = Math.min(dt, R.hpDotT) / R.hpDotT; R.life -= R.hpDot * k; R.hpDot -= R.hpDot * k; R.hpDotT -= dt; }   // trung doc
@@ -328,8 +329,12 @@ function tick(dt) {
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (khong tinh tab an, trong thanh, Luyen Cong) -> S.kps
   const looting = updateGround(dt);                       // di nhat do (cham tay, hoac het quai + khop bo loc)
   if (fieldMode()) fieldTick(dt);                          // bai luyen cong kieu JX1: quai dat san, hoi sinh tai cho (field.js)
+  if (R.pkArena) {                                         // san dau: khong spawn quai, chi PK nguoi
+    if (R.enemies.length) R.enemies = [];
+    R.field = null;
+  }
   if (!R.enemies.length) {
-    if (fieldMode()) return;
+    if (fieldMode() || R.pkArena) return;
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;

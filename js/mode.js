@@ -21,7 +21,7 @@ function farmStage(i) {
 function syncMaxStage() { for (let i = 0; i < ZONES.length; i++) if (zoneOpen(i)) S.maxStage = Math.max(S.maxStage || 1, Math.min(STAGES, zoneFirst(i) + ZONE_STAGES - 1)); }
 /* chuyen ban do ngay (doi nen, vat can, nhac) - giu quai dang co neu keep */
 function gotoZone(i, why, keep) {
-  if (!ZONES[i] || R.dg || R.tower) return false;
+  if (!ZONES[i] || R.dg || R.tower || R.pkArena) return false;
   if (R.town) backFromTown();
   const st = farmStage(i), same = zoneIdx(Math.min(S.stage, STAGES)) === i;
   S.stage = st; S.wave = 1;
@@ -38,7 +38,7 @@ const bossRoundDue = () => (R.round || 0) % BOSS_ROUNDS === BOSS_ROUNDS - 1;
 /* ---------- tu doi ban do theo cap (luyen cong) ---------- */
 function autoMapCheck() {
   syncMaxStage();
-  if (S.mode === 'quest' || S.autoMap === false || R.dg || R.tower || R.town || R.sat) return;
+  if (S.mode === 'quest' || S.autoMap === false || R.dg || R.tower || R.town || R.sat || R.pkArena) return;
   const b = bestZoneIdx(), cur = zoneIdx(Math.min(S.stage, STAGES));
   if (b !== cur) gotoZone(b, 'Đủ cấp, đổi bãi luyện công');
   else { const st = farmStage(b); if (st !== S.stage) { S.stage = st; } }

@@ -7,7 +7,7 @@
 const FLD_RESPAWN = 20, FLD_BOSS_RESPAWN = 180, FLD_BOSS_FIRST = 60;   // giay
 const FLD_CLUSTERS = 14, FLD_GAP = 300, FLD_SPREAD = 60, FLD_WANDER = 50;
 const FLD_AGGRO = 260, FLD_LEASH = 650, FLD_ROUND_KILLS = 24;      // 24 con = 1 vong (nhiem vu "vong luyen cong", doi cap quai)
-const fieldMode = () => !R.dg && !R.tower && !R.town && !window.NO_FIELD;   // NO_FIELD: chi de so sanh trong test
+const fieldMode = () => !R.dg && !R.tower && !R.town && !R.pkArena && !window.NO_FIELD;   // NO_FIELD: chi de so sanh trong test; pkArena: san dau rieng
 const fieldKey = () => `${OBS.key}|${zoneOf(Math.min(S.stage, STAGES)).id}|${S.diff}|${rebornN()}`;
 
 /* vung den cua anh nen (ngoai ban do, vd goc Diem Thuong son): khong dat quai (lay mau anh nen thu nho 1/16) */

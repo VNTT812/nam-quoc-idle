@@ -18,11 +18,12 @@ const mpCid = () => {
   if (typeof NET !== 'undefined' && NET.user && NET.user.id) return String(NET.user.id);
   return typeof chatCid === 'function' ? chatCid() : 'anon';
 };
-const mpActive = () => !!(MP.ch && MP.state === 'ok' && typeof fieldMode === 'function' && fieldMode() && S && S.fac && !R.town && !R.dg && !R.tower);
+const mpArenaOk = () => !!(R && R.pkArena);
+const mpActive = () => !!(MP.ch && MP.state === 'ok' && S && S.fac && !R.town && !R.tower && (mpArenaOk() || (typeof fieldMode === 'function' && fieldMode() && !R.dg)));
 const mpIsHost = () => !MP.host || MP.host === mpCid();
-const mpRoom = z => 'map:' + ((z && z.id) || 0);
+const mpRoom = z => (MP.roomOverride || ('map:' + ((z && z.id) || 0)));
 const mpName = () => String((S && typeof hasRealName === 'function' && hasRealName() ? S.name : (S && FAC[S.fac] && FAC[S.fac].n) || 'Vô danh')).slice(0, 16);
-const mpCanPlay = () => !!(typeof netOn === 'function' && netOn() && NET.user && S && S.fac && typeof fieldMode === 'function' && fieldMode() && !R.town && !R.dg && !R.tower);
+const mpCanPlay = () => !!(typeof netOn === 'function' && netOn() && NET.user && S && S.fac && !R.town && !R.tower && (mpArenaOk() || (typeof fieldMode === 'function' && fieldMode() && !R.dg)));
 
 function mpMid(p) {
   if (p && p.mid) return p.mid;
@@ -44,8 +45,11 @@ function mpUi() {
   if (typeof netOn !== 'function' || !netOn() || (typeof NET !== 'undefined' && NET.offline)) {
     badge.className = 'off'; el.textContent = 'offline'; return;
   }
-  if (typeof fieldMode !== 'function' || !fieldMode() || R.town || R.dg || R.tower) {
+  if (R.town || R.tower || (R.dg && !mpArenaOk()) || (!(typeof fieldMode === 'function' && fieldMode()) && !mpArenaOk())) {
     badge.className = 'idle'; el.textContent = 'solo'; return;
+  }
+  if (mpArenaOk()) {
+    badge.className = 'on'; el.textContent = 'sàn đấu'; return;
   }
   if (MP.state === 'load' || MP.state === 'retry') { badge.className = 'load'; el.textContent = MP.state === 'retry' ? 'nối lại…' : 'đang nối…'; return; }
   if (MP.state === 'err') { badge.className = 'err'; el.textContent = 'mất mạng'; return; }
@@ -682,7 +686,7 @@ function mpChAlive(ch) {
 
 async function mpJoin(z) {
   z = z || (typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null);
-  if (!z || !mpCanPlay()) { if (!NET.user || !S || !S.fac) await mpLeave(); else if (!fieldMode() || R.town || R.dg || R.tower) await mpLeave(); return; }
+  if (!z || !mpCanPlay()) { if (!NET.user || !S || !S.fac) await mpLeave(); else if (R.town || R.tower || (R.dg && !mpArenaOk()) || (!(typeof fieldMode === 'function' && fieldMode()) && !mpArenaOk())) await mpLeave(); return; }
   const rid = mpRoom(z);
   // kenh cung map con song: KHONG go + tao lai (tranh "nối lại" lap / peer tele)
   if (MP.ch && MP.zoneId === z.id && mpChAlive(MP.ch)) {
