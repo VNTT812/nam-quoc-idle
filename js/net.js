@@ -500,10 +500,11 @@ async function profileModal(name, back) {
   modal(`<h3>${esc(x.name)} <small>${esc(f ? f.n : '')} · cấp ${x.lvl}${x.reborn ? ` · chuyển sinh ${x.reborn}` : ''}</small></h3>
     <p class="small">Lực chiến <b>${fmt(x.power || 0)}</b> · Tháp tầng <b>${x.tower || 0}</b> · Trùm đã hạ <b>${fmt(x.bosses || 0)}</b> <small class="dim">· cập nhật ${new Date(x.updated).toLocaleString('vi-VN')}</small></p>
     <div class="pfgrid">${cells}</div>
-    <div class="btnrow">${S && S.fac && x.name !== S.name ? '<button class="btn" id="pfMail">📨 Gửi thư</button>' : ''}${S && S.fac && x.name !== S.name && typeof friendHas === 'function' ? (friendHas(x.name) ? '<button class="btn" id="pfFrRm">Xóa bạn</button>' : '<button class="btn" id="pfFr">👥 Kết bạn</button>') : ''}<button class="btn" id="pfB">Quay lại</button></div>`, () => {
+    <div class="btnrow">${S && S.fac && x.name !== S.name ? '<button class="btn" id="pfMail">📨 Gửi thư</button>' : ''}${S && S.fac && x.name !== S.name && typeof friendHas === 'function' && friendHas(x.name) ? '<button class="btn" id="pfChat">💬 Chat</button>' : ''}${S && S.fac && x.name !== S.name && typeof friendHas === 'function' ? (friendHas(x.name) ? '<button class="btn" id="pfFrRm">Xóa bạn</button>' : '<button class="btn" id="pfFr">👥 Kết bạn</button>') : ''}<button class="btn" id="pfB">Quay lại</button></div>`, () => {
     document.querySelectorAll('#mBody [data-pk]').forEach(b => b.onclick = () => netItemModal(g[b.dataset.pk], '', () => profileModal(name, back)));
     $('#pfB').onclick = back;
     const m = $('#pfMail'); if (m) m.onclick = () => { NET.mailTo = x.name; netModal('mail'); };
+    const ch = $('#pfChat'); if (ch) ch.onclick = () => { closeModal(true); if (typeof chatOpenFriend === 'function') chatOpenFriend(x.name); };
     const fr = $('#pfFr'); if (fr) fr.onclick = () => busy(fr, () => friendRequest(x.name), () => { toast('Đã gửi lời mời kết bạn'); profileModal(name, back); });
     const rm = $('#pfFrRm'); if (rm) rm.onclick = () => { friendRemove(x.name); toast('Đã xóa bạn'); profileModal(name, back); };
   });

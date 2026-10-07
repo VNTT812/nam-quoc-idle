@@ -4,7 +4,7 @@
 const U20_TABS = [['char', 'char', 'Nhân vật', 'Nhân vật'], ['inv', 'inv', 'Hành trang', 'Vật phẩm'], ['skill', 'skill', 'Võ công', 'Kỹ năng'], ['forge', 'forge', 'Lò rèn', 'Lò rèn'],
   ['quest', 'quest', 'Nhiệm vụ · Phó bản', 'Chỉ nam nhiệm vụ'], ['ride', 'ride', 'Lên / xuống ngựa (M)', ''], ['more', 'more', 'Hệ thống', 'Hệ thống']];
 const U20_SIDE = [];
-const U20_LOGT = [['all', 'Tổng hợp'], ['chat', 'Thế giới'], ['fight', 'Chiến đấu'], ['loot', 'Nhặt đồ'], ['quest', 'Nhiệm vụ'], ['sys', 'Hệ thống']];
+const U20_LOGT = [['all', 'Tổng hợp'], ['chat', 'Thế giới'], ['friend', 'Bạn'], ['fight', 'Chiến đấu'], ['loot', 'Nhặt đồ'], ['quest', 'Nhiệm vụ'], ['sys', 'Hệ thống']];
 let u20LogT = 'all', u20Cur = null;
 const u20On = () => !!S && window.innerWidth > window.innerHeight && (window.innerWidth >= 900 || (window.innerWidth >= 640 && window.innerHeight <= 520));   // may tinh + dien thoai cam ngang
 const u2mOn = () => !!S && !u20On();                                     // dien thoai cam doc: giu bo cuc tren / duoi, phong cach 2.0
@@ -99,15 +99,31 @@ const u20Kind = l => /Nhặt được|rơi ra|Tự mua|Hành trang đầy/.test(
 let u20LogN = -1;
 function u20LogDraw() {
   const box = $('#u20lines'); if (!box) return;
-  if (u20LogT === 'chat') { box.innerHTML = typeof CHAT !== 'undefined' && CHAT.msgs.length ? CHAT.msgs.slice(-10).map(chatLine).join('') : '<div style="color:#999">Chưa có tin nhắn · bấm 💬 để chat</div>'; return; }
-  const L = (R.logs || []).filter(l => u20LogT === 'all' || u20Kind(l) === u20LogT).slice(0, 10).reverse();
+  if (u20LogT === 'chat') { box.innerHTML = typeof CHAT !== 'undefined' && CHAT.msgs.length ? CHAT.msgs.slice(-10).map(chatLine).join('') : '<div style="color:#999">Chưa có tin nhắn · bấm 💬 để chat thế giới</div>'; return; }
+  if (u20LogT === 'friend') {
+    const rows = (typeof CHAT !== 'undefined' && CHAT.fmsgs && CHAT.fmsgs.length) ? CHAT.fmsgs.filter(m => !m.sys).slice(-10) : [];
+    box.innerHTML = rows.length
+      ? rows.map(chatLine).join('') + `<div style="color:#9fe8ff;margin-top:4px"><a href="#" id="u20frChat">💬 Mở chat bạn bè</a></div>`
+      : `<div style="color:#999">Chat riêng với bạn · <a href="#" id="u20frChat">bấm 💬 → tab Bạn bè</a></div>`;
+    const a = $('#u20frChat'); if (a) a.onclick = ev => {
+      ev.preventDefault();
+      if (typeof chatOpenFriend === 'function' && CHAT.fTo) chatOpenFriend(CHAT.fTo);
+      else if (typeof chatToggle === 'function') { chatToggle(true); if (typeof chatSetMode === 'function') chatSetMode('friend'); }
+    };
+    return;
+  }
+  const L = (R.logs || []).filter(l => {
+    if (u20LogT === 'all') return true;
+    if (u20LogT === 'sys' && /💬|Kết bạn|Nhận thư/.test(l)) return true;
+    return u20Kind(l) === u20LogT;
+  }).slice(0, 10).reverse();
   box.innerHTML = L.map(l => `<div>${l}</div>`).join('');
 }
 function u20Tick() {
   if (document.body.classList.contains('u2m') && S && S.fac) { u20ZoneName(); u2mZonePos(); return; }
   if (!document.body.classList.contains('u20') || !S || !S.fac) return;
   u20TrkDraw(); u20ZoneName(); { const on = typeof netOn === 'function' && netOn(), n = (typeof NET !== 'undefined' && NET.mailN) || 0; $('#u20mail').style.display = on ? '' : 'none'; $('#u20mkt').style.display = on ? '' : 'none'; const rk = $('#u20rank'); if (rk) rk.style.display = on ? 'block' : 'none'; $('#u20mailN').textContent = n ? (n > 9 ? '9+' : n) : ''; $('#u20mail').classList.toggle('on', n > 0); } const cb = $('#chatBox'); if (cb && cb.parentNode !== document.body) document.body.appendChild(cb); const rb = document.querySelector('#u20menu [data-u="ride"]'); if (rb) { rb.classList.toggle('on', !!R.mounted); rb.classList.toggle('off', !canRide()); }
-  const n = (R.logs || []).length + '|' + (R.logs || [])[0] + '|' + (typeof CHAT !== 'undefined' ? CHAT.msgs.length : 0); if (n !== u20LogN) { u20LogN = n; u20LogDraw(); }
+  const n = (R.logs || []).length + '|' + (R.logs || [])[0] + '|' + (typeof CHAT !== 'undefined' ? CHAT.msgs.length + '|' + CHAT.fmsgs.length + '|' + CHAT.mode + '|' + CHAT.fTo : 0); if (n !== u20LogN) { u20LogN = n; u20LogDraw(); }
   $('#u20g').textContent = fmt(S.gold); $('#u20knb').textContent = fmt(S.knb || 0);
   // thanh mau trum dang danh / gan nhat
   const b = R.enemies && R.enemies.filter(e => !e.dead && (e.cls === 'boss') && Math.hypot(e.x - H.x, e.y - H.y) < 700).sort((p, q) => Math.hypot(p.x - H.x, p.y - H.y) - Math.hypot(q.x - H.x, q.y - H.y))[0], bb = $('#u20boss');

@@ -169,6 +169,7 @@ async function netFriendsBody(el) {
     return `<div class="frrow"><span><b class="frname" data-pn="${esc(r.name)}">${esc(r.name)}</b>
         <small class="dim">Lv${r.lvl || '?'} · ${esc(fac)}${r.power ? ' · ' + fmt(r.power) : ''}</small> ${st}</span>
         <span class="btnrow">
+          <button class="btn sm" data-fchat="${esc(r.name)}">Chat</button>
           <button class="btn sm" data-fmail="${esc(r.name)}">Thư</button>
           <button class="btn sm red" data-frm="${esc(r.name)}">Xóa</button>
         </span></div>`;
@@ -208,6 +209,11 @@ async function netFriendsBody(el) {
   el.querySelectorAll('[data-pn]').forEach(a => a.onclick = ev => {
     ev.preventDefault();
     if (typeof profileModal === 'function') profileModal(a.dataset.pn, () => netModal('friends'));
+  });
+  el.querySelectorAll('[data-fchat]').forEach(b => b.onclick = () => {
+    closeModal(true);
+    if (typeof chatOpenFriend === 'function') chatOpenFriend(b.dataset.fchat);
+    else toast('Chat chưa sẵn sàng');
   });
   el.querySelectorAll('[data-fmail]').forEach(b => b.onclick = () => { NET.mailTo = b.dataset.fmail; netModal('mail'); });
   el.querySelectorAll('[data-frm]').forEach(b => b.onclick = () => {
