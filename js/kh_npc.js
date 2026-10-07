@@ -11,9 +11,9 @@ const KH_HIT_R = 42;    // ban kinh click trung sprite
 const KH_ZONE_NPC = [
   /* kh20 = pose mặt sân (xoay ngược khỏi nhà); đứng sát cột (ô walk gần chân cột) */
   {
-    kh: 20, n: 'Thanh Kiếm Nữ', x: 0.512, y: 0.152, face: 1,
+    kh: 20, n: 'Ngọc Lan', x: 0.512, y: 0.152, face: 1,
     talk: {
-      title: 'Thanh Kiếm Nữ · Hoành Sơn Môn',
+      title: 'Ngọc Lan · Hoành Sơn Môn',
       open: 'Tiểu nữ hầu hạ tại sân luyện. Hiệp khách cần gì?',
       choices: [
         {
