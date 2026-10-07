@@ -401,14 +401,17 @@ function pkArenaOnFchat(m) {
     return true;
   }
   if (act === 'ok') {
-    if (pkArenaOn()) return true;
-    if (pkArenaCooling(room, from)) return true;
-    if (age > 90000) return true;
+    if (pkArenaOn()) { pkArenaClearWait(from); return true; }
+    if (pkArenaCooling(room, from)) { pkArenaClearWait(from); return true; }
+    if (age > 90000) { pkArenaClearWait(from); return true; }
     // CHI vao san khi MINH dang cho OK (da moi, pending.out) — KHONG vao chi vi room khop (gay loop)
     const pend = PKA.pending[from];
     if (pend && pend.out && pend.room === room) {
       pkArenaClearWait(from);
       pkArenaEnter(room, from, true);
+    } else {
+      // ok khong khop pending → bo, tranh treo poll
+      pkArenaClearWait(from);
     }
     return true;
   }
