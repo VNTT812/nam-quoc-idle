@@ -109,7 +109,7 @@ function goTown() {
   if (R.town) return;
   if (R.dg) { toast('Đang trong phó bản / boss tuần'); return; }
   if ((R.tpCd || 0) > 0) { toast(`Thổ Địa Phù hồi sau ${Math.ceil(R.tpCd)} giây`); return; }
-  R.town = true; R.enemies = []; R.corpses = []; R.pickTarget = null; R.moveTo = null; INPUT.target = null;
+  R.town = true; R.enemies = []; R.corpses = []; R.pickTarget = null; R.talkTarget = null; R.moveTo = null; INPUT.target = null;
   obsLoad('town'); [H.x, H.y] = inWorld(WORLD.w / 2, WORLD.h / 2); snapCamera();
   R.bgImg = img(W.town.bg); uiSfx('use');
   playMusic(W.town.id);
@@ -160,12 +160,15 @@ function bindControls() {
   CV.addEventListener('pointerdown', ev => {
     if (INPUT.active) return;
     if (mouseMode() && ev.pointerType !== 'touch') {              // che do chuot: bam / giu chuot de di toi do, bam do tren dat de nhat
-      const [x, y] = pos(ev), d = groundAt(x + CAM.x, y + CAM.y);
+      const [x, y] = pos(ev), wx0 = x + CAM.x, wy0 = y + CAM.y;
+      const npc = typeof khNpcAt === 'function' ? khNpcAt(wx0, wy0) : null;
+      const d = groundAt(wx0, wy0);
       Object.assign(INPUT, { active: true, id: ev.pointerId, fromJoy: false, mouse: true, moved: false, x, y });
       CV.setPointerCapture && CV.setPointerCapture(ev.pointerId);
-      if (d) { R.pickTarget = R.pickTarget === d ? null : d; if (R.pickTarget) toast(`Đi nhặt: ${d.it.n}`); INPUT.mouse = false; return; }
+      if (npc && npc.talk) { startTalkNpc(npc); INPUT.mouse = false; return; }
+      if (d) { R.pickTarget = R.pickTarget === d ? null : d; if (R.pickTarget) toast(`Đi nhặt: ${d.it.n}`); INPUT.mouse = false; R.talkTarget = null; return; }
       if (!manual()) setCtrl('manual');
-      const [wx, wy] = inWorld(x + CAM.x, y + CAM.y); INPUT.target = { x: wx, y: wy }; R.pickTarget = null;
+      const [wx, wy] = inWorld(wx0, wy0); INPUT.target = { x: wx, y: wy }; R.pickTarget = null; R.talkTarget = null;
       return;
     }
     const [x, y] = pos(ev), a = joyAnchor(), fromJoy = !joyFixed() || Math.hypot(x - a.x, y - a.y) <= JOY_R * 1.7;
@@ -184,9 +187,12 @@ function bindControls() {
     const [x, y] = pos(ev), tap = !INPUT.moved && !INPUT.mouse;
     INPUT.mouse = false; INPUT.active = false; INPUT.id = null; INPUT.moved = false;
     if (!tap) return;
-    const d = groundAt(x + CAM.x, y + CAM.y);                   // cham vao do: di nhat (doi sang toa do the gioi)
-    if (d) { R.pickTarget = R.pickTarget === d ? null : d; if (R.pickTarget) toast(`Đi nhặt: ${d.it.n}`); return; }
-    if (manual()) { const [wx, wy] = inWorld(x + CAM.x, y + CAM.y); INPUT.target = { x: wx, y: wy }; }   // cham dat: di toi do
+    const wx0 = x + CAM.x, wy0 = y + CAM.y;
+    const npc = typeof khNpcAt === 'function' ? khNpcAt(wx0, wy0) : null;
+    if (npc && npc.talk) { startTalkNpc(npc); return; }              // cham NPC: di toi + noi chuyen
+    const d = groundAt(wx0, wy0);                                   // cham vao do: di nhat (doi sang toa do the gioi)
+    if (d) { R.pickTarget = R.pickTarget === d ? null : d; if (R.pickTarget) toast(`Đi nhặt: ${d.it.n}`); R.talkTarget = null; return; }
+    if (manual()) { const [wx, wy] = inWorld(wx0, wy0); INPUT.target = { x: wx, y: wy }; R.talkTarget = null; }   // cham dat: di toi do
   };
   CV.addEventListener('pointerup', up);
   CV.addEventListener('pointercancel', ev => { if (ev.pointerId === INPUT.id) { INPUT.active = false; INPUT.id = null; INPUT.moved = false; } });
@@ -231,7 +237,7 @@ function drawJoystick(c) {
   if (!fixed && !(on && INPUT.moved)) return;
   const ox = fixed ? a.x : INPUT.ox, oy = fixed ? a.y : INPUT.oy;
   c.globalAlpha = on ? 0.35 : 0.12; c.fillStyle = '#000'; c.beginPath(); c.arc(ox, oy, JOY_R, 0, 7); c.fill();
-  const ring = img('ui/ring.png');                           // vong sang vang goc (tools/extract_ui.py), thieu thi ve vien
+  const ring = img(Assets.UI.ring);                           // vong sang vang goc (tools/extract_ui.py), thieu thi ve vien
   if (ring && ring.complete && ring.naturalWidth) {
     const n = 4, fw = ring.naturalWidth / n, fr = Math.floor(performance.now() / 90) % n, sz = JOY_R * 2.6;
     c.globalAlpha = on ? 0.9 : 0.4; c.drawImage(ring, fr * fw, 0, fw, ring.naturalHeight, ox - sz / 2, oy - sz / 2, sz, sz);

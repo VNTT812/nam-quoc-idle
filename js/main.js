@@ -38,7 +38,7 @@ function onZoneChange(z) {
   loadZoneBg(z);
   playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh();
   if (typeof mpJoin === 'function') try { mpJoin(z); } catch (e) { /* dong doi beta: loi khong chan game */ }
-  R.khNpcs = null;                                                          // doi map: dat lai NPC tinh (Hoành Sơn Môn)
+  R.khNpcs = null; R.talkTarget = null;                                     // doi map: dat lai NPC tinh (Hoành Sơn Môn)
   if (typeof ensureKhNpcs === 'function') ensureKhNpcs();
 }
 function onStageChange() { if (curTab === 'log') refresh(); }
@@ -142,7 +142,7 @@ function init() {
     bootLoadHide();
     toast(typeof netOn === 'function' && netOn()
       ? 'Đang xác nhận tài khoản admin để chơi phái Test…'
-      : 'Hệ Việt★ / phái Test chỉ tài khoản admin');
+      : 'Hệ Thổ★ / phái Test chỉ tài khoản admin');
     slotMenu();
   } else if (S.fac && FAC[S.fac] && FAC[S.fac].test) {
     if (typeof thoTestUnlock90 === 'function') thoTestUnlock90(S.fac);

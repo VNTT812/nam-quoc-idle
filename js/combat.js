@@ -63,13 +63,11 @@ function makeEnemy(tid, L, cls, x, y) {
   const series = monSeries(tid);                                       // he co dinh theo loai quai (kieu JX1)
   // khang theo he: nguyen to cua he minh (rmax 90) +10, diem yeu (rmax 60) -10, tran = rmax cua quai (+-10 can doi: o cap cao +20 lam mat ~40% sat thuong)
   const res = {}; ELEM.forEach((e, i) => { const mx = m.rmax[i] || 75, b = mx > 75 ? 10 : mx < 75 ? -10 : 0; res[e] = clamp(L * 0.35 + (cls === 'boss' ? 10 : 0) + b, -20, mx); });
-  const e = { id: Math.random(), tid, n: m.n, img: m.img ? img(m.img) : null, sz: m.sz, L, cls, series, res,
+  return { id: Math.random(), tid, n: m.n, img: m.img ? img(m.img) : null, sz: m.sz, L, cls, series, res,
     hp: st.hp, max: st.hp, dmg: st.dmg, ar: st.ar, def: st.def, x, y, r: CLS[cls].r,
     spd: (30 + (m.run || 6) * 4) * (cls === 'boss' ? 0.7 : 1), atkCd: rnd(0.5, 1.5), cd: 1.2 + 18 / Math.max(8, m.spd || 18) * 0.5,
     reach: monReach(tid), ranged: monReach(tid) > 120, born: R.clock || 0, stun: 0, slowT: 0, poison: 0, poisonDmg: 0, hitT: 0, face: 1,
     act: 'st', actT: 0, dir: 0, moving: false };
-  if (typeof attachTranCostume === 'function') attachTranCostume(e);
-  return e;
 }
 /* Mat do quai luyen cong: moi dot DENS_MIN..DENS_MAX con (truoc 3-4), dot trum co them DENS_BOSS dan em.
    Quai thuong danh nhe hon (DENS_DMG) vi dong gap doi. DENS_REW: he so thuong / roi do moi con thuong (test/t2: 1 -> len cap
@@ -295,7 +293,11 @@ function enemyAI(e, dt) {
   }
   if (e.home && fieldIdle(e, dt)) return;                                // chua giao chien: loanh quanh diem goc (field.js)
   const d = Math.hypot(H.x - e.x, H.y - e.y), reach = e.ranged ? (e.reach || 200) : Math.max(e.r + 24, Math.min(e.reach || 0, 90));
-  if (e.act !== 'at' && e.act !== 'hurt') { e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y); }
+  // mat huong: SoM chỉ lật trái/phải + deadzone (hết xoay); quái thường giữ logic cũ
+  if (e.act !== 'at' && e.act !== 'hurt') {
+    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, H.x);
+    else { e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y); }
+  }
   if ((e.seeT = (e.seeT || 0) - dt) <= 0) { e.seeT = 0.25; e.see = d > reach + 4 || obsSee(e.x, e.y, H.x, H.y); }   // tuong chan: khong danh xuyen tuong, phai di vong
   e.moving = d > reach || !e.see;
   if (e.moving) obsChase(e, H.x, H.y, e.spd * sl * dt);
@@ -303,17 +305,17 @@ function enemyAI(e, dt) {
   e.atkCd -= dt * sl;
   if (d <= reach + 4 && e.see && e.atkCd <= 0 && e.act !== 'hurt') {
     e.atkCd = e.cd * (e.curse && typeof curseMod === 'function' ? 1 + ((curseMod(e) || {}).slow || 0) / 100 : 1);
-    e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y);
+    if (typeof isSomMon === 'function' && isSomMon(e.tid) && typeof somUpdateFace === 'function') somUpdateFace(e, H.x);
+    else { e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y); }
     enemyHit(e); e.act = 'at'; e.actT = 0; npcSfx(e.animKey || MON[e.tid].anim, 'at', 0.35); if (e.ranged) fxLine(e, H, { parts: { phys: 1 } });
   }
 }
 function tick(dt) {
   obsFrame(); recTick(dt);
-  if (typeof pkArenaTick === 'function') pkArenaTick(dt);
   if ((R.sweepT = (R.sweepT || 0) + dt) > 30) { R.sweepT = 0; autoEquipAll(); if (typeof autoFuse === 'function') autoFuse(); if (typeof autoHut === 'function') autoHut(); sweepJunk(); autoBuyWeapon(); autoForge(); checkHints(); }
   if (R.dirty) recalc();
   const P = R.P;
-  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode() && !R.pkArena) spawnWave(); } return; }
+  if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (!fieldMode()) spawnWave(); } return; }
   R.life = Math.min(P.life, R.life + P.regen * dt); R.mana = Math.min(P.mana, R.mana + P.manaRegen * dt);
   autoPotion(dt); rideTick(dt);
   if (R.hpDotT > 0) { const k = Math.min(dt, R.hpDotT) / R.hpDotT; R.life -= R.hpDot * k; R.hpDot -= R.hpDot * k; R.hpDotT -= dt; }   // trung doc
@@ -327,33 +329,19 @@ function tick(dt) {
   if (R.town) { townTick(dt); return; }                                // trong thanh (Tho Dia Phu)
   dgTick(dt);                                                           // pho ban / boss tuan: dong ho gioi han (dungeon.js)
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (khong tinh tab an, trong thanh, Luyen Cong) -> S.kps
-  const looting = updateGround(dt);                       // di nhat do (cham tay, hoac het quai + khop bo loc)
+  const talking = typeof updateKhTalk === 'function' && updateKhTalk(dt); // di toi NPC noi chuyen (kh_npc.js)
+  const looting = !talking && updateGround(dt);           // di nhat do (cham tay, hoac het quai + khop bo loc)
   if (fieldMode()) fieldTick(dt);                          // bai luyen cong kieu JX1: quai dat san, hoi sinh tai cho (field.js)
-  if (R.pkArena) {                                         // san dau: khong spawn quai — van di chuyen + heroAttack (PK)
-    if (R.enemies.length) R.enemies = [];
-    R.field = null;
-    if (manual()) moveManual(dt);
-    else if (R.moveTo && R.moveTo.hp > 0 && !(R.stunT > 0)) {
-      obsSteer(H, R.moveTo.x, R.moveTo.y, 150 * curSpeed() * (R.slowT > 0 ? ELEM_SLOW : 1) * dt);
-    }
-    if (!(R.stunT > 0)) {
-      R.atkT -= dt * (R.slowT > 0 ? ELEM_SLOW : 1);
-      if (R.atkT <= 0) R.atkT = heroAttack();
-    }
-    if (R.life <= 0) heroDeath();
-    return;
-  }
   if (!R.enemies.length) {
-    /* Map khong quai (Hoanh Son Mon) van cho di chuyen — khong return som cat moveManual */
-    if (fieldMode()) { if (manual()) moveManual(dt); return; }
+    if (fieldMode()) return;
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
     if (R.dg) dgSpawn(); else if (R.tower) towerSpawn(); else { spawnWave(); if (goldBossDue()) spawnGoldBoss(); }
     return;
   }
-  if (manual()) moveManual(dt);                             // tu dieu khien: joystick / phim / diem cham
-  if (!(looting && R.pickTarget)) {                        // dang chu dong di nhat thi khong danh
+  if (manual() && !talking) moveManual(dt);                // tu dieu khien: joystick / phim / diem cham
+  if (!(talking || (looting && R.pickTarget))) {           // dang noi chuyen / di nhat thi khong danh
     if (manual()) { /* dung yen hoac di theo tay, khong tu chay toi quai */ }
     else if (R.moveTo && R.moveTo.hp > 0 && !looting) {          // dang di nhat do gan: khong chay theo quai
       if (!(R.stunT > 0)) obsSteer(H, R.moveTo.x, R.moveTo.y, 150 * curSpeed() * (R.slowT > 0 ? ELEM_SLOW : 1) * dt);
@@ -361,13 +349,12 @@ function tick(dt) {
     if (!(R.stunT > 0)) { R.atkT -= dt * (R.slowT > 0 ? ELEM_SLOW : 1); if (R.atkT <= 0) R.atkT = heroAttack(); }   // choang: dung danh; cham: danh cham
   }
   for (const e of alive()) {
-    // khach MP: TAT AI di chuyen/danh cua quai remote — chi host dieu khien (het lech → danh khong khi)
-    if (typeof mpActive === 'function' && mpActive() && typeof mpIsHost === 'function' && !mpIsHost() && e.mpRemote) {
+    // khach MP: quai remote dung yen/idle — tranh 2 may AI lech roi field sync keo (an-hien / dich)
+    if (typeof mpActive === 'function' && mpActive() && typeof mpIsHost === 'function' && !mpIsHost() && e.mpRemote && e.home && !e.aggro) {
       if (e.stun > 0) e.stun -= dt;
       if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
       if (e.slowT > 0) e.slowT -= dt;
-      if (e.resBrkT > 0) e.resBrkT -= dt;
-      e.moving = false;
+      if (e.home && typeof fieldIdle === 'function') fieldIdle(e, dt);
       continue;
     }
     enemyAI(e, dt);
@@ -428,12 +415,7 @@ function waveCleared() {
 function heroDeath() {
   if (R.enemies.some(e => e.goldBoss && !e.dead)) RW().gbT = GB_RETRY;   // thua trum Hoang Kim: 5 phut sau quay lai
   R.deadT = 3; R.life = 0; R.enemies = []; recDeath(); R.slowT = R.stunT = R.hpDotT = R.hpDot = 0;
-  H.act = 'die'; H.actT = 0;
   log('<span class="bad">Bạn đã trọng thương.</span>');
-  if (R.pkArena) {
-    if (typeof pkArenaFinish === 'function' && !R.pkArena.ended) pkArenaFinish(false, 'Bị hạ');
-    return;
-  }
   if (R.dg) { dgFail('Gục ngã'); return; }                 // guc trong pho ban: that bai, khong lui ai
   if (R.tower) { towerExit(true); return; }               // gục trong thap: roi thap, khong lui ai
   if (typeof onStageChange === 'function') onStageChange();
