@@ -53,6 +53,16 @@
 #chatBox.open{width:min(92%,420px);top:30px;bottom:8px;background:rgba(8,14,11,.92);border:1px solid #000;box-shadow:0 0 0 1px #5a5850,0 0 12px #000;pointer-events:auto;padding:0}
 #chatBox.open #chatHead{display:flex;align-items:center;gap:4px;width:100%;padding:3px 6px;background:url(ui/jx1/flor.png) center/auto 100% repeat-x;border-bottom:1px solid #000;color:#0d1714;text-shadow:0 0 2px #9fe6d2}
 #chatBox.open #chatHead small{color:#1a2622;flex:1} #chatX{background:none;border:0;font-size:14px;cursor:pointer;color:#0d1714}
+#chatTabs{display:none} #chatBox.open #chatTabs{display:flex;gap:4px;width:100%;padding:4px 6px;border-bottom:1px solid #2b2a26;pointer-events:auto}
+#chatTabs button{flex:1;padding:3px 6px;border:1px solid #3c3a35;background:#141310;color:#cfc6b0;font-size:11px;cursor:pointer}
+#chatTabs button.on{border-color:#c9a227;color:#ffd76a;background:#2a2410}
+#chatFriends{display:none;width:100%;padding:4px 6px;gap:4px;flex-wrap:wrap;border-bottom:1px solid #2b2a26;max-height:72px;overflow:auto;pointer-events:auto}
+#chatBox.open #chatFriends:not(.hidden){display:flex}
+.chat-fr{position:relative;padding:2px 8px;border:1px solid #3c3a35;background:#1a1915;color:#e8e0d0;font-size:11px;cursor:pointer}
+.chat-fr.on{border-color:#6fd46a;color:#9fe8a0}.chat-fr i{color:#6fd46a;font-style:normal;font-size:9px}
+.chat-fr b{position:absolute;top:-4px;right:-4px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:#e0402a;color:#fff;font-size:9px;line-height:14px}
+#chatBox.friend #chatLines .cl.pm.me{background:rgba(80,120,60,.12)}
+#chatBox.friend #chatLines .cl.pm:not(.me){background:rgba(60,90,120,.12)}
 #chatBox.open #chatLines{-webkit-mask-image:none;mask-image:none;flex:1;max-height:none;overflow-y:auto;justify-content:flex-start;padding:4px 6px;margin:0}
 #chatBox.open #chatIn{display:flex;gap:4px;width:100%;padding:4px;border-top:1px solid #2b2a26}
 #chatTxt{flex:1;min-width:0;background:#020202;border:1px solid #3c3a35;color:#f2ecd0;padding:4px 6px;font:inherit}
