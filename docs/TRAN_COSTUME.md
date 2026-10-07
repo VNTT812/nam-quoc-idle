@@ -3,8 +3,14 @@
 Nhuộm màu thân + đầu trên sheet `enemy*` / `boss*`. Thú `ani*` không đổi.
 
 - Code: `js/tran_costume.js` (hook `makeEnemy` + `drawMonAnim`)
+- **Remaster pixel:** `tools/remaster_human_mobs.py` · backup gốc `assets/pack/mobs-goc/` · preview `assets/pack/mobs-remaster-review/before-after.png`
 - Gallery màu: [`tran_costume_preview/index.html`](tran_costume_preview/index.html)
 - Field quái: [`tran_costume_preview/mobs_field.png`](tran_costume_preview/mobs_field.png)
+
+Rollback remaster:
+```bash
+cp assets/pack/mobs-goc/*.webp img/a/
+```
 
 ## Spawn pool (đã gắn)
 
