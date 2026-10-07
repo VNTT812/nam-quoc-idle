@@ -50,9 +50,18 @@ function pkArenaSsSave() {
   } catch (e) { /* bo qua */ }
 }
 
-/** Room co nonce (moi tran) — bo qua pk_A_B legacy de tranh fchat cu keo vao lai. */
+/** Room co nonce (moi tran) — bo qua pk_A_B legacy (ten acc khong co so). */
 function pkArenaHasNonce(room) {
-  return typeof room === 'string' && /_[0-9a-z]{8,}$/i.test(room.trim());
+  const r = String(room || '').trim();
+  if (!/^pk_/i.test(r)) return false;
+  const tail = r.split('_').pop() || '';
+  return tail.length >= 6 && /[0-9]/.test(tail);
+}
+function pkArenaMergeRoom(a, b) {
+  a = String(a || '').trim(); b = String(b || '').trim();
+  if (!a) return b;
+  if (!b) return a;
+  return a < b ? a : b;
 }
 function pkArenaRoomTrusted(room, pendRoom) {
   room = String(room || '').trim();
@@ -524,7 +533,7 @@ function pkArenaOnFchat(m) {
     // Da gui moi nguoc lai (con pending.out tuoi) → dong y theo room MINH da tao (tranh 2 room lech)
     const pend = PKA.pending[from];
     if (pend && pend.out && (Date.now() - (pend.t || 0) < 90000)) {
-      pkArenaAccept(from, pend.room || room);
+      pkArenaAccept(from, pkArenaMergeRoom(pend.room, room));
       return true;
     }
     // Da co inbox cung nguoi+room → khong mo modal lan nua
