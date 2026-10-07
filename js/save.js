@@ -12,7 +12,7 @@ const FEMALE_FAC = ['emei', 'cuiyan'];       // phai nu: trang phuc nu; con lai 
 function newSave() {
   return { v: SAVE_V, name: 'Tân thủ', fac: null, sex: 0, lvl: 1, xp: 0, gold: 0, attrPts: 0, attr: { str: 0, dex: 0, vit: 0, eng: 0 },
     skPts: 1, sk: {}, main: 0, eq: {}, inv: [], stage: 1, maxStage: 1, wave: 1, uid: 1, autoSell: 0,
-    kps: 0.2, totalKills: 0, autoEquip: true, autoPts: false, diff: 1, autoForge: true, autoBuy: true, tut: 0, hints: {}, bakAt: 0, potOff: false, potUsed: 0, potStock: { life: {}, mana: {} }, ctrl: 'auto', joy: 'fixed', slots: [0, 0, 0, 0], snd: { on: true, vol: 0.7, music: true, mvol: 0.4 }, lootF: { minRar: 1, minLvl: 1, groups: [], series: [], auto: true }, ground: [], mats: { ht: {}, ore: {}, shard: {}, misc: {} }, last: Date.now() };
+    kps: 0.2, totalKills: 0, autoEquip: true, autoPts: false, diff: 1, autoForge: true, autoBuy: true, tut: 0, hints: {}, bakAt: 0, potOff: false, potUsed: 0, potStock: { life: {}, mana: {} }, ctrl: 'auto', joy: 'fixed', slots: [0, 0, 0, 0], snd: { on: true, vol: 0.7, music: true, mvol: 0.4 }, lootF: { minRar: 1, minLvl: 1, groups: [], series: [], auto: true }, ground: [], mats: { ht: {}, ore: {}, shard: {}, misc: {} }, friends: [], last: Date.now() };
 }
 /* Chu ky file luu (cyrb53 + muoi): phat hien sua tay localStorage / ma xuat. Khong ngan duoc nguoi quyet tam (game chay hoan toan o may nguoi choi) nhung chan sua vo tinh va nhap ma da bi doi. */
 const SAVE_SALT = 'jx-idle-v1:';

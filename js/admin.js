@@ -243,6 +243,50 @@ async function adminFindChar(name) {
   throw new Error('Không tìm thấy «' + name + '» (họ cần đặt tên + vào xếp hạng một lần)');
 }
 
+/** Mo danh sach nhan vat de click chon (khong can go tung chu). */
+async function adminPickPlayer(onPick, q) {
+  const host = $('#adPickBox');
+  if (!host) throw new Error('Không mở được danh sách');
+  host.hidden = false;
+  host.innerHTML = '<p class="dim small">Đang tải danh sách người chơi…</p>';
+  try {
+    const list = typeof netListChars === 'function'
+      ? await netListChars(q || '', 100)
+      : (await netCall(sb => sb.from('chars').select('name,fac,lvl,reborn,power,sex,updated').order('updated', { ascending: false }).limit(100))).data || [];
+    if (!list.length) {
+      host.innerHTML = '<p class="dim small">Chưa có nhân vật trên xếp hạng.</p><button class="btn sm" id="adPickClose">Đóng</button>';
+      $('#adPickClose').onclick = () => { host.hidden = true; host.innerHTML = ''; };
+      return;
+    }
+    host.innerHTML = `<div class="adpick-h"><b>Chọn người nhận</b> <small class="dim">${list.length} người</small>
+      <input id="adPickFilter" placeholder="Lọc tên…" value="${esc(q || '')}" style="width:8em;margin-left:.4em">
+      <button class="btn sm" id="adPickClose">Đóng</button></div>
+      <div class="adpick-list" id="adPickList"></div>`;
+    const paint = (filter) => {
+      filter = String(filter || '').trim().toLowerCase();
+      const rows = filter ? list.filter(x => (x.name || '').toLowerCase().includes(filter)) : list;
+      const box = $('#adPickList');
+      box.innerHTML = rows.map(x => `<button type="button" class="adpick-i" data-an="${esc(x.name)}"><b>${esc(x.name)}</b>
+        <small>Lv${x.lvl}${x.reborn ? ' CS' + x.reborn : ''} · ${esc(typeof facName === 'function' ? facName(x.fac) : (x.fac || ''))} · LC ${fmt(x.power || 0)}</small></button>`).join('')
+        || '<p class="dim small">Không khớp lọc.</p>';
+      box.querySelectorAll('[data-an]').forEach(b => b.onclick = () => {
+        const name = b.dataset.an;
+        const ch = list.find(x => x.name === name);
+        if ($('#adTo')) $('#adTo').value = name;
+        host.hidden = true; host.innerHTML = '';
+        if (typeof onPick === 'function') onPick(ch || { name });
+        toast('Đã chọn «' + name + '»');
+      });
+    };
+    paint(q);
+    $('#adPickFilter').oninput = e => paint(e.target.value);
+    $('#adPickClose').onclick = () => { host.hidden = true; host.innerHTML = ''; };
+  } catch (e) {
+    host.innerHTML = `<p class="reqbad">${esc(e.message || e)}</p><button class="btn sm" id="adPickClose">Đóng</button>`;
+    $('#adPickClose').onclick = () => { host.hidden = true; host.innerHTML = ''; };
+  }
+}
+
 /** Gui mail admin: uu tien RPC admin_send_mail (SQL MAIL_FIX), fallback insert. Khong sync chars. */
 async function adminSendMailRow(to, item, kind, note) {
   const from = 'Admin';
@@ -402,9 +446,11 @@ function adminModal() {
       <p class="desc small dim">Gửi qua Thư (họ bấm <b>Nhận</b>). Cần đăng nhập online; tên nhân vật phải có trên xếp hạng.</p>
       <div class="row" style="flex-wrap:wrap;gap:.35em">
         Tên NV <input id="adTo" maxlength="14" placeholder="Tên nhân vật" style="width:9em">
+        <button class="btn sm" id="adToList" title="Hiện tất cả người chơi — bấm tên để chọn">Danh sách</button>
         <button class="btn sm" id="adToFind">Tìm</button>
         <small id="adToInfo" class="dim"></small>
       </div>
+      <div id="adPickBox" class="adpick" hidden></div>
       <div class="row" style="margin-top:.35em;flex-wrap:wrap;gap:.35em">
         Đặt cấp <input type="number" id="adGLv" min="1" max="${MAX_LEVEL}" placeholder="vd 90" style="width:4em">
         hoặc +cấp <input type="number" id="adGAdd" min="0" max="200" value="0" style="width:3em">
@@ -479,7 +525,22 @@ function adminModal() {
       el.innerHTML = `→ <b>${esc(ch.name)}</b> Lv${ch.lvl}${FAC[ch.fac] ? ' · ' + esc(FAC[ch.fac].n) : ''}`;
     };
     const done = (btn, msg, ch) => { toast(msg); if (ch) showTo(ch); if (btn) btn.disabled = false; };
-    $('#adToFind').onclick = () => busy($('#adToFind'), () => adminFindChar(grantTo()), ch => done($('#adToFind'), 'Tìm thấy ' + ch.name, ch));
+    $('#adToList').onclick = () => busy($('#adToList'), () => adminPickPlayer(ch => { showTo(ch); }, grantTo()), () => { if ($('#adToList')) $('#adToList').disabled = false; });
+    $('#adToFind').onclick = () => {
+      const q = grantTo();
+      if (!q) return busy($('#adToFind'), () => adminPickPlayer(ch => showTo(ch), ''), () => { if ($('#adToFind')) $('#adToFind').disabled = false; });
+      busy($('#adToFind'), async () => {
+        try { return await adminFindChar(q); }
+        catch (e) {
+          if (/Nhiều tên|Không tìm thấy/i.test(e.message || '')) {
+            await adminPickPlayer(ch => showTo(ch), q);
+            return null;
+          }
+          throw e;
+        }
+      }, ch => { if (ch) done($('#adToFind'), 'Tìm thấy ' + ch.name, ch); else if ($('#adToFind')) $('#adToFind').disabled = false; });
+    };
+    $('#adTo').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#adToList').click(); } });
     $('#adGSendStat').onclick = () => {
       const btn = $('#adGSendStat'), lvRaw = $('#adGLv').value, addLv = +$('#adGAdd').value || 0;
       const opts = { to: grantTo(), note: grantNote(), knb: +$('#adGKnb').value || 0, attrPts: +$('#adGPts').value || 0, skPts: +$('#adGSk').value || 0 };
@@ -522,11 +583,21 @@ function adminInjectMore() {
   $('#bAdmin').onclick = () => adminModal();
   $('#bAdminSwitch').onclick = () => typeof netSwitchAccount === 'function' && netSwitchAccount($('#bAdminSwitch'));
 }
+function friendsInjectMore() {
+  if (!S || !S.fac) return;
+  const t = $('#t-more'); if (!t || t.querySelector('#bFriends')) return;
+  const card = `<h3>👥 Bạn bè</h3><div class="card"><p class="dim small">Danh sách bạn, mời kết bạn, gửi thư nhanh.</p><div class="btnrow"><button class="btn" id="bFriends">Mở bạn bè${S.friends && S.friends.length ? ` (${S.friends.length})` : ''}</button></div></div>`;
+  const adm = t.querySelector('#bAdmin');
+  if (adm) adm.closest('.card')?.previousElementSibling?.insertAdjacentHTML?.('beforebegin', card);
+  else t.insertAdjacentHTML('afterbegin', card);
+  if (!t.querySelector('#bFriends')) t.insertAdjacentHTML('afterbegin', card);
+  const b = $('#bFriends'); if (b) b.onclick = () => typeof friendsModal === 'function' && friendsModal();
+}
 
 /* ---------- hook UI + combat ---------- */
 (function adminBoot() {
   const prev = typeof renderMore === 'function' ? renderMore : null;
-  if (prev) renderMore = function () { prev(); adminInjectMore(); };
+  if (prev) renderMore = function () { prev(); friendsInjectMore(); adminInjectMore(); };
 
   if (typeof tick === 'function') {
     const _tick = tick;
