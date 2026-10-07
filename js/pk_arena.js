@@ -380,6 +380,8 @@ function pkArenaExit(why, onlyRoom) {
   R.pkArena = null;
   R.zoneShown = null;
   R.enemies = []; R.corpses = []; R.pickTarget = null; R.moveTo = null; R.deadT = 0;
+  // Go HUD ngay — tranh thanh "Sàn Đấu … Bỏ cuộc" treo sau flee
+  try { const hud = typeof $ === 'function' ? $('#pkaHud') : document.getElementById('pkaHud'); if (hud) hud.remove(); } catch (e) { /* bo qua */ }
   // Chan re-enter tu ok/req cu trong fchat (+ sessionStorage)
   pkArenaCoolSet(room, foe, 45000);
   pkArenaClearWait(foe);
