@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Phổ Minh Tự (400) — lấy đúng map gốc đẹp, chỉ phóng + collision.
+"""Phổ Minh Tự (400) — lấy đúng map gốc đẹp, phóng vừa + collision.
 
-Map gốc = img/z/_tran_tiles/tran-pho-minh-map.jpg (điện, ao, sư tử, đường, tre).
-- Phóng full-frame 3584 — giữ nguyên màu/chi tiết, KHÔNG reskin đè.
+Map gốc = img/z/_tran_tiles/tran-pho-minh-map.jpg (1024, điện/ao/sư tử/đường/tre).
+- World 2048 (= ×2) — tránh phóng 3584 làm vỡ pixel.
+- Giữ màu/chi tiết, KHÔNG reskin HSV.
 - Collision riêng: mở đường/cỏ/khúc gỗ; chỉ chặn điện/sư tử/ao.
 """
 from __future__ import annotations
@@ -33,7 +34,9 @@ from reskin_tran_layout import (  # noqa: E402
 )
 
 CW, CH = 32, 16
-SIZE = 3584
+# Layout gốc 1024 — ×2 = 2048 (sắc nét). ×3.5 lên 3584 làm vỡ pixel.
+SIZE = 2048
+REF_SIZE = 3584  # tọa độ obs cũ theo khung 3584
 ART = Path("/opt/cursor/artifacts/pho-minh-reset")
 
 
@@ -115,9 +118,15 @@ def load_layout_orig() -> Image.Image:
 
 
 def build_canvas_from_layout(src: Image.Image, size: int = SIZE) -> Image.Image:
-    """Phóng thẳng map gốc lên 3584 — giữ màu/chi tiết, không blur-blend đè."""
-    out = src.resize((size, size), Image.LANCZOS)
-    print(f"direct scale {src.size} -> {out.size}")
+    """Phóng map gốc theo từng bước ×2 — sắc hơn phóng thẳng lên 3584."""
+    out = src.convert("RGB")
+    while max(out.size) * 2 <= size:
+        nxt = (out.size[0] * 2, out.size[1] * 2)
+        out = out.resize(nxt, Image.Resampling.LANCZOS)
+        out = ImageEnhance.Sharpness(out).enhance(1.08)
+    if out.size != (size, size):
+        out = out.resize((size, size), Image.Resampling.LANCZOS)
+    print(f"stepped scale {src.size} -> {out.size}")
     return out
 
 
@@ -217,9 +226,13 @@ def reskin_scenery(img: Image.Image, bias: str = "warm") -> Image.Image:
 
 def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
     """Collision Phổ Minh sạch: mở gần hết, chỉ chặn điện/sư tử/ao."""
-    gw, gh = meta2["gw"], meta2["gh"]
+    gw, gh = size // CW, size // CH
     blocked = [0] * (gw * gh)  # không kế thừa obs Yên Tử
     cx, cy = size // 2, size // 2
+    k = size / float(REF_SIZE)
+
+    def S(v: float) -> float:
+        return v * k
 
     # mép map mỏng — tránh rơi ra ngoài khung
     for gy in range(gh):
@@ -227,21 +240,27 @@ def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
             if gx < 2 or gy < 2 or gx >= gw - 2 or gy >= gh - 2:
                 blocked[gy * gw + gx] = 1
 
-    mark_rect(blocked, cx - 260, cy - 500, 520, 380, True, gw, gh)  # điện
-    mark_rect(blocked, cx - 300, cy - 150, 170, 120, True, gw, gh)  # sư tử L
-    mark_rect(blocked, cx + 90, cy - 130, 170, 120, True, gw, gh)  # sư tử R
-    mark_rect(blocked, cx - 700, cy - 60, 260, 230, True, gw, gh)  # ao
+    mark_rect(blocked, cx - S(260), cy - S(500), S(520), S(380), True, gw, gh)  # điện
+    mark_rect(blocked, cx - S(300), cy - S(150), S(170), S(120), True, gw, gh)  # sư tử L
+    mark_rect(blocked, cx + S(90), cy - S(130), S(170), S(120), True, gw, gh)  # sư tử R
+    mark_rect(blocked, cx - S(700), cy - S(60), S(260), S(230), True, gw, gh)  # ao
 
     # đường rộng — gồm nhánh qua khúc gỗ
-    carve_path(blocked, [(cx - 200, cy + 1100), (cx, cy + 220), (cx, cy - 40)], 110, gw, gh)
-    carve_path(blocked, [(cx - 600, cy + 400), (cx - 220, cy + 200), (cx, cy + 80)], 95, gw, gh)
-    carve_path(blocked, [(cx + 500, cy + 500), (cx + 140, cy + 160)], 85, gw, gh)
-    carve_path(blocked, [(cx - 480, cy + 60), (cx - 200, cy + 40), (cx, cy + 60)], 95, gw, gh)
-    carve_path(blocked, [(cx - 150, cy + 350), (cx + 180, cy + 180)], 80, gw, gh)
+    carve_path(blocked, [(cx - S(200), cy + S(1100)), (cx, cy + S(220)), (cx, cy - S(40))], S(110), gw, gh)
+    carve_path(blocked, [(cx - S(600), cy + S(400)), (cx - S(220), cy + S(200)), (cx, cy + S(80))], S(95), gw, gh)
+    carve_path(blocked, [(cx + S(500), cy + S(500)), (cx + S(140), cy + S(160))], S(85), gw, gh)
+    carve_path(blocked, [(cx - S(480), cy + S(60)), (cx - S(200), cy + S(40)), (cx, cy + S(60))], S(95), gw, gh)
+    carve_path(blocked, [(cx - S(150), cy + S(350)), (cx + S(180), cy + S(180))], S(80), gw, gh)
     carve_path(
         blocked,
-        [(cx - 220, cy - 60), (cx - 420, cy - 220), (cx - 80, cy - 380), (cx + 220, cy - 180), (cx + 60, cy - 40)],
-        75,
+        [
+            (cx - S(220), cy - S(60)),
+            (cx - S(420), cy - S(220)),
+            (cx - S(80), cy - S(380)),
+            (cx + S(220), cy - S(180)),
+            (cx + S(60), cy - S(40)),
+        ],
+        S(75),
         gw,
         gh,
     )
@@ -249,15 +268,19 @@ def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
     meta = dict(meta2)
     meta["w"] = size
     meta["h"] = size
+    meta["gw"] = gw
+    meta["gh"] = gh
+    meta["cw"] = CW
+    meta["ch"] = CH
     meta["obs"] = encode_obs(blocked)
     meta["blocked"] = int(sum(blocked))
     return meta
 
 
 def polish_only(img: Image.Image) -> Image.Image:
-    """Chỉ nét nhẹ — không đổi hue/palette map gốc."""
-    img = ImageEnhance.Sharpness(img).enhance(1.06)
-    img = ImageEnhance.Contrast(img).enhance(1.02)
+    """Nét nhẹ sau ×2 — không đổi hue/palette map gốc."""
+    img = ImageEnhance.Sharpness(img).enhance(1.12)
+    img = ImageEnhance.Contrast(img).enhance(1.03)
     return img
 
 
@@ -276,19 +299,49 @@ def rebuild() -> Image.Image:
 
 def save_previews(img: Image.Image, before: Image.Image | None = None) -> None:
     ART.mkdir(parents=True, exist_ok=True)
-    img.resize((800, 800), Image.LANCZOS).save(ART / "pho-minh-full.jpg", quality=88)
+    img.resize((800, 800), Image.Resampling.LANCZOS).save(ART / "pho-minh-full.jpg", quality=88)
+    # zoom 1:1 crop — chứng minh hết vỡ pixel
     cx = cy = SIZE // 2
-    img.crop((cx - 420, cy - 620, cx + 420, cy + 80)).save(ART / "pho-minh-temple.jpg", quality=92)
-    img.crop((cx - 700, cy - 100, cx - 50, cy + 450)).save(ART / "pho-minh-logs-path.jpg", quality=90)
+    z = 220
+    img.crop((cx - z, cy - z - 80, cx + z, cy + z - 80)).save(ART / "pho-minh-temple-1x.jpg", quality=95)
+    k = SIZE / float(REF_SIZE)
+    img.crop(
+        (int(cx - 420 * k), int(cy - 620 * k), int(cx + 420 * k), int(cy + 80 * k))
+    ).save(ART / "pho-minh-temple.jpg", quality=92)
+    img.crop(
+        (int(cx - 700 * k), int(cy - 100 * k), int(cx - 50 * k), int(cy + 450 * k))
+    ).save(ART / "pho-minh-logs-path.jpg", quality=90)
+    # so 3584 blur vs 2048 sharp (cùng vùng điện)
+    layout = load_layout_orig()
+    native = layout.crop((412, 300, 612, 500)).resize((400, 400), Image.Resampling.NEAREST)
+    sharp = img.crop((int(412 * 2), int(300 * 2), int(612 * 2), int(500 * 2))).resize(
+        (400, 400), Image.Resampling.NEAREST
+    )
+    if before is not None and before.size[0] >= 3000:
+        mush = before.crop((int(412 * 3.5), int(300 * 3.5), int(612 * 3.5), int(500 * 3.5))).resize(
+            (400, 400), Image.Resampling.NEAREST
+        )
+    else:
+        mush = layout.resize((3584, 3584), Image.Resampling.LANCZOS).crop(
+            (int(412 * 3.5), int(300 * 3.5), int(612 * 3.5), int(500 * 3.5))
+        ).resize((400, 400), Image.Resampling.NEAREST)
+    cmp = Image.new("RGB", (1240, 440), (18, 16, 14))
+    from PIL import ImageDraw
+
+    d = ImageDraw.Draw(cmp)
+    for i, (im, lab) in enumerate(
+        [(native, "layout 1024"), (mush, "cu 3584 (vo pixel)"), (sharp, f"moi {SIZE} (x2)")]
+    ):
+        cmp.paste(im, (20 + i * 410, 30))
+        d.text((28 + i * 410, 8), lab, fill=(220, 210, 180))
+    cmp.save(ART / "pho-minh-pixel-fix.jpg", quality=92)
     if before is not None:
         side = Image.new("RGB", (1600, 820), (18, 16, 14))
-        side.paste(before.resize((800, 800), Image.LANCZOS), (0, 20))
-        side.paste(img.resize((800, 800), Image.LANCZOS), (800, 20))
-        from PIL import ImageDraw
-
-        d = ImageDraw.Draw(side)
-        d.text((20, 2), "truoc", fill=(200, 140, 140))
-        d.text((820, 2), "map goc trung thuc (dung anh dep)", fill=(140, 220, 160))
+        side.paste(before.resize((800, 800), Image.Resampling.LANCZOS), (0, 20))
+        side.paste(img.resize((800, 800), Image.Resampling.LANCZOS), (800, 20))
+        d2 = ImageDraw.Draw(side)
+        d2.text((20, 2), f"truoc {before.size[0]}", fill=(200, 140, 140))
+        d2.text((820, 2), f"sau {SIZE} (het vo pixel)", fill=(140, 220, 160))
         side.save(ART / "pho-minh-before-after.jpg", quality=90)
 
 
@@ -319,7 +372,7 @@ def main() -> None:
         z2 = (ROOT / "zones2.js").read_text(encoding="utf-8")
         z2 = re.sub(r"(img/z/\w+\.jpg)\?v=\d+", rf"\1?v={ver}", z2)
         (ROOT / "zones2.js").write_text(z2, encoding="utf-8")
-        print(f"Done v{ver} — Phổ Minh map gốc trung thực (không reskin)")
+        print(f"Done v{ver} — Phổ Minh {SIZE}px (×2, hết vỡ pixel), không reskin")
 
 
 if __name__ == "__main__":
