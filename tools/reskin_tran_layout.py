@@ -275,7 +275,7 @@ def ground_grain(W: int, H: int, seed: int) -> np.ndarray | None:
     return np.asarray(canvas, dtype=np.float32)
 
 
-def reskin(stem: str, bias: str | None = None) -> Path:
+def reskin(stem: str, bias: str | None = None, out_path: Path | None = None) -> Path:
     bias = bias or BIAS.get(stem, "warm")
     orig = load_orig(stem)
     W, H = orig.size
@@ -339,9 +339,10 @@ def reskin(stem: str, bias: str | None = None) -> Path:
     img = ImageEnhance.Contrast(img).enhance(1.06)
     img = ImageEnhance.Color(img).enhance(1.04)
 
-    out_path = Z / f"{stem}.jpg"
-    img.save(out_path, quality=90, optimize=True)
-    return out_path
+    dest = out_path or (Z / f"{stem}.jpg")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    img.save(dest, quality=90, optimize=True)
+    return dest
 
 
 def ensure_orig_jmo(stem: str = "7") -> None:
