@@ -7,7 +7,7 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=338',
+  bg: 'img/z/403.jpg?v=339',
   music: 400,
   limit: 180,
   // Gan nhau de melee/tam xa danh duoc ngay (truoc ~620px → khong cham duoc)
@@ -103,7 +103,7 @@ async function pkArenaPollInbox() {
   const sb = await pkArenaSb();
   if (!sb) return;
   try {
-    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const since = new Date(Date.now() - 3 * 60 * 1000).toISOString();
     const { data, error } = await sb.from('fchat').select('*')
       .eq('to_name', S.name).gte('ts', since).order('id', { ascending: true }).limit(30);
     if (error || !data) return;
@@ -214,6 +214,8 @@ async function pkArenaDecline(from, room) {
 function pkArenaEnter(room, foe, asHost) {
   if (!room || !foe) return;
   if (R.pkArena && R.pkArena.room === room) return;
+  // Dong modal moi / welcome neu dang che
+  try { if (typeof closeModal === 'function') closeModal(true); } catch (e) { /* bo qua */ }
   if (R.town && typeof backFromTown === 'function') backFromTown();
   if (R.dg && typeof dgExit === 'function') {
     try { dgExit(); } catch (e) { R.dg = null; }
@@ -227,6 +229,7 @@ function pkArenaEnter(room, foe, asHost) {
     host: asHost != null ? !!asHost : (S.name < foe)
   };
   R.zoneShown = 'pk';
+  PKA.inbox = null;
   if (typeof obsLoad === 'function') obsLoad(PK_ARENA.id);
   const [sx, sy] = R.pkArena.host ? PK_ARENA.spawnA : PK_ARENA.spawnB;
   [H.x, H.y] = inWorld(sx, sy);
@@ -329,11 +332,16 @@ function pkArenaOnFchat(m) {
   }
   if (act === 'req') {
     if (pkArenaOn()) return true;
+    // Bo loi moi cu (>90s) — tranh modal stale sau F5 / poll
+    const age = m.ts ? (Date.now() - +new Date(m.ts)) : 0;
+    if (age > 90000) return true;
     // Da gui moi nguoc lai → ca hai dong y
     if (PKA.pending[from] && PKA.pending[from].out) {
       pkArenaAccept(from, room);
       return true;
     }
+    // Da co inbox cung nguoi+room → khong mo modal lan nua
+    if (PKA.inbox && PKA.inbox.from === from && PKA.inbox.room === room) return true;
     pkArenaShowInvite(from, room);
     return true;
   }
