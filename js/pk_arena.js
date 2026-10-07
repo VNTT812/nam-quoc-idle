@@ -14,9 +14,11 @@ const PK_ARENA = {
   spawnA: [1616, 1800],
   spawnB: [2000, 1800]
 };
-const PKA = { pending: {}, inbox: null, lastInvite: 0, seen: null, cool: {}, done: null, lastEnter: 0 };
+const PKA = { pending: {}, inbox: null, lastInvite: 0, seen: null, cool: {}, done: null, lastEnter: 0, lastExitFoe: '', lastExitT: 0 };
 const PKA_SS_COOL = 'pka_cool_v1';
 const PKA_SS_DONE = 'pka_done_v1';
+const PKA_FOE_COOL_MS = 90000;
+const PKA_MATCH_COOL_MS = 90000;
 
 const pkArenaOn = () => !!(R && R.pkArena);
 const pkArenaBusy = () => !!(R && (R.pkArena || R.dg || R.tower || R.deadT > 0));
@@ -48,15 +50,42 @@ function pkArenaSsSave() {
   } catch (e) { /* bo qua */ }
 }
 
-/** Sau tran / roi san: chan req/ok cung room + foe (sessionStorage — song sot F5). */
+/** Room co nonce (moi tran) — bo qua pk_A_B legacy de tranh fchat cu keo vao lai. */
+function pkArenaHasNonce(room) {
+  return typeof room === 'string' && /_[0-9a-z]{8,}$/i.test(room.trim());
+}
+function pkArenaRoomTrusted(room, pendRoom) {
+  room = String(room || '').trim();
+  if (!room) return false;
+  if (pendRoom && room === pendRoom) return true;
+  return pkArenaHasNonce(room);
+}
+function pkArenaPairCoolKey(a, b) {
+  const k = pkArenaPairKey(a, b);
+  return k ? ('pair:' + k) : '';
+}
+
+/** Sau tran / roi san: chan req/ok cung room + foe + cap doi legacy (sessionStorage). */
 function pkArenaCoolSet(room, foe, ms) {
-  const until = Date.now() + (ms || 45000);
+  const until = Date.now() + (ms || PKA_MATCH_COOL_MS);
   if (room) {
     PKA.cool[room] = until;
     if (!PKA.done) PKA.done = new Set();
     PKA.done.add(String(room));
   }
-  if (foe) PKA.cool['foe:' + foe] = until;
+  if (foe) {
+    PKA.cool['foe:' + foe] = until;
+    PKA.lastExitFoe = foe;
+    PKA.lastExitT = Date.now();
+  }
+  if (foe && S && S.name) {
+    const pk = pkArenaPairCoolKey(S.name, foe);
+    if (pk) {
+      PKA.cool[pk] = until;
+      if (!PKA.done) PKA.done = new Set();
+      PKA.done.add(pk.replace('pair:', ''));
+    }
+  }
   pkArenaSsSave();
 }
 function pkArenaRoomDone(room) {
@@ -67,7 +96,19 @@ function pkArenaCooling(room, foe) {
   if (room && PKA.cool[room] && PKA.cool[room] > now) return true;
   if (room && pkArenaRoomDone(room)) return true;
   if (foe && PKA.cool['foe:' + foe] && PKA.cool['foe:' + foe] > now) return true;
+  if (foe && S && S.name) {
+    const pk = pkArenaPairCoolKey(S.name, foe);
+    if (pk && PKA.cool[pk] && PKA.cool[pk] > now) return true;
+    const pair = pk.replace('pair:', '');
+    if (pair && pkArenaRoomDone(pair)) return true;
+  }
+  if (foe && PKA.lastExitFoe === foe && now - (PKA.lastExitT || 0) < PKA_FOE_COOL_MS) return true;
   return false;
+}
+function pkArenaHudRemove() {
+  try {
+    document.querySelectorAll('#pkaHud').forEach(el => el.remove());
+  } catch (e) { /* bo qua */ }
 }
 function pkArenaClearWait(foe) {
   if (foe) delete PKA.pending[foe];
@@ -301,7 +342,12 @@ async function pkArenaDecline(from, room) {
 
 function pkArenaEnter(room, foe, asHost) {
   if (!room || !foe) return;
+  room = String(room).trim();
+  if (!pkArenaRoomTrusted(room)) return;
   if (R.pkArena && R.pkArena.room === room) return;
+  if (R.pkArena && R.pkArena.room !== room) {
+    pkArenaExit('Chuyển trận', R.pkArena.room);
+  }
   // Room da ket thuc / cool → khong vao lai (ke ca sau F5)
   if (!pkArenaOn() && (pkArenaRoomDone(room) || pkArenaCooling(room, foe))) return;
   // Chong double-enter spam (<2s)
@@ -380,8 +426,7 @@ function pkArenaExit(why, onlyRoom) {
   R.pkArena = null;
   R.zoneShown = null;
   R.enemies = []; R.corpses = []; R.pickTarget = null; R.moveTo = null; R.deadT = 0;
-  // Go HUD ngay — tranh thanh "Sàn Đấu … Bỏ cuộc" treo sau flee
-  try { const hud = typeof $ === 'function' ? $('#pkaHud') : document.getElementById('pkaHud'); if (hud) hud.remove(); } catch (e) { /* bo qua */ }
+  pkArenaHudRemove();
   // Chan re-enter tu ok/req cu trong fchat (+ sessionStorage)
   pkArenaCoolSet(room, foe, 45000);
   pkArenaClearWait(foe);
@@ -417,15 +462,17 @@ function pkArenaExit(why, onlyRoom) {
 function pkArenaFinish(win, reason) {
   if (!R.pkArena || R.pkArena.ended) return;
   R.pkArena.ended = true;
+  R.pkArena._exitWait = 0;
   const foe = R.pkArena.foe;
   const room = R.pkArena.room;
+  const sub = win ? ('Thắng «' + foe + '»!') : (win === false ? ('Thua «' + foe + '»') : (reason || 'Hòa'));
+  R.pkArena._exitWhy = reason || sub;
   // Cool ngay khi ket thuc — tranh ok/req poll trong 1.6s truoc exit
-  pkArenaCoolSet(room, foe, 45000);
+  pkArenaCoolSet(room, foe, PKA_MATCH_COOL_MS);
   pkArenaClearWait(foe);
   PKA.pending = {};
   PKA.inbox = null;
   if (PKA.pollT) { clearInterval(PKA.pollT); PKA.pollT = null; }
-  const sub = win ? ('Thắng «' + foe + '»!') : (win === false ? ('Thua «' + foe + '»') : (reason || 'Hòa'));
   R.banner = { t: 2.4, text: win ? 'Chiến thắng!' : (win === false ? 'Thất bại' : 'Hết giờ'), sub };
   if (typeof uiSfx === 'function' && win) uiSfx('levelup');
   pkArenaSend(foe, 'end', { room, win: win ? 1 : 0, reason: reason || '' }).catch(() => {});
@@ -438,12 +485,12 @@ function pkArenaFinish(win, reason) {
 
 /** Bo cuoc: thoat NGAY (khong cho HUD treo 1.6s / ended khoa nut). */
 function pkArenaFlee() {
-  if (!pkArenaOn()) return;
+  if (!pkArenaOn()) { pkArenaHudRemove(); return; }
   const g = R.pkArena;
   const foe = g.foe, room = g.room;
   if (!g.ended) {
     g.ended = true;
-    pkArenaCoolSet(room, foe, 45000);
+    pkArenaCoolSet(room, foe, PKA_MATCH_COOL_MS);
     pkArenaClearWait(foe);
     PKA.pending = {};
     PKA.inbox = null;
@@ -460,7 +507,10 @@ function pkArenaOnFchat(m) {
   if (!m || !m.item || !m.item.__duel) return false;
   // Chi xu ly tin gui TOI minh (tranh self-echo / poll trung)
   if (m.to_name && S && S.name && m.to_name !== S.name) return true;
-  const act = m.item.act, from = m.from_name, room = m.item.room || pkArenaRoomId(S.name, from);
+  const act = m.item.act, from = m.from_name;
+  const rawRoom = m.item.room || '';
+  const pendEarly = PKA.pending[from];
+  const room = String(rawRoom || (pendEarly && pendEarly.room) || '').trim();
   if (!from || from === S.name) return true;
   // Chong xu ly 2 lan cung id (string hoa so)
   if (pkArenaMarkSeen(m)) return true;
@@ -468,12 +518,13 @@ function pkArenaOnFchat(m) {
   if (act === 'req') {
     if (pkArenaOn()) return true;
     if (pkArenaCooling(room, from) || pkArenaRoomDone(room)) return true;
+    if (!pkArenaRoomTrusted(room, pendEarly && pendEarly.room)) return true;
     // Bo loi moi cu (>90s)
     if (age > 90000) return true;
-    // Da gui moi nguoc lai (con pending.out tuoi) → ca hai dong y theo ROOM cua req toi
+    // Da gui moi nguoc lai (con pending.out tuoi) → dong y theo room MINH da tao (tranh 2 room lech)
     const pend = PKA.pending[from];
     if (pend && pend.out && (Date.now() - (pend.t || 0) < 90000)) {
-      pkArenaAccept(from, room);
+      pkArenaAccept(from, pend.room || room);
       return true;
     }
     // Da co inbox cung nguoi+room → khong mo modal lan nua
@@ -485,6 +536,7 @@ function pkArenaOnFchat(m) {
     if (pkArenaOn()) { pkArenaClearWait(from); return true; }
     if (pkArenaCooling(room, from) || pkArenaRoomDone(room)) { pkArenaClearWait(from); return true; }
     if (age > 90000) { pkArenaClearWait(from); return true; }
+    if (!pkArenaRoomTrusted(room)) { pkArenaClearWait(from); return true; }
     // CHI vao san khi MINH dang cho OK dung room nay — ok cu / room khac bi bo
     const pend = PKA.pending[from];
     if (pend && pend.out && pend.room === room) {
@@ -515,7 +567,12 @@ function pkArenaOnFchat(m) {
 }
 
 function pkArenaTick(dt) {
-  const g = R.pkArena; if (!g || g.ended) return;
+  const g = R.pkArena; if (!g) return;
+  if (g.ended) {
+    g._exitWait = (g._exitWait || 0) + dt;
+    if (g._exitWait > 2.2) pkArenaExit(g._exitWhy || 'Hết trận', g.room);
+    return;
+  }
   g.t = (g.t || 0) + dt;
   if (g.t >= g.limit) pkArenaFinish(null, 'Hết giờ — hòa');
 }
@@ -528,8 +585,8 @@ function pkArenaHud() {
 }
 
 function pkArenaEnsureHud() {
+  if (!pkArenaOn()) { pkArenaHudRemove(); return; }
   let el = $('#pkaHud');
-  if (!pkArenaOn()) { if (el) el.remove(); return; }
   const g = R.pkArena, left = Math.max(0, Math.ceil(g.limit - (g.t || 0)));
   if (!el) {
     el = document.createElement('div');
@@ -588,7 +645,17 @@ function pkArenaHook() {
 function pkArenaInit() {
   pkArenaSsLoad();
   pkArenaHook();
-  setInterval(() => { if (pkArenaOn()) pkArenaEnsureHud(); }, 400);
+  if (!pkArenaInit._fleeCap) {
+    document.addEventListener('click', ev => {
+      const t = ev.target && ev.target.closest && ev.target.closest('#pkaFlee, [data-pka-flee]');
+      if (!t) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      pkArenaFlee();
+    }, true);
+    pkArenaInit._fleeCap = true;
+  }
+  setInterval(() => { pkArenaEnsureHud(); }, 400);
   // Chi poll khi dang CHO moi/OK — khong poll trong san / sau tran
   setInterval(() => {
     if (pkArenaOn()) return;
@@ -620,6 +687,8 @@ if (typeof window !== 'undefined') {
   window.pkArenaInit = pkArenaInit;
   window.pkArenaPollInbox = pkArenaPollInbox;
   window.pkArenaKickPoll = pkArenaKickPoll;
+  window.pkArenaHudRemove = pkArenaHudRemove;
+  window.pkArenaRoomTrusted = pkArenaRoomTrusted;
   window.PK_ARENA = PK_ARENA;
   window.PKA = PKA;
 }
