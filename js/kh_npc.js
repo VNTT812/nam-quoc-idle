@@ -5,16 +5,9 @@
 'use strict';
 /** Zone id JMO2 — Hoành Sơn Môn (zones2 alt index 0). */
 const KH_NPC_ZONE = 402;
-/* kh = id PNG; x/y = ty le map (0–1); face: 1 phai, -1 trai — sân luyện trong môn */
+/* Mot NPC dung truoc nha / canh gia vu khi trong san luyen */
 const KH_ZONE_NPC = [
-  { kh: 1, n: 'Thanh Kiếm Nữ', x: 0.522, y: 0.279, face: 1 },
-  { kh: 40, n: 'Lãng Kiếm Khách', x: 0.558, y: 0.270, face: -1 },
-  { kh: 80, n: 'Hàn Sơn Đạo', x: 0.603, y: 0.279, face: 1 },
-  { kh: 120, n: 'Phi Vân Tán', x: 0.638, y: 0.288, face: -1 },
-  { kh: 200, n: 'Bạch Y Thư Sinh', x: 0.496, y: 0.319, face: 1 },
-  { kh: 350, n: 'Hồng Y Nữ Hiệp', x: 0.549, y: 0.328, face: -1 },
-  { kh: 500, n: 'Hắc Y Thích Khách', x: 0.612, y: 0.333, face: 1 },
-  { kh: 700, n: 'Kim Đao Thương', x: 0.576, y: 0.301, face: -1 },
+  { kh: 1, n: 'Thanh Kiếm Nữ', x: 0.540, y: 0.297, face: 1 },
 ];
 
 function khNpcImg(kh) {
