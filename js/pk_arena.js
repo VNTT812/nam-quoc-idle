@@ -7,12 +7,12 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=344',
+  bg: 'img/z/403.jpg?v=345',
   music: 400,
   limit: 180,
-  // Plaza giua san (obs 403 mo) — ~384px, melee/tam xa cham duoc, khong bip tuong
-  spawnA: [1616, 1800],
-  spawnB: [2000, 1800]
+  // Plaza giua san (obs 403 rebuild v345)
+  spawnA: [1480, 1780],
+  spawnB: [2100, 1780]
 };
 const PKA = { pending: {}, inbox: null, lastInvite: 0, seen: null, cool: {}, done: null, lastEnter: 0, lastExitFoe: '', lastExitT: 0 };
 const PKA_SS_COOL = 'pka_cool_v1';
