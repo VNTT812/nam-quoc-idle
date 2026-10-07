@@ -23,6 +23,7 @@ from reskin_tran_layout import (  # noqa: E402
     bias_params,
     blur_mask,
     bump_cache,
+    patch_jmo2_assign_zone,
     classify,
     ground_grain,
     hsv_to_rgb,
@@ -319,12 +320,7 @@ def main() -> None:
     meta56, _, _ = extract_zone(jmo, "56")
     meta = obs_for_layout(meta56, img, SIZE)
 
-    jmo2_path = ROOT / "jmo2.js"
-    jmo2 = jmo2_path.read_text(encoding="utf-8")
-    _, start, end = extract_zone(jmo2, "401")
-    key_start = jmo2.rfind('"401"', 0, start)
-    new_obj = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
-    jmo2_path.write_text(jmo2[:key_start] + '"401":' + new_obj + jmo2[end:], encoding="utf-8")
+    patch_jmo2_assign_zone("401", meta)
     print(f"jmo2 401 obs blocked={meta['blocked']}")
 
     ver = bump_cache()
