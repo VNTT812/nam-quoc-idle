@@ -13,14 +13,22 @@ const chatSinceIso = () => new Date(Date.now() - CHAT_TTL_MS).toISOString();
 const chatMsgAge = m => { const t = m && (m.ts || m.created_at); const ms = t ? +new Date(t) : 0; return ms > 0 ? Date.now() - ms : 0; };
 const chatFresh = m => !m || m.pending || m.sys || chatMsgAge(m) < CHAT_TTL_MS;
 function chatPruneLocal() {
-  const n = CHAT.msgs.length;
+  const n = CHAT.msgs.length, nf = CHAT.fmsgs.length;
   CHAT.msgs = CHAT.msgs.filter(chatFresh);
-  if (CHAT.msgs.length !== n) chatRender();
+  CHAT.fmsgs = (CHAT.fmsgs || []).filter(m => m.sys || chatFresh(m));
+  if (CHAT.msgs.length !== n || CHAT.fmsgs.length !== nf) chatRender();
 }
 async function chatPurgeServer() {
   if (!CHAT.sb || Date.now() - (CHAT.purged || 0) < 10 * 60 * 1000) return;   // toi da 1 lan / 10 phut
   CHAT.purged = Date.now();
   try { await CHAT.sb.rpc('chat_purge_old'); } catch (e) { /* RPC chua cai (CHAT_TTL.sql) — van loc o client */ }
+  try { await CHAT.sb.rpc('fchat_purge_old'); CHAT.fpurged = Date.now(); } catch (e) { /* FRIEND_CHAT.sql */ }
+  chatPruneLocal();
+}
+async function fchatPurgeServer() {
+  if (!CHAT.sb || Date.now() - (CHAT.fpurged || 0) < 10 * 60 * 1000) return;
+  CHAT.fpurged = Date.now();
+  try { await CHAT.sb.rpc('fchat_purge_old'); } catch (e) { /* chua cai SQL */ }
   chatPruneLocal();
 }
 
@@ -32,7 +40,7 @@ function chatDom() {
     <div id="chatFriends" class="hidden"></div>
     <div id="chatLines"></div>
     <form id="chatIn" autocomplete="off"><span id="chatAtt"></span><input id="chatTxt" maxlength="${CHAT_MAX}" placeholder="Nhập tin nhắn… (xóa sau 24h)"><button class="btn sm">Gửi</button></form>
-    <button id="chatBtn" title="Chat thế giới / bạn bè · tin xóa sau 24 giờ">💬<b id="chatN"></b></button>`;
+    <button id="chatBtn" title="Chat thế giới / bạn bè · tin & thư tự xóa sau 24 giờ">💬<b id="chatN"></b></button>`;
   $('#battle').appendChild(b);
   $('#chatLines').onclick = ev => {
     const ci = ev.target.closest('[data-ci]'); if (ci) { chatItemShow(+ci.dataset.ci); return; }
@@ -69,8 +77,9 @@ function chatSetMode(mode) {
     chatPaintFriends();
     if (CHAT.fTo) { CHAT.fUnread[CHAT.fTo] = 0; fchatLoad(CHAT.fTo).catch(() => {}); }
   }
-  const t = $('#chatTxt'); if (t) t.placeholder = CHAT.mode === 'friend' ? (CHAT.fTo ? 'Nhắn «' + CHAT.fTo + '»…' : 'Chọn bạn bên trên rồi nhập tin…') : 'Nhập tin nhắn… (xóa sau 24h)';
+  const t = $('#chatTxt'); if (t) t.placeholder = CHAT.mode === 'friend' ? (CHAT.fTo ? 'Nhắn «' + CHAT.fTo + '»… (xóa sau 24h)' : 'Chọn bạn bên trên rồi nhập tin…') : 'Nhập tin nhắn… (xóa sau 24h)';
   const title = $('#chatTitle'); if (title) title.textContent = CHAT.mode === 'friend' ? (CHAT.fTo ? 'Bạn · ' + CHAT.fTo : 'Bạn bè') : 'Thế giới';
+  if (CHAT.mode === 'friend') fchatPurgeServer().catch(() => {});
   chatRender();
 }
 function chatPaintFriends() {
@@ -347,5 +356,5 @@ async function chatPoll(force) {
   } catch (e) {
     if (/relation .*fchat|Could not find the table/i.test((e && e.message) || '')) CHAT.fOk = false;
   }
-  try { if (Date.now() - (CHAT.fpurged || 0) > 10 * 60 * 1000) { CHAT.fpurged = Date.now(); await CHAT.sb.rpc('fchat_purge_old'); } } catch (e) { /* chua cai SQL */ }
+  await fchatPurgeServer();
 }
