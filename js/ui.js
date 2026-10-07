@@ -460,9 +460,13 @@ function updateTop() {
     const l = typeof stateIcons === 'function' ? stateIcons() : []; const h = l.map(x => `<div class="sti" title="${esc(x.n)}"><img src="${esc(x.ic || '')}" alt=""><b>${fmtLeft(x.t)}</b></div>`).join(''); if (bb.innerHTML !== h) bb.innerHTML = h; }
   $('#stageLbl').textContent = R.dg ? (R.dg.kind === 'boat' ? '⛵ Phong Lăng Độ' : R.dg.kind === 'wb' ? 'Boss tuần' : R.dg.d.n) : `${modeOf()[1]} ${zoneOf(Math.min(S.stage, STAGES)).n} ${R.field && !R.town ? ` · hạ ${fmt(R.field.kills)}` : ''}`;
   const need = J.exp[S.lvl - 1] || 1;
-  $('#xpBar').style.width = (S.xp / need * 100) + '%'; $('#xpTxt').textContent = `${(S.xp / need * 100).toFixed(1)}%`;
-  $('#hpBar').style.width = (R.life / P.life * 100) + '%'; $('#hpTxt').textContent = `${fmt(R.life)} / ${fmt(P.life)}`;
-  $('#mpBar').style.width = (R.mana / P.mana * 100) + '%'; $('#mpTxt').textContent = `${fmt(R.mana)} / ${fmt(P.mana)}`;
+  const xp = Number.isFinite(+S.xp) ? +S.xp : 0;
+  const xpPct = Math.max(0, Math.min(100, need > 0 ? (xp / need * 100) : 0));
+  $('#xpBar').style.width = xpPct + '%'; $('#xpTxt').textContent = `${xpPct.toFixed(1)}%`;
+  const lifePct = P.life > 0 && Number.isFinite(+R.life) ? Math.max(0, Math.min(100, R.life / P.life * 100)) : 0;
+  const manaPct = P.mana > 0 && Number.isFinite(+R.mana) ? Math.max(0, Math.min(100, R.mana / P.mana * 100)) : 0;
+  $('#hpBar').style.width = lifePct + '%'; $('#hpTxt').textContent = `${fmt(R.life)} / ${fmt(P.life)}`;
+  $('#mpBar').style.width = manaPct + '%'; $('#mpTxt').textContent = `${fmt(R.mana)} / ${fmt(P.mana)}`;
   $('#mainSk').textContent = P.main.n;
   const ls = $('#lvS'); if (ls) ls.textContent = S.lvl; const ps = $('#pwS'); if (ps) ps.textContent = fmt(R.power || 0);   // thanh trang thai JX1
 }
