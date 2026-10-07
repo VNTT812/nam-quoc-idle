@@ -8,11 +8,8 @@ const MP_PK_HIT_GAP = 0.12;
 const MP_PK_MAX_FRAC = 0.32; // toi da ~32% mau max / don (chong 1-shot hack)
 
 function mpPkReady() {
-  if (R && R.pkArena) {
-    return !!(typeof mpCid === 'function' && S && S.fac && R.deadT <= 0);
-  }
   return !!(typeof mpCid === 'function' && typeof fieldMode === 'function' && fieldMode()
-    && S && S.fac && R && !R.town && !R.dg && !R.tower && R.deadT <= 0
+    && S && S.fac && R && !R.town && !R.dg && !R.tower && !R.pkArena && R.deadT <= 0
     && typeof mpSkillNetOk === 'function' && mpSkillNetOk());
 }
 function mpPkOn() { return !!(MP && MP.pk && mpPkReady()); }
