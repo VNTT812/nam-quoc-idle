@@ -38,6 +38,8 @@ function onZoneChange(z) {
   loadZoneBg(z);
   playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh();
   if (typeof mpJoin === 'function') try { mpJoin(z); } catch (e) { /* dong doi beta: loi khong chan game */ }
+  R.khNpcs = null;                                                          // doi map: dat lai NPC tinh (Hoành Sơn Môn)
+  if (typeof ensureKhNpcs === 'function') ensureKhNpcs();
 }
 function onStageChange() { if (curTab === 'log') refresh(); }
 function onLevelUp() { if (S.lvl === NEWBIE_LV && !rebornN()) log('🌱 Đạt cấp ' + NEWBIE_LV + ': hết <b>Hỗ Trợ Tân Thủ</b>.'); if (typeof autoMapCheck === 'function') autoMapCheck(); if (isNovice() && S.lvl >= NOVICE_LV && !R.quiet) { toast('Đạt cấp ' + NOVICE_LV + ': gia nhập môn phái!'); if ($('#modal').classList.contains('hidden')) joinModal(); } if (S.autoPts === true) { autoSpendAttrs(); autoSpendSkills(); } autoEquipAll(); if (!R.quiet) { checkHints(); updateDots(); renderPad(); dotGift(); if (LV_MS.some(m => m[0] === S.lvl)) toast(`Đạt mốc cấp ${S.lvl}: nhận quà ở nút 🎁`); } }

@@ -327,8 +327,10 @@ function draw(dt) {
   drawPet(c, dt);                                                           // dong hanh (rewards.js)
   // ke dich (sap theo y de nguoi o duoi ve sau)
   drawMount(c, dt);                                                         // bui phi ngua (horse.js)
-  const ents = R.enemies.filter(e => !e.dead).concat([{ hero: true, y: H.y }], typeof othEnts === 'function' ? othEnts() : []).sort((a, b) => a.y - b.y);
+  if (typeof ensureKhNpcs === 'function') ensureKhNpcs();                   // NPC tinh Hoành Sơn Môn (kh_npc.js)
+  const ents = R.enemies.filter(e => !e.dead).concat([{ hero: true, y: H.y }], typeof othEnts === 'function' ? othEnts() : [], typeof townNpcEnts === 'function' ? townNpcEnts() : []).sort((a, b) => a.y - b.y);
   for (const e of ents) {
+    if (e.khNpc) { drawOneTownNpc(c, e.khNpc); continue; }               // NPC dung o sơn môn
     if (e.oth) { othDraw(c, e.oth, dt); continue; }                        // nguoi choi khac (others.js)
     if (e.hero) {
       c.fillStyle = '#0007'; c.beginPath(); c.ellipse(H.x, H.y, 16, 6, 0, 0, 7); c.fill();
