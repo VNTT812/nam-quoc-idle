@@ -1,5 +1,5 @@
 /* Trang phục quái người thời Trần — áo giao lĩnh / khăn vấn.
-   Sheet enemy*/boss* đã bake remap cloth (tools/rebuild_tran_mob_costume.py).
+   Sheet enemy* / boss* đã bake remap cloth (tools/rebuild_tran_mob_costume.py).
    Runtime chỉ nhuộm nhẹ thêm theo lớp (thường/tinh anh/boss). Thú ani* không đụng. */
 'use strict';
 

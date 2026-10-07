@@ -65,6 +65,7 @@ create table if not exists public.chat (
   item jsonb,
   ts timestamptz not null default now()
 );
+create index if not exists chat_ts_idx on public.chat (ts);
 
 -- ========== RLS ==========
 alter table public.chars enable row level security;
@@ -192,6 +193,24 @@ grant usage, select on all sequences in schema public to authenticated;
 grant execute on function public.claim_mail(bigint) to authenticated;
 grant execute on function public.market_buy(bigint, text) to authenticated;
 grant execute on function public.market_cancel(bigint) to authenticated;
+
+-- Chat TTL 24h: xoa tin cu (client goi dinh ky; xem them sql/CHAT_TTL.sql)
+create or replace function public.chat_purge_old()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n integer;
+begin
+  delete from public.chat where ts < now() - interval '24 hours';
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+revoke all on function public.chat_purge_old() from public;
+grant execute on function public.chat_purge_old() to anon, authenticated;
 
 -- Realtime chat
 alter publication supabase_realtime add table public.chat;
