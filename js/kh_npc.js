@@ -7,6 +7,8 @@
 const KH_NPC_ZONE = 402;
 const KH_TALK_R = 48;   // ban kinh bat dau noi chuyen
 const KH_HIT_R = 42;    // ban kinh click trung sprite
+/* PNG kiem_hiep ~158px cao; hero st ~51×HERO_SCALE(1.35) ≈ 69px → scale ~0.44 cho ngang tầm */
+const KH_NPC_SCALE = 0.44;
 /* Mot NPC dung truoc nha / canh gia vu khi trong san luyen */
 const KH_ZONE_NPC = [
   /* kh20 = pose mặt sân (xoay ngược khỏi nhà); đứng sát cột (ô walk gần chân cột) */
@@ -75,6 +77,7 @@ function khZonePlace() {
       face: d.face || 1,
       imgPath: khNpcImg(d.kh),
       sz,
+      sc: KH_NPC_SCALE,
       talk: d.talk || null,
     };
   });
@@ -94,7 +97,8 @@ function khNpcAt(sx, sy) {
   if (!khNpcZoneActive() || !R.khNpcs) return null;
   let best = null, bd = KH_HIT_R;
   for (const n of R.khNpcs) {
-    const torsoY = n.y - (n.sz ? n.sz[1] * 0.45 : 60);
+    const sc = n.sc || KH_NPC_SCALE;
+    const torsoY = n.y - (n.sz ? n.sz[1] * sc * 0.45 : 30);
     const k = Math.hypot(n.x - sx, torsoY - sy);
     if (k < bd) { bd = k; best = n; }
   }
@@ -159,16 +163,17 @@ function updateKhTalk(dt) {
 
 function drawOneTownNpc(c, n) {
   const im = img(n.imgPath);
+  const sc = n.sc || KH_NPC_SCALE;
   c.fillStyle = '#0006';
   c.beginPath();
-  c.ellipse(n.x, n.y, 14, 5, 0, 0, 7);
+  c.ellipse(n.x, n.y, 10, 3.5, 0, 0, 7);
   c.fill();
   if (im && im.complete && im.naturalWidth) {
     const sz = n.sz || [im.naturalWidth, im.naturalHeight, im.naturalWidth / 2, im.naturalHeight - 2];
-    drawSprite(im, sz, n.x, n.y, 1, n.face < 0);
+    drawSprite(im, sz, n.x, n.y, sc, n.face < 0);
   }
   const near = n.talk && khNpcNear(n, KH_TALK_R + 24);
-  const nameY = n.y - (n.sz ? n.sz[1] * 0.9 : 100);
+  const nameY = n.y - (n.sz ? n.sz[1] * sc * 0.9 : 62);
   label(n.x, nameY, n.n, '#e8d5a3', 11, null, null, near ? 'Nói chuyện' : null, near ? '#9fe8a0' : null);
 }
 
