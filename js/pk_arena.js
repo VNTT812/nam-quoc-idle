@@ -7,7 +7,7 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=330',
+  bg: 'img/z/403.jpg?v=333',
   music: 400,
   limit: 180,
   spawnA: [1480, 1780],
