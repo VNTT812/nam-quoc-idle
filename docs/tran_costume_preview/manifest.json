@@ -1,0 +1,173 @@
+[
+  {
+    "key": "goc",
+    "n": null,
+    "note": null,
+    "body": null,
+    "head": null,
+    "file": "costume_goc.png",
+    "status": "reference"
+  },
+  {
+    "key": "day",
+    "n": "Áo đay",
+    "note": "Sơn dân · nâu đay",
+    "body": "#6b4e2e",
+    "head": "#3f3224",
+    "file": "costume_day.png",
+    "status": "active"
+  },
+  {
+    "key": "cham",
+    "n": "Áo chàm",
+    "note": "Lính tuần · chàm",
+    "body": "#2f4f6f",
+    "head": "#1a3044",
+    "file": "costume_cham.png",
+    "status": "active"
+  },
+  {
+    "key": "reu",
+    "n": "Áo rêu",
+    "note": "Phục kích · xanh rêu",
+    "body": "#3a5740",
+    "head": "#24382a",
+    "file": "costume_reu.png",
+    "status": "active"
+  },
+  {
+    "key": "muc",
+    "n": "Áo mực",
+    "note": "Ám sát · mực đen",
+    "body": "#2c2c32",
+    "head": "#16161a",
+    "file": "costume_muc.png",
+    "status": "active"
+  },
+  {
+    "key": "son",
+    "n": "Áo son",
+    "note": "Đầu lĩnh · đỏ son",
+    "body": "#8a3030",
+    "head": "#4e1c1c",
+    "file": "costume_son.png",
+    "status": "active"
+  },
+  {
+    "key": "kim",
+    "n": "Áo kim",
+    "note": "Trùm cao · vàng nhạt",
+    "body": "#9a7a2e",
+    "head": "#5c4818",
+    "file": "costume_kim.png",
+    "status": "active"
+  },
+  {
+    "key": "bach",
+    "n": "Áo bạch",
+    "note": "Lụa trắng · văn quan",
+    "body": "#d8d2c4",
+    "head": "#8a8478",
+    "file": "costume_bach.png",
+    "status": "active"
+  },
+  {
+    "key": "lam",
+    "n": "Áo lam",
+    "note": "Lam nhạt · thư sinh",
+    "body": "#4a6d8c",
+    "head": "#2c4458",
+    "file": "costume_lam.png",
+    "status": "active"
+  },
+  {
+    "key": "dat",
+    "n": "Áo đất",
+    "note": "Nâu đất đậm · nông binh",
+    "body": "#5a3a22",
+    "head": "#2e1e12",
+    "file": "costume_dat.png",
+    "status": "active"
+  },
+  {
+    "key": "thao",
+    "n": "Áo thảo",
+    "note": "Vàng cỏ · dân dã",
+    "body": "#7a6a38",
+    "head": "#4a4020",
+    "file": "costume_thao.png",
+    "status": "active"
+  },
+  {
+    "key": "huyen",
+    "n": "Áo huyền",
+    "note": "Than tối · đặc sứ",
+    "body": "#3a2a3a",
+    "head": "#1e1620",
+    "file": "costume_huyen.png",
+    "status": "active"
+  },
+  {
+    "key": "ngoc",
+    "n": "Áo ngọc",
+    "note": "Xanh ngọc · cận vệ",
+    "body": "#2a5a55",
+    "head": "#163832",
+    "file": "costume_ngoc.png",
+    "status": "active"
+  },
+  {
+    "key": "hoang",
+    "n": "Áo hoàng",
+    "note": "Hoàng y · cận thần",
+    "body": "#c4a035",
+    "head": "#6e5818",
+    "file": "costume_hoang.png",
+    "status": "active"
+  },
+  {
+    "key": "tu",
+    "n": "Áo tử",
+    "note": "Tía dâu · quan võ",
+    "body": "#6a3a58",
+    "head": "#3a2030",
+    "file": "costume_tu.png",
+    "status": "active"
+  },
+  {
+    "key": "dong",
+    "n": "Áo đồng",
+    "note": "Đồng hun · lính cung",
+    "body": "#8a5a32",
+    "head": "#4a3018",
+    "file": "costume_dong.png",
+    "status": "active"
+  },
+  {
+    "key": "lua",
+    "n": "Áo lửa",
+    "note": "Cam lửa · cảm tử",
+    "body": "#b04828",
+    "head": "#5c2414",
+    "file": "costume_lua.png",
+    "status": "active"
+  },
+  {
+    "key": "sam",
+    "n": "Áo sẫm",
+    "note": "Chàm sẫm · đêm",
+    "body": "#1e2a3a",
+    "head": "#101820",
+    "file": "costume_sam.png",
+    "status": "active"
+  },
+  {
+    "key": "ho",
+    "n": "Áo hổ",
+    "note": "Nâu hổ · dũng sĩ",
+    "body": "#8a5228",
+    "head": "#4a2c14",
+    "file": "costume_ho.png",
+    "status": "active"
+  }
+]
