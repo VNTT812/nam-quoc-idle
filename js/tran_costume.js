@@ -2,14 +2,24 @@
    Không đổi sheet: nhuộm thân + đầu giống look.js, chỉ áp quái anim enemy* / boss*. */
 'use strict';
 
-/** Bảng trang phục. body/head: { c, a } — màu + độ phủ source-atop. */
+/** Bảng trang phục. body/head: { c, a } — màu + độ phủ source-atop.
+ *  active = đang xoay spawn · candidate = chờ duyệt (vẫn gọi được qua override).
+ *  Gallery duyệt: docs/tran_costume_preview/  hoặc  python3 tools/gen_tran_costume_preview.py */
 const TRAN_COSTUMES = {
-  day:  { n: 'Áo đay',   note: 'Sơn dân · nâu đay',     body: { c: '#6b4e2e', a: 0.40 }, head: { c: '#3f3224', a: 0.28 } },
-  cham: { n: 'Áo chàm',  note: 'Lính tuần · chàm',      body: { c: '#2f4f6f', a: 0.42 }, head: { c: '#1a3044', a: 0.30 } },
-  reu:  { n: 'Áo rêu',   note: 'Phục kích · xanh rêu',  body: { c: '#3a5740', a: 0.38 }, head: { c: '#24382a', a: 0.26 } },
-  muc:  { n: 'Áo mực',   note: 'Ám sát · mực đen',     body: { c: '#2c2c32', a: 0.44 }, head: { c: '#16161a', a: 0.32 } },
-  son:  { n: 'Áo son',   note: 'Đầu lĩnh · đỏ son',    body: { c: '#8a3030', a: 0.42 }, head: { c: '#4e1c1c', a: 0.30 } },
-  kim:  { n: 'Áo kim',   note: 'Trùm cao · vàng nhạt', body: { c: '#9a7a2e', a: 0.40 }, head: { c: '#5c4818', a: 0.28 } }
+  /* —— đang dùng —— */
+  day:   { n: 'Áo đay',   note: 'Sơn dân · nâu đay',        body: { c: '#6b4e2e', a: 0.40 }, head: { c: '#3f3224', a: 0.28 }, status: 'active' },
+  cham:  { n: 'Áo chàm',  note: 'Lính tuần · chàm',         body: { c: '#2f4f6f', a: 0.42 }, head: { c: '#1a3044', a: 0.30 }, status: 'active' },
+  reu:   { n: 'Áo rêu',   note: 'Phục kích · xanh rêu',     body: { c: '#3a5740', a: 0.38 }, head: { c: '#24382a', a: 0.26 }, status: 'active' },
+  muc:   { n: 'Áo mực',   note: 'Ám sát · mực đen',        body: { c: '#2c2c32', a: 0.44 }, head: { c: '#16161a', a: 0.32 }, status: 'active' },
+  son:   { n: 'Áo son',   note: 'Đầu lĩnh · đỏ son',       body: { c: '#8a3030', a: 0.42 }, head: { c: '#4e1c1c', a: 0.30 }, status: 'active' },
+  kim:   { n: 'Áo kim',   note: 'Trùm cao · vàng nhạt',    body: { c: '#9a7a2e', a: 0.40 }, head: { c: '#5c4818', a: 0.28 }, status: 'active' },
+  /* —— ứng viên chờ duyệt —— */
+  bach:  { n: 'Áo bạch',  note: 'Lụa trắng · văn quan',    body: { c: '#d8d2c4', a: 0.46 }, head: { c: '#8a8478', a: 0.28 }, status: 'candidate' },
+  lam:   { n: 'Áo lam',   note: 'Lam nhạt · thư sinh',     body: { c: '#4a6d8c', a: 0.40 }, head: { c: '#2c4458', a: 0.28 }, status: 'candidate' },
+  dat:   { n: 'Áo đất',   note: 'Nâu đất đậm · nông binh', body: { c: '#5a3a22', a: 0.44 }, head: { c: '#2e1e12', a: 0.30 }, status: 'candidate' },
+  thao:  { n: 'Áo thảo',  note: 'Vàng cỏ · dân dã',        body: { c: '#7a6a38', a: 0.40 }, head: { c: '#4a4020', a: 0.28 }, status: 'candidate' },
+  huyen: { n: 'Áo huyền', note: 'Than tối · đặc sứ',       body: { c: '#3a2a3a', a: 0.42 }, head: { c: '#1e1620', a: 0.32 }, status: 'candidate' },
+  ngoc:  { n: 'Áo ngọc',  note: 'Xanh ngọc · cận vệ',      body: { c: '#2a5a55', a: 0.42 }, head: { c: '#163832', a: 0.30 }, status: 'candidate' }
 };
 
 const TRAN_COSTUME_KEYS = Object.keys(TRAN_COSTUMES);
