@@ -28,6 +28,10 @@ function u20Init() {
   u20LogVis();
   const nm = t => () => (typeof netModal === 'function' && typeof netOn === 'function' && netOn() ? netModal(t) : toast('Bản chơi trên máy không có xếp hạng / chợ / thư'));
   $('#u20mkt').onclick = nm('mkt'); $('#u20mail').onclick = nm('mail'); const rk = $('#u20rank'); if (rk) rk.onclick = () => rankModal20();
+  if (!$('#u20fr') && $('#u20mail')) {
+    $('#u20mail').insertAdjacentHTML('afterend', '<button id="u20fr" title="Bạn bè">👥</button>');
+    $('#u20fr').onclick = () => (typeof friendsModal === 'function' ? friendsModal() : nm('friends')());
+  }
   $('#u20zb').onclick = () => { u20ZoneList(); u20Front($('#u20zone')); }; $('#u20wx').onclick = u20Close; $('#u20gift').onclick = () => giftModal(true); $('#u20ktc').onclick = () => ktcModal();
   u20Drag(h, p);
   p.addEventListener('pointerdown', () => { if ($('#modal').classList.contains('hidden')) u20Front(p); });

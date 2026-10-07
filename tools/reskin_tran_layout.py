@@ -396,6 +396,37 @@ def ensure_orig_jmo(stem: str = "7") -> None:
     jmo_path.write_text(cur, encoding="utf-8")
 
 
+def patch_jmo2_assign_zone(stem: str, meta: dict) -> None:
+    """Cap nhat mot zone trong jmo2.js (Object.assign) ma khong lam hong JSON."""
+    import json
+
+    path = ROOT / "jmo2.js"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if len(lines) < 2 or not lines[1].startswith("Object.assign(window.JMO, "):
+        raise SystemExit("jmo2.js: expected Object.assign format")
+    prefix = "Object.assign(window.JMO, "
+    line = lines[1].strip()
+    if not line.endswith(");"):
+        raise SystemExit("jmo2.js: missing );")
+    body = line[len(prefix) : -2]
+    obj = json.loads(body)
+    entry = {k: v for k, v in meta.items() if not str(k).startswith("_")}
+    obj[str(stem)] = entry
+
+    def kord(k):
+        return (0, int(k)) if str(k).isdigit() else (1, str(k))
+
+    ordered = {k: obj[k] for k in sorted(obj.keys(), key=kord)}
+    body_out = json.dumps(ordered, ensure_ascii=False, separators=(",", ":"))
+    path.write_text(
+        "/* vat can ban do (tools/gen_tran_maps.py, phong cach Tran) */\n"
+        + prefix
+        + body_out
+        + ");\n",
+        encoding="utf-8",
+    )
+
+
 def bump_cache() -> int:
     idx = ROOT / "index.html"
     text = idx.read_text(encoding="utf-8")

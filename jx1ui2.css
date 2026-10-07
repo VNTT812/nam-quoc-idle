@@ -77,6 +77,16 @@
 .nmrow .it{width:46px;height:46px;flex:none}
 .pfs{width:100%}.pfs .it{width:100%;max-width:62px}
 .ngate h3{text-align:center}.ngate .card .row input{flex:1}
+.adpick{margin-top:.45em;border:1px solid #5a5238;background:#12110e;padding:6px 8px;max-height:220px;overflow:auto}
+.adpick-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px;position:sticky;top:0;background:#12110e;padding-bottom:4px;z-index:1}
+.adpick-list{display:flex;flex-direction:column;gap:3px}
+.adpick-i{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;width:100%;padding:5px 8px;border:1px solid #3c3a35;background:#1a1915;color:#e8e0d0;cursor:pointer}
+.adpick-i:hover,.adpick-i:focus{border-color:#c9a227;background:#2a2410}
+.adpick-i b{color:#ffd76a;font-size:13px}.adpick-i small{color:#9a9588;font-size:11px}
+.frlist{margin-top:.5em}.frrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #2b2a26}
+.frrow>span:first-child{flex:1;min-width:0}.frname{color:#ffd76a;cursor:pointer;text-decoration:underline dotted}
+.fron{color:#6fd46a;font-size:11px;margin-left:4px}
+#u20fr{margin-left:4px;min-width:32px}
 body.nochat #modeSw{left:6px}
 /* ---- Thanh o vat pham / o vo cong duoi san dau (kieu JX1) ---- */
 #pad{left:50%!important;right:auto!important;bottom:4px!important;transform:translateX(-50%);width:auto!important;flex-wrap:nowrap!important;gap:0!important;align-items:center;

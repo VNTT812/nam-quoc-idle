@@ -259,11 +259,13 @@ function mpSkillPayload(extra) {
 }
 function mpEmitSkill(payload) {
   if (!payload) return;
+  if (payload.t0 == null) payload.t0 = Date.now();
   let viaAuth = false;
-  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok' && typeof mpaSend === 'function') {
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
+    && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {
     try { mpaSend(Object.assign({ t: 'skill' }, payload)); viaAuth = true; } catch (e) { /* bo qua */ }
   }
-  // Supabase backup (khi khong auth / auth lech)
+  // Supabase backup (khi khong auth / auth lech / ws chet)
   if (!viaAuth) mpSend('skill', payload);
   else if (MP.ch && (MP.state === 'ok' || MP.state === 'retry')) {
     try { mpSend('skill', payload); } catch (e) { /* bo qua */ }

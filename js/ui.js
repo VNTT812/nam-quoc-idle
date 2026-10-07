@@ -64,7 +64,24 @@ function equip(it, quiet) {
   S.eq[slot] = it; R.dirty = true; invDirty = true; if (!quiet) uiSfx(it.d <= 1 ? 'equipWeapon' : 'equipCloth');
   if (!quiet) { closeModal(); refresh(); }
 }
-function unequip(slot) { const it = S.eq[slot]; if (!it) return; if (S.inv.length >= INV_MAX) { toast('Túi đầy'); return; } delete S.eq[slot]; S.inv.unshift(it); R.dirty = true; invDirty = true; closeModal(); refresh(); }
+function unequip(slot) { const it = S.eq[slot]; if (!it) return; if (S.inv.length >= INV_MAX) { toast('Túi đầy'); return; } delete S.eq[slot]; S.inv.unshift(it); R.dirty = true; invDirty = true; if (slot === 'horse' && typeof setMount === 'function') setMount(false, true); closeModal(); refresh(); }
+/* Go toan bo trang bi dang mac: ngua ve Ma Truong (day thi ve tui), do khac ve hanh trang */
+function unequipAll() {
+  let n = 0, skipped = 0;
+  for (const [slot] of SLOTS) {
+    const it = S.eq[slot]; if (!it) continue;
+    if (slot === 'horse' && typeof stable === 'function' && typeof STABLE_MAX === 'number' && stable().length < STABLE_MAX) {
+      delete S.eq.horse; stable().push(it); n++; continue;
+    }
+    if (S.inv.length >= INV_MAX) { skipped++; continue; }
+    delete S.eq[slot]; S.inv.unshift(it); n++;
+  }
+  if (n) {
+    R.dirty = true; invDirty = true;
+    if (!S.eq.horse && typeof setMount === 'function') setMount(false, true);
+  }
+  return { n, skipped, left: SLOTS.filter(([k]) => S.eq[k]).length };
+}
 /* Ban mon khong khop bo loc (nut trong the Hanh trang, cua hang, Tho Dia Phu): khong bao gio ban do bo, do Tim dang kham, Bach Kim da thang cap */
 const sellProtected = it => !!((it.set && setKept(it)) || it.vio || it.plv || it.lock || it.thanma || (typeof dtNeed === 'function' && dtNeed(it)));   // khoa (🔒): khong bao gio tu ban / ban hang loat
 function sellUnmatched() {
@@ -307,7 +324,7 @@ function renderInv() {
   const invBad = S.inv.filter(i => !lootMatch(i) && !sellProtected(i)), locked = S.inv.filter(i => i.lock).length;
   const pre = lootPresets();
   $('#t-inv').innerHTML = `<div class="invbar"><span>${S.inv.length}/${INV_MAX}</span><select id="iSort" title="Sắp xếp hiển thị">${INV_SORTS.map(([k, n]) => `<option value="${k}" ${(S.invSort || 'new') === k ? 'selected' : ''}>${n}</option>`).join('')}</select><span class="sp"></span>
-    <button class="btn sm" id="bStash">Kho chung</button><button class="btn sm" id="bDonKho">🧹 Dọn kho</button><button class="btn sm" id="bBest">Mặc đồ tốt</button><button class="btn sm red" id="bSellAll" ${invBad.length ? '' : 'disabled'}>${invBad.length ? `Bán ${invBad.length} món không khớp lọc` : 'Không có đồ để bán'}</button></div>
+    <button class="btn sm" id="bStash">Kho chung</button><button class="btn sm" id="bDonKho">🧹 Dọn kho</button><button class="btn sm" id="bBest">Mặc đồ tốt</button><button class="btn sm" id="bUnequip">Gỡ trang bị</button><button class="btn sm red" id="bSellAll" ${invBad.length ? '' : 'disabled'}>${invBad.length ? `Bán ${invBad.length} món không khớp lọc` : 'Không có đồ để bán'}</button></div>
     <div class="invgrid">${invSorted().map(itemCell).join('')}</div>
     <p class="dim small">${locked ? `${locked} món đã khóa 🔒 (không tự bán, không bán hàng loạt, không hợp Huyền Tinh). ` : ''}${S.lootF.setOnly ? `Đang chỉ giữ bộ: ${S.lootF.setKeep.join(', ') || '(chưa chọn bộ nào)'}. ` : ''}Mở chi tiết món đồ để khóa / mở khóa.</p>
     <div class="btnrow"><button class="btn sm" id="bKtcI">🏮 Kỳ Trân Các</button></div>
@@ -367,6 +384,12 @@ function renderInv() {
     $('#eWhite').onchange = x => { e.white = x.target.checked; ch(); }; $('#eJew').onchange = x => { e.jew = x.target.checked; ch(); }; $('#eBlue').onchange = x => { e.blue = x.target.checked; ch(); };
     $('#eBlueLv').onchange = x => { e.blueLv = +x.target.value; ch(); }; $('#eDest').onchange = x => { e.dest = x.target.value; ch(); }; }
   $('#bBest').onclick = () => { for (const it of S.inv.slice()) if (betterThanEquipped(it)) equip(it, true); refresh(); };
+  $('#bUnequip').onclick = () => {
+    const r = unequipAll();
+    if (!r.n) toast(r.left ? 'Túi đầy, không gỡ thêm được' : 'Không có trang bị đang mặc');
+    else toast(`Đã gỡ ${r.n} món${r.skipped ? `, còn ${r.skipped} món (túi đầy)` : ''}`);
+    refresh();
+  };
   $('#bDonKho').onclick = () => donKhoModal();
   $('#bSellAll').onclick = () => { const r = sellUnmatched(); toast(`Bán ${r.n} món (+${fmt(r.gold)} lượng)${r.kept ? `, giữ ${r.kept} món được bảo vệ` : ''}`); refresh(); };
   document.querySelectorAll('#t-inv .invgrid .it').forEach(b => b.onclick = () => itemModal(findItem(b.dataset.uid)));
@@ -460,9 +483,13 @@ function updateTop() {
     const l = typeof stateIcons === 'function' ? stateIcons() : []; const h = l.map(x => `<div class="sti" title="${esc(x.n)}"><img src="${esc(x.ic || '')}" alt=""><b>${fmtLeft(x.t)}</b></div>`).join(''); if (bb.innerHTML !== h) bb.innerHTML = h; }
   $('#stageLbl').textContent = R.dg ? (R.dg.kind === 'boat' ? '⛵ Phong Lăng Độ' : R.dg.kind === 'wb' ? 'Boss tuần' : R.dg.d.n) : `${modeOf()[1]} ${zoneOf(Math.min(S.stage, STAGES)).n} ${R.field && !R.town ? ` · hạ ${fmt(R.field.kills)}` : ''}`;
   const need = J.exp[S.lvl - 1] || 1;
-  $('#xpBar').style.width = (S.xp / need * 100) + '%'; $('#xpTxt').textContent = `${(S.xp / need * 100).toFixed(1)}%`;
-  $('#hpBar').style.width = (R.life / P.life * 100) + '%'; $('#hpTxt').textContent = `${fmt(R.life)} / ${fmt(P.life)}`;
-  $('#mpBar').style.width = (R.mana / P.mana * 100) + '%'; $('#mpTxt').textContent = `${fmt(R.mana)} / ${fmt(P.mana)}`;
+  const xp = Number.isFinite(+S.xp) ? +S.xp : 0;
+  const xpPct = Math.max(0, Math.min(100, need > 0 ? (xp / need * 100) : 0));
+  $('#xpBar').style.width = xpPct + '%'; $('#xpTxt').textContent = `${xpPct.toFixed(1)}%`;
+  const lifePct = P.life > 0 && Number.isFinite(+R.life) ? Math.max(0, Math.min(100, R.life / P.life * 100)) : 0;
+  const manaPct = P.mana > 0 && Number.isFinite(+R.mana) ? Math.max(0, Math.min(100, R.mana / P.mana * 100)) : 0;
+  $('#hpBar').style.width = lifePct + '%'; $('#hpTxt').textContent = `${fmt(R.life)} / ${fmt(P.life)}`;
+  $('#mpBar').style.width = manaPct + '%'; $('#mpTxt').textContent = `${fmt(R.mana)} / ${fmt(P.mana)}`;
   $('#mainSk').textContent = P.main.n;
   const ls = $('#lvS'); if (ls) ls.textContent = S.lvl; const ps = $('#pwS'); if (ps) ps.textContent = fmt(R.power || 0);   // thanh trang thai JX1
 }

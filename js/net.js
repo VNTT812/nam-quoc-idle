@@ -264,7 +264,7 @@ async function netMailCount() {
 }
 function netCleanItem(it) {
   if (!it || typeof it !== 'object') return null;
-  if (it.__admin) return it;                                                 // goi cap phat admin (cap / knb / do)
+  if (it.__admin || it.__friend) return it;                                   // goi cap phat admin / loi moi ban be
   if (!Array.isArray(it.base) || !Array.isArray(it.mag)) return null;
   const x = JSON.parse(JSON.stringify(it)); x.uid = S.uid++; delete x.lock; return x;
 }
@@ -281,6 +281,7 @@ function netMailLabel(m) {
     if (it.gear && it.gear.n) bits.push(it.gear.n);
     return bits.join(' · ') || 'Quà Admin';
   }
+  if (it && it.__friend) return it.act === 'ok' ? 'Đã chấp nhận kết bạn' : 'Lời mời kết bạn';
   return it ? it.n : '';
 }
 function netApplyAdminGrant(a) {
@@ -322,15 +323,19 @@ function netApplyAdminGrant(a) {
 }
 async function netClaim(m, quiet) {
   const isAdminMail = !!(m.item && m.item.__admin) || m.kind === 'admin';
-  if (m.item && !isAdminMail && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
+  const isFriendMail = !!(m.item && m.item.__friend) || m.kind === 'friend';
+  if (m.item && !isAdminMail && !isFriendMail && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy');
   if (isAdminMail && m.item && m.item.gear && S.inv.length >= INV_MAX) throw new Error('Hành trang đầy — dọn túi rồi nhận');
   // Admin cap/diem: thu phai co nhan vat dang choi
   if (isAdminMail && (!S || !S.fac)) throw new Error('Vào nhân vật trước rồi nhận thư');
+  if (isFriendMail && (!S || !S.fac)) throw new Error('Vào nhân vật trước rồi nhận lời mời');
   const r = await netCall(sb => sb.rpc('claim_mail', { mid: m.id })), d = r.data || m;
   const parts = [];
   try {
     if (d.item && d.item.__admin) parts.push(...netApplyAdminGrant(d.item));
-    else if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
+    else if (d.item && d.item.__friend && typeof friendClaimItem === 'function') {
+      const msg = friendClaimItem(d.item, d.from_name); if (msg) parts.push(msg);
+    } else if (d.item) { const it = netCleanItem(d.item); if (it) { S.inv.push(it); parts.push(it.n); invDirty = true; } }
     if (d.gold > 0) { S.gold += +d.gold; parts.push(fmt(+d.gold) + ' lượng'); }
   } catch (e) {
     // thu da xoa tren may chu — van luu phan da apply, bao loi ro
@@ -399,13 +404,15 @@ async function netModal(tab, msg) {
   if (tab) NET.tab = tab;
   if (NET.sb) await netEnsureUser();
   if (!netOn()) return modal('<h3>🌐 Giang hồ online</h3><p class="desc">Chưa cấu hình máy chủ (js/chatcfg.js).</p>');
-  const tabs = [['acc', 'Tài khoản'], ['rank', 'Xếp hạng'], ['mail', `Thư${NET.mailN ? ` (${NET.mailN})` : ''}`], ['mkt', 'Chợ']];
+  const frN = (S && S.friends && S.friends.length) ? ` (${S.friends.length})` : '';
+  const tabs = [['acc', 'Tài khoản'], ['rank', 'Xếp hạng'], ['friends', `Bạn bè${frN}`], ['mail', `Thư${NET.mailN ? ` (${NET.mailN})` : ''}`], ['mkt', 'Chợ']];
   const head = `<h3>🌐 Giang hồ online <small>${NET.user ? esc(netUname()) : 'chưa đăng nhập'}</small></h3><div class="dtabs" id="netTabs">${tabs.map(([k, n]) => `<button data-nt="${k}" class="${k === NET.tab ? 'on' : ''}">${n}</button>`).join('')}</div>${msg ? `<p class="cn small">${esc(msg)}</p>` : ''}${S && S.fac ? '' : '<div class="btnrow"><button class="btn sm" id="netSlot">← Chọn nhân vật</button></div>'}`;
   modal(head + '<div id="netBody"><p class="dim small">Đang tải…</p></div>', () => { document.querySelectorAll('#netTabs [data-nt]').forEach(b => b.onclick = () => netModal(b.dataset.nt)); const s = $('#netSlot'); if (s) s.onclick = () => slotMenu(); }, !(S && S.fac));
   try { await netClient(); } catch (e) { $('#netBody').innerHTML = `<p class="reqbad">${esc(e.message)}</p>`; return; }
   const body = $('#netBody'); if (!body) return;
-  const need = !NET.user && NET.tab !== 'rank';
-  try { await ({ acc: netAccBody, rank: netRankBody, mail: netMailBody, mkt: netMktBody })[need ? 'acc' : NET.tab](body); }
+  const need = !NET.user && NET.tab !== 'rank' && NET.tab !== 'friends';
+  const bodies = { acc: netAccBody, rank: netRankBody, friends: typeof netFriendsBody === 'function' ? netFriendsBody : async el => { el.innerHTML = '<p class="dim">Chưa tải module bạn bè</p>'; }, mail: netMailBody, mkt: netMktBody };
+  try { await (bodies[need ? 'acc' : NET.tab] || netAccBody)(body); }
   catch (e) { body.innerHTML = `<p class="reqbad">${esc(e.message || e)}</p>`; }
 }
 const busy = async (btn, fn, after) => { if (btn) btn.disabled = true; try { const m = await fn(); after ? after(m) : null; } catch (e) { toast(e.message || String(e)); if (btn) btn.disabled = false; } };
@@ -493,10 +500,12 @@ async function profileModal(name, back) {
   modal(`<h3>${esc(x.name)} <small>${esc(f ? f.n : '')} · cấp ${x.lvl}${x.reborn ? ` · chuyển sinh ${x.reborn}` : ''}</small></h3>
     <p class="small">Lực chiến <b>${fmt(x.power || 0)}</b> · Tháp tầng <b>${x.tower || 0}</b> · Trùm đã hạ <b>${fmt(x.bosses || 0)}</b> <small class="dim">· cập nhật ${new Date(x.updated).toLocaleString('vi-VN')}</small></p>
     <div class="pfgrid">${cells}</div>
-    <div class="btnrow">${S && S.fac && x.name !== S.name ? '<button class="btn" id="pfMail">📨 Gửi thư</button>' : ''}<button class="btn" id="pfB">Quay lại</button></div>`, () => {
+    <div class="btnrow">${S && S.fac && x.name !== S.name ? '<button class="btn" id="pfMail">📨 Gửi thư</button>' : ''}${S && S.fac && x.name !== S.name && typeof friendHas === 'function' ? (friendHas(x.name) ? '<button class="btn" id="pfFrRm">Xóa bạn</button>' : '<button class="btn" id="pfFr">👥 Kết bạn</button>') : ''}<button class="btn" id="pfB">Quay lại</button></div>`, () => {
     document.querySelectorAll('#mBody [data-pk]').forEach(b => b.onclick = () => netItemModal(g[b.dataset.pk], '', () => profileModal(name, back)));
     $('#pfB').onclick = back;
     const m = $('#pfMail'); if (m) m.onclick = () => { NET.mailTo = x.name; netModal('mail'); };
+    const fr = $('#pfFr'); if (fr) fr.onclick = () => busy(fr, () => friendRequest(x.name), () => { toast('Đã gửi lời mời kết bạn'); profileModal(name, back); });
+    const rm = $('#pfFrRm'); if (rm) rm.onclick = () => { friendRemove(x.name); toast('Đã xóa bạn'); profileModal(name, back); };
   });
 }
 
@@ -508,17 +517,20 @@ async function netMailBody(el) {
   const myName = (S && hasRealName() && S.name) ? S.name : '';
   const rowHtml = m => {
     const adm = !!(m.item && m.item.__admin);
+    const fr = !!(m.item && m.item.__friend) || m.kind === 'friend';
     const label = netMailLabel(m);
     let icon = '<span class="nmg">💰</span>';
     if (adm && m.item.gear && Array.isArray(m.item.gear.base)) icon = netCell(m.item.gear).replace('data-uid=', `data-mi="${m.id}" data-x=`);
     else if (adm) icon = '<span class="nmg">🛠</span>';
+    else if (fr) icon = '<span class="nmg">👥</span>';
     else if (m.item) icon = netCell(m.item).replace('data-uid=', `data-mi="${m.id}" data-x=`);
     const nameHtml = adm
       ? `<span class="cp">${esc(label || 'Quà Admin')}</span>`
+      : fr ? `<span class="cp">${esc(m.item && m.item.act === 'ok' ? 'Đã chấp nhận kết bạn' : 'Lời mời kết bạn')}</span>`
       : (m.item ? `<span style="color:${RAR_COL[m.item.r] || '#ddd'}">${esc(m.item.n)}</span>` : '');
     return `<div class="nmrow">${icon}<span><b>${esc(m.from_name)}</b> <small class="dim">${new Date(m.created).toLocaleString('vi-VN')}</small><br>
         ${nameHtml}${m.gold > 0 ? ` <span class="cp">+${fmt(m.gold)} lượng</span>` : ''}${m.note ? `<br><small class="dim">${esc(m.note)}</small>` : ''}</span>
-        <button class="btn sm" data-take="${m.id}" ${S.fac ? '' : 'disabled'}>Nhận</button></div>`;
+        <button class="btn sm" data-take="${m.id}" ${S.fac ? '' : 'disabled'}>${fr && !(m.item && m.item.act === 'ok') ? 'Chấp nhận' : 'Nhận'}</button></div>`;
   };
   const emptyHint = myName
     ? `<p class="dim small">Không có thư.<br>Tên nhận thư của bạn: <b class="cp">${esc(myName)}</b> — Admin phải gửi đúng tên này. Bấm <b>Đồng bộ tên</b> nếu vừa đổi tên.</p><div class="btnrow"><button class="btn sm" id="nmSync">Đồng bộ tên lên xếp hạng</button></div>`
@@ -592,6 +604,10 @@ async function netProbe() {
 async function netInit() {
   if (!netOn()) return;
   const h = $('#giftBtn'); if (h && !$('#netBtn')) { const b = document.createElement('button'); b.id = 'netBtn'; b.title = 'Giang hồ online: tài khoản, xếp hạng, thư, chợ'; b.textContent = '🌐'; h.parentNode.insertBefore(b, h); b.onclick = () => { if (typeof uiSfx === 'function') uiSfx('click'); netModal(); }; }
+  if (h && !$('#frBtn')) {
+    const f = document.createElement('button'); f.id = 'frBtn'; f.title = 'Bạn bè'; f.textContent = '👥';
+    h.parentNode.insertBefore(f, h); f.onclick = () => { if (typeof uiSfx === 'function') uiSfx('click'); if (typeof friendsModal === 'function') friendsModal(); };
+  }
   try { await netProbe(); await netClient(); } catch (e) { netGate('Không kết nối được máy chủ: ' + (e.message || e)); return; }
   if (!NET.user) { netGate(); return; }
   if (typeof netThoAdminReady === 'function') netThoAdminReady();
