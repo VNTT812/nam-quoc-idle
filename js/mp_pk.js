@@ -32,7 +32,8 @@ function mpPkToggle() {
 
 function mpPkEmitFlag() {
   const payload = { pk: MP.pk ? 1 : 0 };
-  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok' && typeof mpaSend === 'function') {
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
+    && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {
     try { mpaSend(Object.assign({ t: 'pkflag' }, payload)); } catch (e) { /* bo qua */ }
   }
   if (typeof mpSend === 'function') {
@@ -43,7 +44,8 @@ function mpPkEmitFlag() {
 function mpPkEmitHit(payload) {
   if (!payload) return;
   let via = false;
-  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok' && typeof mpaSend === 'function') {
+  if (typeof mpaEnabled === 'function' && mpaEnabled() && typeof MPA !== 'undefined' && MPA.state === 'ok'
+    && typeof mpaSend === 'function' && MPA.ws && MPA.ws.readyState === 1) {
     try { mpaSend(Object.assign({ t: 'pkhit' }, payload)); via = true; } catch (e) { /* bo qua */ }
   }
   if (!via && typeof mpSend === 'function') mpSend('pkhit', payload);
