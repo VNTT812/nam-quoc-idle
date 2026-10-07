@@ -157,10 +157,18 @@ function mpaApplySnap(msg) {
   if (typeof mpUi === 'function') mpUi();
 }
 
+function mpaZone() {
+  // San dau: zone rieng theo room (khong chung map farm — 2 cap PK thay nhau thay vi dong map)
+  if (typeof mpArenaOk === 'function' && mpArenaOk() && R && R.pkArena && R.pkArena.room) {
+    return { id: 'pk:' + R.pkArena.room, n: (typeof PK_ARENA !== 'undefined' && PK_ARENA.n) || 'Sàn Đấu' };
+  }
+  return typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null;
+}
+
 async function mpaJoin() {
   if (!mpaEnabled()) return;
   if (typeof mpCanPlay === 'function' && !mpCanPlay()) return;
-  const z = typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null;
+  const z = mpaZone();
   if (!z) return;
   const url = mpaUrl();
   if (MPA.ws && MPA.url === url && MPA.zone === z.id && MPA.ws.readyState <= 1) return;
@@ -178,7 +186,8 @@ async function mpaJoin() {
       title: tw && typeof titleName === 'function' ? String(titleName(tw)).slice(0, 24) : '',
       titleId: tw ? tw[0] : '',
       titleCol: tw && typeof TIER !== 'undefined' && TIER[tw[3]] ? TIER[tw[3]].c : '',
-      x: H && H.x, y: H && H.y
+      x: H && H.x, y: H && H.y,
+      pk: (typeof MP !== 'undefined' && MP.pk) ? 1 : 0
     };
     // local khong login: dung dev cid neu server MP_DEV_OPEN=1
     if (!token) {
@@ -226,7 +235,9 @@ function mpaClose() {
 
 function mpaSendInput(dt) {
   if (!MPA.ws || MPA.ws.readyState !== 1 || MPA.state !== 'ok') return;
-  if (typeof fieldMode === 'function' && (!fieldMode() || R.town || R.dg || R.tower)) return;
+  // San dau PK: van gui toa do (fieldMode=false trong arena)
+  const inArena = typeof mpArenaOk === 'function' && mpArenaOk();
+  if (!inArena && typeof fieldMode === 'function' && (!fieldMode() || R.town || R.dg || R.tower)) return;
   MPA.sendT = (MPA.sendT || 0) + dt;
   if (MPA.sendT < 0.025) return; // 40Hz — muot hon 30Hz khi cua/doi huong
   MPA.sendT = 0;
@@ -239,7 +250,8 @@ function mpaSendInput(dt) {
     y: H ? Math.round(H.y * 10) / 10 : 0,
     vx: Math.round(vel.vx * 10) / 10, vy: Math.round(vel.vy * 10) / 10,
     face: H.face >= 0 ? 1 : -1, dir: H.dir | 0, act: H.act || 'st',
-    life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1
+    life: R.P && R.P.life ? +(R.life / R.P.life).toFixed(2) : 1,
+    pk: (typeof MP !== 'undefined' && MP.pk) ? 1 : 0
   });
   MPA.metaT = (MPA.metaT || 0) + 0.05;
   if (MPA.metaT > 2) {
@@ -256,6 +268,13 @@ function mpaSendInput(dt) {
 /** Hook: goi moi frame tu main — an toan neu chua bat */
 function mpaTick(dt) {
   if (!mpaEnabled()) return;
+  // Doi zone (vao/ra san dau): join lai phong dung
+  const want = mpaZone();
+  if (want && MPA.zone != null && MPA.zone !== want.id && MPA.state === 'ok') {
+    MPA._nextJoin = 0;
+    mpaJoin();
+    return;
+  }
   if (MPA.state === 'off' || !MPA.ws) {
     if (!MPA._nextJoin || Date.now() > MPA._nextJoin) {
       MPA._nextJoin = Date.now() + 2000;

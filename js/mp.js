@@ -766,7 +766,11 @@ async function mpJoin(z) {
         MP.state = 'retry'; mpUi();
         const wait = Math.min(18000, 4000 + MP.retries * 2500);
         MP._nextJoin = Date.now() + wait;
-        clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
+        clearTimeout(MP.reT); MP.reT = setTimeout(() => {
+          if (!mpCanPlay()) return;
+          if (mpArenaOk() && R.pkArena) mpJoin({ id: 'pk:' + R.pkArena.room, n: (typeof PK_ARENA !== 'undefined' && PK_ARENA.n) || 'Sàn Đấu' });
+          else mpJoin(zoneOf(Math.min(S.stage, STAGES)));
+        }, wait);
       } else if (st === 'CLOSED') {
         if (MP.ch === ch && MP.leaving !== ch) {
           MP.joinBusy = false;
@@ -774,7 +778,11 @@ async function mpJoin(z) {
           MP.state = 'retry'; mpUi();
           const wait = Math.min(15000, 5000 + (MP.retries || 0) * 2000);
           MP._nextJoin = Date.now() + wait;
-          clearTimeout(MP.reT); MP.reT = setTimeout(() => { if (mpCanPlay()) mpJoin(zoneOf(Math.min(S.stage, STAGES))); }, wait);
+          clearTimeout(MP.reT); MP.reT = setTimeout(() => {
+            if (!mpCanPlay()) return;
+            if (mpArenaOk() && R.pkArena) mpJoin({ id: 'pk:' + R.pkArena.room, n: (typeof PK_ARENA !== 'undefined' && PK_ARENA.n) || 'Sàn Đấu' });
+            else mpJoin(zoneOf(Math.min(S.stage, STAGES)));
+          }, wait);
         }
       }
     });
@@ -783,7 +791,10 @@ async function mpJoin(z) {
 
 function mpEnsure() {
   if (!mpCanPlay()) { mpUi(); return; }
-  const zid = zoneOf(Math.min(S.stage, STAGES)).id;
+  const z = (mpArenaOk() && R.pkArena)
+    ? { id: 'pk:' + R.pkArena.room, n: (typeof PK_ARENA !== 'undefined' && PK_ARENA.n) || 'Sàn Đấu' }
+    : zoneOf(Math.min(S.stage, STAGES));
+  const zid = z.id;
   if (MP.ch && MP.zoneId === zid && mpChAlive(MP.ch)) {
     if (MP.state !== 'ok') { MP.state = 'ok'; MP._subOkAt = Date.now(); mpUi(); }
     return;
@@ -792,7 +803,7 @@ function mpEnsure() {
   if (MP._nextJoin && Date.now() < MP._nextJoin) return;
   // dang retry nhung chua den luc recreate
   if (MP.state === 'retry' && MP.ch && MP.zoneId === zid) return;
-  mpJoin(zoneOf(Math.min(S.stage, STAGES)));
+  mpJoin(z);
 }
 
 function mpInit() {

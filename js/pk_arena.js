@@ -7,11 +7,12 @@
 const PK_ARENA = {
   id: 403,
   n: 'Sàn Đấu · Đình Trần',
-  bg: 'img/z/403.jpg?v=333',
+  bg: 'img/z/403.jpg?v=336',
   music: 400,
   limit: 180,
-  spawnA: [1480, 1780],
-  spawnB: [2100, 1780]
+  // Gan nhau de melee/tam xa danh duoc ngay (truoc ~620px → khong cham duoc)
+  spawnA: [1720, 1780],
+  spawnB: [1880, 1780]
 };
 const PKA = { pending: {}, inbox: null, lastInvite: 0 };
 
@@ -165,21 +166,38 @@ function pkArenaEnter(room, foe, asHost) {
   if (typeof obsLoad === 'function') obsLoad(PK_ARENA.id);
   const [sx, sy] = R.pkArena.host ? PK_ARENA.spawnA : PK_ARENA.spawnB;
   [H.x, H.y] = inWorld(sx, sy);
+  H.act = 'st'; H.actT = 0;
   if (typeof snapCamera === 'function') snapCamera();
   R.bgImg = typeof img === 'function' ? img(PK_ARENA.bg) : null;
   if (typeof playMusic === 'function') playMusic(PK_ARENA.music);
   if (typeof MP !== 'undefined') {
     MP.pk = true; MP.pkTarget = null;
     MP.roomOverride = 'map:pk:' + room;
+    MP.peers = {}; // doi phong — bo peer map farm cu
   }
+  // Supabase channel san dau
   if (typeof mpJoin === 'function') {
-    try { mpJoin({ id: PK_ARENA.id, n: PK_ARENA.n }); } catch (e) { /* bo qua */ }
+    try { mpJoin({ id: 'pk:' + room, n: PK_ARENA.n }); } catch (e) { /* bo qua */ }
   }
+  // Auth WSS: join zone pk:room (mpaTick cung tu doi khi zone lech)
+  if (typeof mpaClose === 'function') { try { mpaClose(); } catch (e) { /* bo qua */ } }
+  if (typeof mpaJoin === 'function') {
+    try { mpaJoin(); } catch (e) { /* bo qua */ }
+  }
+  // Auto danh trong san (PK) — nguoi choi van doi sang manual neu muon
+  if (typeof S !== 'undefined') { S.ctrl = S.ctrl || 'auto'; }
   R.banner = { t: 2.8, text: PK_ARENA.n, sub: 'PK với ' + foe + ' · hạ đối thủ để thắng' };
   if (typeof log === 'function') log('⚔️ Vào <b>' + esc(PK_ARENA.n) + '</b> — đối thủ: <b>' + esc(foe) + '</b>.');
   if (typeof toast === 'function') toast('Sàn đấu: PK với ' + foe);
   if (typeof mpUi === 'function') mpUi();
   if (typeof mpPkEmitFlag === 'function') mpPkEmitFlag();
+  // Khoa muc tieu peer khi thay mat
+  setTimeout(() => {
+    if (!pkArenaOn() || typeof MP === 'undefined') return;
+    for (const p of Object.values(MP.peers || {})) {
+      if (p && p.name === foe) { MP.pkTarget = p.cid; p.pk = true; break; }
+    }
+  }, 800);
 }
 
 function pkArenaExit(why) {
@@ -192,19 +210,26 @@ function pkArenaExit(why) {
   if (typeof MP !== 'undefined') {
     MP.roomOverride = null;
     MP.pk = false; MP.pkTarget = null;
+    MP.peers = {};
   }
   if (typeof mpLeave === 'function') {
     try { mpLeave(); } catch (e) { /* bo qua */ }
   }
+  if (typeof mpaClose === 'function') {
+    try { mpaClose(); } catch (e) { /* bo qua */ }
+  }
   pkArenaRestore(ret);
   if (R.P) { R.life = R.P.life; R.mana = R.P.mana; }
-  H.act = 'stand'; H.actT = 0;
+  H.act = 'st'; H.actT = 0;
   if (typeof toast === 'function') toast(why || 'Rời sàn đấu');
   if (typeof log === 'function') log('⚔️ Rời sàn đấu' + (why ? ': ' + esc(why) : '') + (foe ? ' (vs ' + esc(foe) + ')' : '') + '.');
   if (typeof mpUi === 'function') mpUi();
-  // join lai map farm
+  // join lai map farm + auth zone farm
   if (typeof mpJoin === 'function' && typeof zoneOf === 'function') {
     try { mpJoin(zoneOf(Math.min(S.stage, STAGES))); } catch (e) { /* bo qua */ }
+  }
+  if (typeof mpaJoin === 'function') {
+    try { mpaJoin(); } catch (e) { /* bo qua */ }
   }
 }
 
@@ -224,8 +249,20 @@ function pkArenaFinish(win, reason) {
 
 function pkArenaOnFchat(m) {
   if (!m || !m.item || !m.item.__duel) return false;
+  // Chi xu ly tin gui TOI minh (tranh self-echo / poll trung)
+  if (m.to_name && S && S.name && m.to_name !== S.name) return true;
   const act = m.item.act, from = m.from_name, room = m.item.room || pkArenaRoomId(S.name, from);
   if (!from || from === S.name) return true;
+  // Chong xu ly 2 lan cung id
+  if (m.id != null) {
+    if (!PKA.seen) PKA.seen = new Set();
+    if (PKA.seen.has(m.id)) return true;
+    PKA.seen.add(m.id);
+    if (PKA.seen.size > 80) {
+      const arr = [...PKA.seen];
+      PKA.seen = new Set(arr.slice(-40));
+    }
+  }
   if (act === 'req') {
     if (pkArenaOn()) return true;
     // Da gui moi nguoc lai → ca hai dong y
@@ -237,6 +274,7 @@ function pkArenaOnFchat(m) {
     return true;
   }
   if (act === 'ok') {
+    // Nguoi moi nhan OK → vao san (host spawn A)
     if (PKA.pending[from] || (pkArenaRoomId(S.name, from) === room)) {
       delete PKA.pending[from];
       if (!pkArenaOn()) pkArenaEnter(room, from, true);
@@ -250,7 +288,12 @@ function pkArenaOnFchat(m) {
     return true;
   }
   if (act === 'end' && pkArenaOn()) {
-    if (!R.pkArena.ended) pkArenaFinish(null, m.item.reason || 'Kết thúc trận');
+    if (room && R.pkArena.room && room !== R.pkArena.room) return true;
+    if (!R.pkArena.ended) {
+      // win=1 tu doi thu nghia la HO bi thua (ho thang)
+      const theyWin = m.item.win === 1 || m.item.win === true;
+      pkArenaFinish(theyWin ? false : (m.item.win === 0 ? true : null), m.item.reason || 'Kết thúc trận');
+    }
     return true;
   }
   return true;

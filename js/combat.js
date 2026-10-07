@@ -329,13 +329,23 @@ function tick(dt) {
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (khong tinh tab an, trong thanh, Luyen Cong) -> S.kps
   const looting = updateGround(dt);                       // di nhat do (cham tay, hoac het quai + khop bo loc)
   if (fieldMode()) fieldTick(dt);                          // bai luyen cong kieu JX1: quai dat san, hoi sinh tai cho (field.js)
-  if (R.pkArena) {                                         // san dau: khong spawn quai, chi PK nguoi
+  if (R.pkArena) {                                         // san dau: khong spawn quai — van di chuyen + heroAttack (PK)
     if (R.enemies.length) R.enemies = [];
     R.field = null;
+    if (manual()) moveManual(dt);
+    else if (R.moveTo && R.moveTo.hp > 0 && !(R.stunT > 0)) {
+      obsSteer(H, R.moveTo.x, R.moveTo.y, 150 * curSpeed() * (R.slowT > 0 ? ELEM_SLOW : 1) * dt);
+    }
+    if (!(R.stunT > 0)) {
+      R.atkT -= dt * (R.slowT > 0 ? ELEM_SLOW : 1);
+      if (R.atkT <= 0) R.atkT = heroAttack();
+    }
+    if (R.life <= 0) heroDeath();
+    return;
   }
   if (!R.enemies.length) {
-    /* Map khong quai (Hoanh Son Mon / san dau) van cho di chuyen — khong return som cat moveManual */
-    if (fieldMode() || R.pkArena) { if (manual()) moveManual(dt); return; }
+    /* Map khong quai (Hoanh Son Mon) van cho di chuyen — khong return som cat moveManual */
+    if (fieldMode()) { if (manual()) moveManual(dt); return; }
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
@@ -418,7 +428,12 @@ function waveCleared() {
 function heroDeath() {
   if (R.enemies.some(e => e.goldBoss && !e.dead)) RW().gbT = GB_RETRY;   // thua trum Hoang Kim: 5 phut sau quay lai
   R.deadT = 3; R.life = 0; R.enemies = []; recDeath(); R.slowT = R.stunT = R.hpDotT = R.hpDot = 0;
+  H.act = 'die'; H.actT = 0;
   log('<span class="bad">Bạn đã trọng thương.</span>');
+  if (R.pkArena) {
+    if (typeof pkArenaFinish === 'function' && !R.pkArena.ended) pkArenaFinish(false, 'Bị hạ');
+    return;
+  }
   if (R.dg) { dgFail('Gục ngã'); return; }                 // guc trong pho ban: that bai, khong lui ai
   if (R.tower) { towerExit(true); return; }               // gục trong thap: roi thap, khong lui ai
   if (typeof onStageChange === 'function') onStageChange();
