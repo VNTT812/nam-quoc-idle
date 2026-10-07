@@ -1,20 +1,35 @@
 /* ======================= CHAT THE GIOI (Supabase Realtime) =======================
    Khung chat goc duoi trai san dau nhu JX1: thu gon hien 4 dong moi nhat, cham 💬 de mo lich su + o nhap.
-   Tin nhan luu bang public.chat (xem CHAT_SETUP.sql), nhan tin moi qua realtime, dem nguoi online qua presence. */
+   Tin nhan luu bang public.chat (xem CHAT_SETUP.sql / CHAT_TTL.sql), nhan tin moi qua realtime, dem nguoi online qua presence.
+   Lich su chat chi giu 24 gio: client loc khi doc + goi RPC chat_purge_old de xoa tren may chu. */
 'use strict';
 const CHAT = { sb: null, ch: null, msgs: [], open: false, unread: 0, online: 0, state: 'off', last: 0, err: '' };
-const CHAT_MAX = 150, CHAT_KEEP = 80, CHAT_GAP = 2500;
+const CHAT_MAX = 150, CHAT_KEEP = 80, CHAT_GAP = 2500, CHAT_TTL_MS = 24 * 60 * 60 * 1000;
 const chatCid = () => { try { let c = localStorage.getItem('jxidle_cid'); if (!c) { c = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); localStorage.setItem('jxidle_cid', c); } return c; } catch (e) { return 'anon' + Math.random().toString(36).slice(2, 10); } };
 const chatName = () => String(S && (S.name || (FAC[S.fac] && FAC[S.fac].n)) || 'Vô danh').slice(0, 20);
 const chatTime = t => { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const chatSinceIso = () => new Date(Date.now() - CHAT_TTL_MS).toISOString();
+const chatMsgAge = m => { const t = m && (m.ts || m.created_at); const ms = t ? +new Date(t) : 0; return ms > 0 ? Date.now() - ms : 0; };
+const chatFresh = m => !m || m.pending || m.sys || chatMsgAge(m) < CHAT_TTL_MS;
+function chatPruneLocal() {
+  const n = CHAT.msgs.length;
+  CHAT.msgs = CHAT.msgs.filter(chatFresh);
+  if (CHAT.msgs.length !== n) chatRender();
+}
+async function chatPurgeServer() {
+  if (!CHAT.sb || Date.now() - (CHAT.purged || 0) < 10 * 60 * 1000) return;   // toi da 1 lan / 10 phut
+  CHAT.purged = Date.now();
+  try { await CHAT.sb.rpc('chat_purge_old'); } catch (e) { /* RPC chua cai (CHAT_TTL.sql) — van loc o client */ }
+  chatPruneLocal();
+}
 
 function chatDom() {
   if ($('#chatBox')) return;
   const b = document.createElement('div'); b.id = 'chatBox';
   b.innerHTML = `<div id="chatHead"><b>Thế giới</b><small id="chatOn"></small><button id="chatX" title="Thu gọn">▾</button></div>
     <div id="chatLines"></div>
-    <form id="chatIn" autocomplete="off"><span id="chatAtt"></span><input id="chatTxt" maxlength="${CHAT_MAX}" placeholder="Nhập tin nhắn…"><button class="btn sm">Gửi</button></form>
-    <button id="chatBtn" title="Chat thế giới">💬<b id="chatN"></b></button>`;
+    <form id="chatIn" autocomplete="off"><span id="chatAtt"></span><input id="chatTxt" maxlength="${CHAT_MAX}" placeholder="Nhập tin nhắn… (xóa sau 24h)"><button class="btn sm">Gửi</button></form>
+    <button id="chatBtn" title="Chat thế giới · tin nhắn xóa sau 24 giờ">💬<b id="chatN"></b></button>`;
   $('#battle').appendChild(b);
   $('#chatLines').onclick = ev => { const ci = ev.target.closest('[data-ci]'); if (ci) { chatItemShow(+ci.dataset.ci); return; } const n = ev.target.closest('[data-pn]'); if (n && CHAT.open && typeof profileModal === 'function') profileModal(n.dataset.pn); };
   $('#chatBtn').onclick = () => chatToggle(true); $('#chatX').onclick = () => chatToggle(false);
@@ -38,11 +53,12 @@ function chatRenderNow() {
   const el = $('#chatLines'), atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;   // dang keo len doc tin cu: khong nhay xuong
   const h = (CHAT.open || !CHAT.msgs.length ? st : '') + list.map(chatLine).join('');
   if (h !== CHAT.lastH) { CHAT.lastH = h; el.innerHTML = h; if (atEnd || !CHAT.open) el.scrollTop = el.scrollHeight; }
-  $('#chatOn').textContent = CHAT.state === 'ok' && CHAT.online ? ` · ${CHAT.online} người online` : CHAT.state === 'ok' && !CHAT.subOk ? ' · đang nối…' : '';
+  $('#chatOn').textContent = CHAT.state === 'ok' && CHAT.online ? ` · ${CHAT.online} online · 24h` : CHAT.state === 'ok' && !CHAT.subOk ? ' · đang nối…' : CHAT.state === 'ok' ? ' · giữ 24h' : '';
   $('#chatN').textContent = CHAT.unread ? (CHAT.unread > 9 ? '9+' : CHAT.unread) : '';
   box.classList.toggle('quiet', !CHAT.open && !CHAT.msgs.length && CHAT.state === 'off');
 }
 function chatPush(m) {
+  if (!chatFresh(m)) return;
   if (m.id && CHAT.msgs.some(x => x.id === m.id)) return;
   if (m.cid === chatCid()) { const i = CHAT.msgs.findIndex(x => x.pending && x.msg === m.msg); if (i >= 0) { CHAT.msgs[i] = m; chatRender(); return; } }   // tin cua minh ve tu may chu: thay ban hien tam
   CHAT.msgs.push(m); if (CHAT.msgs.length > CHAT_KEEP) CHAT.msgs.shift();
@@ -75,9 +91,10 @@ async function chatInit() {
   try {
     await chatLoadLib();
     CHAT.sb = await netClient();
-    const { data, error } = await CHAT.sb.from('chat').select('*').order('id', { ascending: false }).limit(50);
+    const { data, error } = await CHAT.sb.from('chat').select('*').gte('ts', chatSinceIso()).order('id', { ascending: false }).limit(50);
     if (error) throw error;
-    CHAT.msgs = (data || []).reverse(); CHAT.state = 'ok'; chatRender();   // doc / gui tin duoc ngay; realtime (tin moi, online) noi sau
+    CHAT.msgs = (data || []).reverse().filter(chatFresh); CHAT.state = 'ok'; chatRender();   // doc / gui tin duoc ngay; realtime (tin moi, online) noi sau
+    chatPurgeServer();   // xoa tin > 24h tren may chu (can CHAT_TTL.sql)
     chatSub();
     if (!CHAT.polling) { CHAT.polling = true; setInterval(chatPoll, 15000);    // du phong: lay tin bi lo + noi lai kenh khi rot
       document.addEventListener('visibilitychange', () => { if (!document.hidden) chatPoll(true); }); }   // quay lai tab (trinh duyet bop websocket khi an)
@@ -159,10 +176,12 @@ async function chatPoll(force) {
   const live = CHAT.subOk && CHAT.ch && CHAT.ch.state === 'joined';
   if (live && force !== true && Date.now() - (CHAT.polled || 0) < 60000) return;   // kenh truc tiep dang song: 60 giay moi kiem 1 lan
   CHAT.polled = Date.now();
+  chatPruneLocal();
+  chatPurgeServer();
   if (!CHAT.ch || CHAT.ch.state === 'closed' || CHAT.ch.state === 'errored') chatSub();   // chi noi lai khi kenh da dong / loi (dang noi thi de yen)
   try {
     const last = CHAT.msgs.reduce((m, x) => Math.max(m, +x.id || 0), 0);
-    const { data } = await CHAT.sb.from('chat').select('*').gt('id', last).order('id', { ascending: true }).limit(50);
+    const { data } = await CHAT.sb.from('chat').select('*').gt('id', last).gte('ts', chatSinceIso()).order('id', { ascending: true }).limit(50);
     (data || []).forEach(chatPush);
     if (CHAT.ch && CHAT.ch.presenceState) { CHAT.online = Object.keys(CHAT.ch.presenceState()).length; chatRender(); }
   } catch (e) { /* thu lai lan sau */ }
