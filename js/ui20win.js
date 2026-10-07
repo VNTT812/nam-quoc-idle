@@ -307,7 +307,10 @@ function u20ZoneList(keep) {
   const pickMap = i => { if (S.mode === 'quest' || S.mode === 'dg') { S.mode = 'farm'; log('⚔ Chọn bãi luyện công: chuyển sang chế độ Luyện công.'); } S.autoMap = false; gotoZone(i, 'Chọn bãi luyện công'); save(); refresh(); box.classList.add('hidden'); };
   box.querySelectorAll('.zrow').forEach(b => b.onclick = () => pickMap(+b.dataset.z));
   box.querySelectorAll('[data-za]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.za.split(':').map(Number); (S.zalt || (S.zalt = {}))[i] = k;
-    if (zoneIdx(Math.min(S.stage, STAGES)) === i) { S.wave = 1; R.enemies = []; R.spawnT = 0.3; R.zoneShown = null; } else pickMap(i); save(); refresh(); u20ZoneList(true); });
+    if (zoneIdx(Math.min(S.stage, STAGES)) === i) {
+      S.wave = 1; R.enemies = []; R.corpses = []; R.field = null; R.spawnT = 0.3; R.zoneShown = null;
+      if (typeof onZoneChange === 'function') onZoneChange(zoneOf(Math.min(S.stage, STAGES)));
+    } else pickMap(i); save(); refresh(); u20ZoneList(true); });
   $('#u20za').onchange = e => { S.autoMap = e.target.checked; save(); };
 }
 document.addEventListener('pointerdown', e => { const z = $('#u20zone'); if (z && !z.contains(e.target)) { const l = $('#u20zl'); if (l) l.classList.add('hidden'); } });

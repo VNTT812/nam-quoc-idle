@@ -334,7 +334,8 @@ function tick(dt) {
     R.field = null;
   }
   if (!R.enemies.length) {
-    if (fieldMode() || R.pkArena) return;
+    /* Map khong quai (Hoanh Son Mon / san dau) van cho di chuyen — khong return som cat moveManual */
+    if (fieldMode() || R.pkArena) { if (manual()) moveManual(dt); return; }
     if (looting && R.lootWait < 8) { R.lootWait += dt; return; }   // doi nhat xong (toi da 8 giay) moi goi dot moi
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
