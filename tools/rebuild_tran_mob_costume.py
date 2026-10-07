@@ -12,7 +12,7 @@ import shutil
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_A = ROOT / "img" / "a"
@@ -92,21 +92,48 @@ def ensure_remaster_snapshot() -> None:
                 shutil.copy2(src, dst)
 
 
+def _dilate(mask: np.ndarray, k: int = 1) -> np.ndarray:
+    m = mask.astype(np.uint8) * 255
+    im = Image.fromarray(m, "L")
+    for _ in range(k):
+        im = im.filter(ImageFilter.MaxFilter(3))
+    return np.asarray(im) > 0
+
+
 def segment(rgb: np.ndarray, alpha: np.ndarray):
-    """Phân vùng: skin / metal / hair / red_accent / cloth."""
+    """Phân vùng: skin / metal / hair / red_accent / cloth — bảo vệ da trần."""
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     mx = rgb.max(-1)
     mn = rgb.min(-1)
     sat = (mx - mn) / np.maximum(mx, 1.0)
     opaque = alpha > 40
 
-    skin = opaque & (r > g * 0.95) & (r > b * 1.02) & (r > 70) & (r < 230) & (sat < 0.55) & (mx - mn < 90)
-    # tighten: not too blue
-    skin = skin & (b < r * 0.95 + 20)
+    # vải tím/hồng (áo) — không nhầm là da
+    purple = opaque & (b > g * 1.05) & (r > g * 1.05) & (sat > 0.15)
 
-    metal = opaque & (sat < 0.22) & (mx > 130) & ~skin
-    hair = opaque & (mx < 55) & (sat < 0.35) & ~skin
-    red = opaque & (r > 110) & (r > g * 1.25) & (r > b * 1.25) & (sat > 0.25)
+    # da: peach/tan/olive — nới hơn để giữ ngực trần / tay
+    skin_core = (
+        opaque
+        & ~purple
+        & (r > 55)
+        & (r < 245)
+        & (r >= g - 5)
+        & (r > b + 2)
+        & (g > b - 8)
+        & (sat < 0.62)
+        & ((r - b) > 8)
+        & (mx - mn < 110)
+    )
+    # da sáng / hồng nhạt
+    skin_light = opaque & ~purple & (r > 150) & (g > 110) & (b > 90) & (r > b) & (sat < 0.35) & (r - b < 70)
+    skin = skin_core | skin_light
+    # giãn 1px giữ mép da; không nuốt vải đậm / tím
+    skin = _dilate(skin, 1) & opaque & ~purple & (sat < 0.65) & (r >= g - 10)
+
+    metal = opaque & (sat < 0.20) & (mx > 140) & ~skin
+    # tóc/khăn tối — không lấy da tối
+    hair = opaque & (mx < 58) & (sat < 0.40) & ~skin & (r < 80)
+    red = opaque & (r > 115) & (r > g * 1.28) & (r > b * 1.28) & (sat > 0.28) & ~skin
     cloth = opaque & ~skin & ~metal & ~hair & ~red
     return skin, metal, hair, red, cloth
 

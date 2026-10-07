@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset=utf-8><title>Live mobs</title></head>
+<body style="margin:0;background:#121614;color:#eee">
+<canvas id="c" width="1200" height="720"></canvas>
+<script>
+const CV=document.getElementById("c"), CX=CV.getContext("2d");
+const stems=["enemy122","enemy050","enemy079","enemy083","enemy129","enemy142","boss002","boss008","boss013","boss019","enemy003","enemy069"];
+function load(src){return new Promise((res,rej)=>{const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=src;});}
+(async()=>{
+  CX.fillStyle="#121614"; CX.fillRect(0,0,1200,720);
+  CX.fillStyle="#e6d2a0"; CX.font="16px sans-serif";
+  CX.fillText("Live canvas — quai nguoi ao Tran bake", 16, 28);
+  for(let i=0;i<stems.length;i++){
+    const stem=stems[i];
+    const im=await load("../../img/a/"+stem+"_st.webp");
+    const cols=4, cell=290;
+    const r=Math.floor(i/cols), c=i%cols;
+    const x=16+c*cell, y=48+r*165;
+    CX.imageSmoothingEnabled=false;
+    const cw=Math.min(72,im.width), ch=Math.min(72,im.height);
+    CX.drawImage(im,0,0,cw,ch,x,y,130,130);
+    CX.fillStyle="#ccc"; CX.font="12px sans-serif"; CX.fillText(stem,x,y+148);
+  }
+  document.title="DONE";
+})().catch(e=>{document.title="ERR "+e;});
+</script></body></html>
