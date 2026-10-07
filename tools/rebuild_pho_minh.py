@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Phổ Minh Tự (400) — làm lại từ đầu.
+"""Phổ Minh Tự (400) — lấy đúng map gốc đẹp, chỉ phóng + collision.
 
 Map gốc = img/z/_tran_tiles/tran-pho-minh-map.jpg (điện, ao, sư tử, đường, tre).
-- Phóng full-frame 3584 (không thu nhỏ thành đảo, không viền rừng lặp).
-- Reskin HSV tông Trần nhẹ trên đúng pixel bố cục.
-- Collision riêng: trong map mở, chỉ chặn điện/sư tử/ao — đường/cỏ/khúc gỗ đi được.
+- Phóng full-frame 3584 — giữ nguyên màu/chi tiết, KHÔNG reskin đè.
+- Collision riêng: mở đường/cỏ/khúc gỗ; chỉ chặn điện/sư tử/ao.
 """
 from __future__ import annotations
 
@@ -116,33 +115,10 @@ def load_layout_orig() -> Image.Image:
 
 
 def build_canvas_from_layout(src: Image.Image, size: int = SIZE) -> Image.Image:
-    """Phóng bố cục gốc full map — mép feather, không đảo nhỏ / không pad rừng."""
-    base = src.resize((size, size), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.0))
-    ba = np.asarray(base, dtype=np.float32)
-
-    core_sz = 3300
-    core = src.resize((core_sz, core_sz), Image.LANCZOS)
-    ca = np.asarray(core, dtype=np.float32)
-    ox = (size - core_sz) // 2
-    oy = (size - core_sz) // 2 - 40
-
-    yy, xx = np.ogrid[:core_sz, :core_sz]
-    margin = 160.0
-    dx = np.minimum(xx, core_sz - 1 - xx)
-    dy = np.minimum(yy, core_sz - 1 - yy)
-    edge = np.minimum(dx, dy).astype(np.float32)
-    alpha = np.clip(edge / margin, 0, 1)
-    alpha = alpha * alpha * (3 - 2 * alpha)
-
-    x0, y0 = max(0, ox), max(0, oy)
-    x1, y1 = min(size, ox + core_sz), min(size, oy + core_sz)
-    sx0, sy0 = x0 - ox, y0 - oy
-    sw, sh = x1 - x0, y1 - y0
-    a = alpha[sy0 : sy0 + sh, sx0 : sx0 + sw][..., None]
-    patch = ca[sy0 : sy0 + sh, sx0 : sx0 + sw]
-    ba[y0:y1, x0:x1] = patch * a + ba[y0:y1, x0:x1] * (1.0 - a)
-    print(f"full-frame core {core_sz} at ({ox},{oy})")
-    return Image.fromarray(np.clip(ba, 0, 255).astype(np.uint8), "RGB")
+    """Phóng thẳng map gốc lên 3584 — giữ màu/chi tiết, không blur-blend đè."""
+    out = src.resize((size, size), Image.LANCZOS)
+    print(f"direct scale {src.size} -> {out.size}")
+    return out
 
 
 def roof_mask(og: np.ndarray) -> np.ndarray:
@@ -278,11 +254,23 @@ def obs_for_layout(meta2: dict, size: int = SIZE) -> dict:
     return meta
 
 
+def polish_only(img: Image.Image) -> Image.Image:
+    """Chỉ nét nhẹ — không đổi hue/palette map gốc."""
+    img = ImageEnhance.Sharpness(img).enhance(1.06)
+    img = ImageEnhance.Contrast(img).enhance(1.02)
+    return img
+
+
 def rebuild() -> Image.Image:
     src = load_layout_orig()
     print(f"layout orig {src.size} from {TILES / 'tran-pho-minh-map.jpg'}")
+    # đúng map user chỉ — phóng full, không reskin
     canvas = build_canvas_from_layout(src, SIZE)
-    img = reskin_scenery(canvas, bias="warm")
+    if "--reskin" in sys.argv:
+        print("optional --reskin enabled")
+        return reskin_scenery(canvas, bias="warm")
+    img = polish_only(canvas)
+    print("faithful layout (no reskin)")
     return img
 
 
@@ -299,8 +287,8 @@ def save_previews(img: Image.Image, before: Image.Image | None = None) -> None:
         from PIL import ImageDraw
 
         d = ImageDraw.Draw(side)
-        d.text((20, 2), "truoc (ban hong)", fill=(200, 140, 140))
-        d.text((820, 2), "lam lai tu dau — map goc", fill=(140, 220, 160))
+        d.text((20, 2), "truoc", fill=(200, 140, 140))
+        d.text((820, 2), "map goc trung thuc (dung anh dep)", fill=(140, 220, 160))
         side.save(ART / "pho-minh-before-after.jpg", quality=90)
 
 
@@ -331,7 +319,7 @@ def main() -> None:
         z2 = (ROOT / "zones2.js").read_text(encoding="utf-8")
         z2 = re.sub(r"(img/z/\w+\.jpg)\?v=\d+", rf"\1?v={ver}", z2)
         (ROOT / "zones2.js").write_text(z2, encoding="utf-8")
-        print(f"Done v{ver} — Phổ Minh map gốc full-frame + reskin nhẹ")
+        print(f"Done v{ver} — Phổ Minh map gốc trung thực (không reskin)")
 
 
 if __name__ == "__main__":
