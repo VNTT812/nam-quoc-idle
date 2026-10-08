@@ -139,10 +139,12 @@ function mpPkCalcDmg(a, peer) {
     if (counters(a.series, series)) tot *= 1 + SERIES_BONUS;
     else if (counters(series, a.series)) tot *= 1 - SERIES_BONUS;
   }
-  // giam nhe theo def (hitPercent-style soft)
-  const ar = R.P.ar || 100;
-  const hit = typeof hitPercent === 'function' ? hitPercent(ar, def, a.ignore || 0) : 85;
-  if (Math.random() * 100 >= hit) return { dmg: 0, miss: true, el: best, crit: false };
+  /* Khớp heroHit: chỉ chiêu useAR mới roll trúng/trượt — chiêu pháp thuật (Cái/Võ/Côn…) không miss theo AR */
+  if (a.useAR) {
+    const ar = (R.P && R.P.ar) || 100;
+    const hit = typeof hitPercent === 'function' ? hitPercent(ar, def, a.ignore || 0) : 85;
+    if (Math.random() * 100 >= hit) return { dmg: 0, miss: true, el: best, crit: false };
+  }
   tot = Math.max(1, Math.round(tot * 0.85)); // PK: ~15% nhe hon danh quai
   return { dmg: tot, miss: false, el: best, crit };
 }
