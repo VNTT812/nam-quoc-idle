@@ -564,6 +564,7 @@ function createCharacter(name, sex, series) {
   S.fac = 'vo' + series; S.sex = sex; S.sexSet = 1; S.name = name; if (typeof NET !== 'undefined' && NET.user) S.netOwner = NET.user.id;   // nhan vat tao boi tai khoan (duoc tai len dam may)
   starterGear();
   R.dirty = true; recalc(); R.life = R.P.life; R.mana = R.P.mana;
+  if (typeof khNewbieSpawn === 'function') khNewbieSpawn();   // tan thu spawn Hoành Sơn Môn, gap Liễu Như Yên
   loginCheck(); dotGift();
   closeModal(true); save(); showTab('log');
   noticeModal();
@@ -612,6 +613,7 @@ function startFaction(key) {
   if (f.starter) { S.sk[f.starter] = 1; S.skPts = Math.max(0, S.skPts - 1); S.main = f.starter; }
   starterGear();
   R.dirty = true; recalc(); R.life = R.P.life; R.mana = R.P.mana;
+  if (typeof khNewbieSpawn === 'function') khNewbieSpawn();   // tan thu spawn Hoành Sơn Môn, gap Liễu Như Yên
   loginCheck(); dotGift();                                  // ngay dau: co qua diem danh
   closeModal(true); save(); showTab('log');
   noticeModal();
