@@ -538,26 +538,95 @@ function slotMenu(confirmDel) {
 }
 /* ---------- tao nhan vat (kieu JX1): ten, gioi tinh, he; cap 10 moi vao phai cung he ---------- */
 const SERIES_DESC = ['Cương mãnh, ngoại công mạnh', 'Độc dược, ám khí', 'Mềm dẻo, nội công băng', 'Hỏa công, lực đánh lớn', 'Lôi, kiếm khí, bền bỉ'];
+/* Tip ngan cho tan thu — tranh jargon day o man tao NV */
+const SERIES_TIP = [
+  { tip: 'Đánh mạnh, dễ làm quen', tag: 'Gợi ý', easy: 1 },
+  { tip: 'Độc & ám khí, cần khéo', tag: '' },
+  { tip: 'Băng hàn, linh hoạt', tag: '' },
+  { tip: 'Hỏa lực cao, đánh nhanh', tag: 'Sát thương' },
+  { tip: 'Bền máu, trụ lâu', tag: 'An toàn' },
+  { tip: 'Nhân vật Việt★ (admin)', tag: 'Admin' }
+];
+const SERIES_ICON = ['⚔', '❀', '❄', '🔥', '⛰', '★'];
 let NEWC = { name: '', sex: 0, s: 0 };
+function newcPreviewFac(series, sex) {
+  const list = FACTIONS.filter(f => f.series === series && !f.novice && (typeof facVisible !== 'function' || facVisible(f)));
+  return list.find(f => facAllowed(f, sex) && (f.key in FAC_SEX))
+    || list.find(f => facAllowed(f, sex))
+    || list[0]
+    || null;
+}
+function newcPreviewImg(series, sex) {
+  const pf = newcPreviewFac(series, sex);
+  if (pf && W.hero[pf.key] && W.hero[pf.key].img) return W.hero[pf.key].img;
+  const g = typeof heroGfx === 'function' ? heroGfx('vo' + series, sex) : null;
+  return (g && g.img) || 'img/pl/shaolin.png';
+}
 function pickFaction() {
   const facs = s => FACTIONS.filter(f => f.series === s && (typeof facVisible !== 'function' || facVisible(f)));
-  const facTxt = (s, sex) => facs(s).map(f => facAllowed(f, sex) ? esc(f.n) : `<s>${esc(f.n)}</s>`).join(' · ');
+  const facShort = (s, sex) => facs(s).filter(f => !f.novice).map(f => facAllowed(f, sex) ? f.n.replace(/\s*phái$/, '').replace(/\s*Bang$/, '').replace(/\s*Giáo$/, '').replace(/\s*môn$/, '') : null).filter(Boolean).slice(0, 2).join(' · ')
+    || (s === 5 ? 'Yên Tử★ · Bạch Đằng★' : '—');
   const serIdx = typeof visibleSeries === 'function' ? visibleSeries() : [0, 1, 2, 3, 4];
   if (!serIdx.includes(NEWC.s)) NEWC.s = 0;
   const st = J.start[mechSeries(NEWC.s) * 2 + NEWC.sex] || {};
   const ok = facs(NEWC.s).some(f => facAllowed(f, NEWC.sex)) || (NEWC.s === 5 && typeof canSeeThoTest === 'function' && canSeeThoTest());
-  modal(`<h3>Tạo nhân vật</h3><p class="desc">Như Võ Lâm Truyền Kỳ: chọn tên, giới tính và hệ ngũ hành. Đến <b>cấp ${NOVICE_LV}</b> mới gia nhập môn phái cùng hệ.</p>
-    <div class="card lootf newc"><div class="row">Tên <input id="ncName" maxlength="14" placeholder="Tên nhân vật" value="${esc(NEWC.name)}"></div>
-      <div class="row">Giới tính <span class="seg">${['Nam', 'Nữ'].map((n, i) => `<button class="btn sm${NEWC.sex === i ? ' on' : ''}" data-sx="${i}">${n}</button>`).join('')}</span></div>
-      <div class="dim small">Hệ ngũ hành (Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim):</div>
-      <div class="serpick">${serIdx.map(i => `<button data-se="${i}" class="${NEWC.s === i ? 'on' : ''}" style="--c:${SERIES_COL[i]}"><b>${SERIES[i]}</b><small>${SERIES_DESC[i] || ''}</small><small>Phái: ${facTxt(i, NEWC.sex) || (i === 5 ? 'Yên Tử★ · Bạch Đằng★ · Thạch Sơn★' : '—')}</small></button>`).join('')}</div>
-      <div class="stats"><span>Sức mạnh</span><span>${st.str ?? '-'}</span><span>Thân pháp</span><span>${st.dex ?? '-'}</span><span>Sinh khí</span><span>${st.vit ?? '-'}</span><span>Nội công</span><span>${st.eng ?? '-'}</span></div>
-      ${ok ? '' : `<p class="reqbad">Hệ ${SERIES[NEWC.s]} không có môn phái nhận ${NEWC.sex ? 'nữ' : 'nam'}.</p>`}
-      <div class="btnrow"><button class="btn" id="ncGo" ${ok ? '' : 'disabled'}>Vào giang hồ</button></div></div>`, () => {
-    const nm = $('#ncName'); nm.oninput = () => { NEWC.name = nm.value; };
-    document.querySelectorAll('#mBody [data-sx]').forEach(b => b.onclick = () => { NEWC.name = nm.value; NEWC.sex = +b.dataset.sx; pickFaction(); });
-    document.querySelectorAll('#mBody [data-se]').forEach(b => b.onclick = () => { NEWC.name = nm.value; NEWC.s = +b.dataset.se; pickFaction(); });
-    $('#ncGo').onclick = () => { const n = nm.value.trim().replace(/\s+/g, ' '); if (n.length < 2) { toast('Tên cần ít nhất 2 ký tự'); return; } createCharacter(n.slice(0, 14), NEWC.sex, NEWC.s); };
+  const tip = SERIES_TIP[NEWC.s] || SERIES_TIP[0];
+  const prevImg = newcPreviewImg(NEWC.s, NEWC.sex);
+  const prevFac = newcPreviewFac(NEWC.s, NEWC.sex);
+  modal(`<h3>Tạo nhân vật</h3>
+    <p class="desc newc-lead">Chọn tên, giới tính và <b>hướng chơi</b>. Bạn vào giang hồ với <b>Vô Môn Phái</b> — đến <b>cấp ${NOVICE_LV}</b> mới chọn môn cùng hệ.</p>
+    <div class="newc newc-ui">
+      <aside class="newc-prev">
+        <div class="newc-stage" style="--c:${SERIES_COL[NEWC.s]}"><img src="${esc(prevImg)}" alt=""></div>
+        <div class="newc-prevmeta">
+          <b style="color:${SERIES_COL[NEWC.s]}">Hệ ${esc(SERIES[NEWC.s] || '')}</b>
+          <small>${esc(tip.tip)}</small>
+          <small class="dim">${esc(facShort(NEWC.s, NEWC.sex))}${prevFac ? ' · xem trước ' + esc(prevFac.n) : ''}</small>
+        </div>
+        <div class="newc-statrow">
+          <span>Sức <b>${st.str ?? '—'}</b></span>
+          <span>Thân <b>${st.dex ?? '—'}</b></span>
+          <span>Sinh <b>${st.vit ?? '—'}</b></span>
+          <span>Nội <b>${st.eng ?? '—'}</b></span>
+        </div>
+      </aside>
+      <div class="newc-form">
+        <label class="newc-field"><span>1 · Tên nhân vật</span>
+          <input id="ncName" maxlength="14" placeholder="VD: Phong Vân" value="${esc(NEWC.name)}" autocomplete="nickname"></label>
+        <div class="newc-field"><span>2 · Giới tính</span>
+          <span class="seg">${['Nam', 'Nữ'].map((n, i) => `<button type="button" class="btn sm${NEWC.sex === i ? ' on' : ''}" data-sx="${i}">${n}</button>`).join('')}</span></div>
+        <div class="newc-field"><span>3 · Hướng chơi (ngũ hành)</span>
+          <div class="serpick serpick-grid">${serIdx.map(i => {
+    const t = SERIES_TIP[i] || { tip: SERIES_DESC[i] || '', tag: '' };
+    return `<button type="button" data-se="${i}" class="${NEWC.s === i ? 'on' : ''}${t.easy ? ' easy' : ''}" style="--c:${SERIES_COL[i]}">
+              <i class="ser-ic">${SERIES_ICON[i] || '·'}</i>
+              <b>${esc(SERIES[i])}</b>${t.tag ? `<em class="ser-tag">${esc(t.tag)}</em>` : ''}
+              <small>${esc(t.tip || SERIES_DESC[i] || '')}</small>
+              <small class="ser-fac">${esc(facShort(i, NEWC.sex))}</small>
+            </button>`;
+  }).join('')}</div>
+          <p class="newc-hint dim small">Mẹo: Kim khắc Mộc · Mộc khắc Thổ · Thổ khắc Thủy · Thủy khắc Hỏa · Hỏa khắc Kim. Chọn hệ bạn thích — sau này vào phái cùng hệ.</p>
+        </div>
+        ${ok ? '' : `<p class="reqbad">Hệ ${SERIES[NEWC.s]} không có môn phái nhận ${NEWC.sex ? 'nữ' : 'nam'} — đổi giới tính hoặc chọn hệ khác.</p>`}
+        <div class="btnrow newc-cta">
+          <button class="btn" id="ncGo" ${ok ? '' : 'disabled'}>Bắt đầu chơi</button>
+          <small class="dim">Đánh quái để lên cấp · cấp ${NOVICE_LV} chọn môn phái</small>
+        </div>
+      </div>
+    </div>`, () => {
+    const nm = $('#ncName');
+    if (nm) {
+      nm.oninput = () => { NEWC.name = nm.value; };
+      try { nm.focus(); nm.setSelectionRange(nm.value.length, nm.value.length); } catch (e) { /* bo qua */ }
+    }
+    document.querySelectorAll('#mBody [data-sx]').forEach(b => b.onclick = () => { NEWC.name = (nm && nm.value) || NEWC.name; NEWC.sex = +b.dataset.sx; pickFaction(); });
+    document.querySelectorAll('#mBody [data-se]').forEach(b => b.onclick = () => { NEWC.name = (nm && nm.value) || NEWC.name; NEWC.s = +b.dataset.se; pickFaction(); });
+    const go = $('#ncGo');
+    if (go) go.onclick = () => {
+      const n = ((nm && nm.value) || NEWC.name || '').trim().replace(/\s+/g, ' ');
+      if (n.length < 2) { toast('Đặt tên ít nhất 2 ký tự nhé'); if (nm) nm.focus(); return; }
+      createCharacter(n.slice(0, 14), NEWC.sex, NEWC.s);
+    };
   }, true);
 }
 function createCharacter(name, sex, series) {

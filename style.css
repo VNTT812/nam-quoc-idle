@@ -247,6 +247,47 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .newc input{flex:1;min-width:0;background:#0c1210;border:1px solid var(--line2);color:var(--text);padding:6px 8px;border-radius:4px;font:inherit}
 .seg{display:inline-flex;gap:4px}.seg .on{border-color:var(--gold);color:#1a1206;background:var(--gold)}
 .serpick{display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0}.serpick button{text-align:left;padding:8px 10px;border:1px solid var(--line2);border-left:4px solid var(--c);border-radius:5px;background:#0c1210}.serpick button.on{background:#1f2a24;border-color:var(--c)}.serpick b{color:var(--c);margin-right:8px}.serpick small{display:block;color:var(--dim);font-size:11px}
+/* Tao NV — layout tan thu: preview + form, it chu */
+.newc-lead{font-size:12.5px;line-height:1.45;margin:0 0 10px}
+.newc-ui{display:grid;grid-template-columns:148px 1fr;gap:12px;align-items:start}
+.newc-prev{display:flex;flex-direction:column;gap:8px;position:sticky;top:0}
+.newc-stage{aspect-ratio:3/4;display:grid;place-items:center;background:
+  radial-gradient(ellipse at 50% 70%,color-mix(in srgb,var(--c) 28%,transparent),transparent 62%),
+  linear-gradient(180deg,#1a221c 0%,#0c1210 100%);
+  border:1px solid color-mix(in srgb,var(--c) 55%,var(--line2));border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px #0006}
+.newc-stage img{width:88%;height:88%;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 6px 10px #000a)}
+.newc-prevmeta{text-align:center;line-height:1.35}.newc-prevmeta b{display:block;font-size:14px}.newc-prevmeta small{display:block;color:var(--dim);font-size:11px;margin-top:2px}
+.newc-prevmeta small.dim{opacity:.85}
+.newc-statrow{display:grid;grid-template-columns:1fr 1fr;gap:4px}.newc-statrow span{background:#0c1210;border:1px solid var(--line2);border-radius:4px;padding:4px 6px;font-size:11px;color:var(--dim)}.newc-statrow b{color:var(--text);font-weight:700;margin-left:2px}
+.newc-form{min-width:0;display:flex;flex-direction:column;gap:8px}
+.newc-field{display:flex;flex-direction:column;gap:4px;margin:0}
+.newc-field>span{font-size:11.5px;color:#d8cfa8;letter-spacing:.2px}
+.newc-field input{width:100%;box-sizing:border-box;padding:8px 10px;font-size:14px}
+.serpick-grid{grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 0}
+.serpick-grid button{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:6px;row-gap:1px;align-items:center;padding:7px 8px;cursor:pointer;transition:background .12s,border-color .12s,transform .08s}
+.serpick-grid button .ser-ic{grid-row:1/3;font-style:normal;font-size:16px;line-height:1;width:1.4em;text-align:center;opacity:.95}
+.serpick-grid button b{grid-column:2;margin:0;font-size:13px}
+.serpick-grid button .ser-tag{grid-column:3;grid-row:1;justify-self:end;align-self:start;font-style:normal;font-size:9.5px;padding:1px 5px;border-radius:3px;border:1px solid color-mix(in srgb,var(--c) 50%,#666);color:var(--c);background:#0006;white-space:nowrap}
+.serpick-grid button small{grid-column:2/4;margin:0;line-height:1.3}
+.serpick-grid button .ser-fac{color:#8a8570;font-size:10px}
+.serpick-grid button.easy{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 25%,transparent)}
+.serpick-grid button.on{transform:translateY(-1px);box-shadow:0 0 0 1px var(--c),inset 0 0 12px color-mix(in srgb,var(--c) 18%,transparent)}
+.serpick-grid button:hover{background:#15201a}
+.newc-hint{margin:4px 0 0;font-size:10.5px;line-height:1.4}
+.newc-cta{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-top:4px}
+.newc-cta .btn{width:100%;padding:10px 12px;font-size:15px;font-weight:700;letter-spacing:.3px;background:linear-gradient(#8a7a4a,#4e4330);border-color:var(--gold);color:#fff6d8}
+.newc-cta .btn:disabled{opacity:.45;filter:grayscale(.3)}
+.newc-cta small{text-align:center;font-size:11px}
+.reqbad{color:#ff8a7a;font-size:12px;margin:0}
+@media (max-width:560px){
+  .newc-ui{grid-template-columns:1fr;gap:10px}
+  .newc-prev{position:static;flex-direction:row;align-items:center;gap:10px}
+  .newc-stage{width:96px;aspect-ratio:3/4;flex:none}
+  .newc-prevmeta{flex:1;text-align:left}
+  .newc-statrow{display:none}
+  .serpick-grid{grid-template-columns:1fr}
+}
+body.u20 #modal:has(.newc-ui) .mbox{max-width:min(720px,94vw)!important;width:min(720px,94vw)}
 .facpick button[disabled]{opacity:.4}
 .stgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}.stgrid .btn{padding:8px 2px}.stgrid small{display:block;font-size:10px;color:var(--dim)}
 .zalt{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 6px 10px}.zalt .chip2{font-size:11px;padding:2px 7px}.zalt .chip2.on{border-color:var(--gold);color:var(--gold)}
