@@ -118,8 +118,11 @@ function khZonePlace() {
 function ensureKhNpcs() {
   if (!khNpcZoneActive()) { R.khNpcs = null; R.talkTarget = null; return; }
   if (R.khNpcs && R.khNpcs.length) return;
-  if (window._khStubs) khZonePlace();
-  else khNpcLoadStubs().then(() => { if (khNpcZoneActive()) khZonePlace(); });
+  /* Dat ngay bang sz mac dinh de NPC hien khi vua spawn; stubs load xong thi dat lai chuan */
+  khZonePlace();
+  if (!window._khStubs) {
+    khNpcLoadStubs().then(() => { if (khNpcZoneActive()) { R.khNpcs = null; khZonePlace(); } });
+  }
 }
 
 function ensureTownNpcs() { ensureKhNpcs(); }
@@ -174,13 +177,18 @@ function khClaimNewbieGift() {
 
 function khSendToYenTu() {
   if (!S) return;
+  /* Cùng vùng Yên Tử (zi=0) chỉ đổi alt — gotoZone bỏ qua onZoneChange khi same zone → buộc reload */
   (S.zalt || (S.zalt = {}))[KH_ZALT_IDX] = 0;
+  S.stage = typeof farmStage === 'function' ? farmStage(KH_ZALT_IDX) : 1;
+  S.wave = 1;
   R.enemies = []; R.corpses = []; R.field = null; R.talkTarget = null; R.khNpcs = null;
-  if (typeof gotoZone === 'function') gotoZone(KH_ZALT_IDX, 'Luyện công Yên Tử Sơn');
-  else {
-    S.stage = typeof farmStage === 'function' ? farmStage(KH_ZALT_IDX) : 1;
-    const z = typeof zoneOf === 'function' ? zoneOf(S.stage) : null;
-    if (z && typeof onZoneChange === 'function') { R.zoneShown = z.id; onZoneChange(z); }
+  const z = typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null;
+  if (z) {
+    R.zoneShown = z.id;
+    if (typeof onZoneChange === 'function') onZoneChange(z);
+    else if (typeof obsLoad === 'function') obsLoad(z.id);
+    R.banner = { t: 2.2, text: z.n, sub: 'Luyện công Yên Tử Sơn' };
+    log(`🗺 Luyện công: tới <b>${esc(z.n)}</b>`);
   }
   const w = (typeof WORLD !== 'undefined' && WORLD.w) || 3584;
   const h = (typeof WORLD !== 'undefined' && WORLD.h) || 3584;
@@ -188,6 +196,7 @@ function khSendToYenTu() {
   if (typeof snapCamera === 'function') snapCamera();
   toast('Đã tới Yên Tử Sơn — bắt đầu luyện công');
   if (typeof save === 'function') save();
+  if (typeof refresh === 'function') refresh();
 }
 
 /* ---------- tuong tac: click / lai gan noi chuyen ---------- */
