@@ -553,14 +553,14 @@ function newcPreviewFac(series, sex) {
   const list = FACTIONS.filter(f => f.series === series && !f.novice && (typeof facVisible !== 'function' || facVisible(f)));
   return list.find(f => facAllowed(f, sex) && (f.key in FAC_SEX))
     || list.find(f => facAllowed(f, sex))
-    || list[0]
-    || null;
+    || null;   // khong fallback phai trai gioi — tranh preview sai khi he khong nhan
 }
 function newcPreviewImg(series, sex) {
   const pf = newcPreviewFac(series, sex);
-  if (pf && W.hero[pf.key] && W.hero[pf.key].img) return W.hero[pf.key].img;
-  const g = typeof heroGfx === 'function' ? heroGfx('vo' + series, sex) : null;
-  return (g && g.img) || 'img/pl/shaolin.png';
+  if (!pf) return '';   // he/gioi khong hop le: khong dung heroGfx (no hay fallback phai trai gioi)
+  if (W.hero[pf.key] && W.hero[pf.key].img) return W.hero[pf.key].img;
+  const g = typeof heroGfx === 'function' ? heroGfx(pf.key, sex) : null;
+  return (g && g.img) || '';
 }
 function pickFaction() {
   const facs = s => FACTIONS.filter(f => f.series === s && (typeof facVisible !== 'function' || facVisible(f)));
@@ -577,11 +577,11 @@ function pickFaction() {
     <p class="desc newc-lead">Chọn tên, giới tính và <b>hướng chơi</b>. Bạn vào giang hồ với <b>Vô Môn Phái</b> — đến <b>cấp ${NOVICE_LV}</b> mới chọn môn cùng hệ.</p>
     <div class="newc newc-ui">
       <aside class="newc-prev">
-        <div class="newc-stage" style="--c:${SERIES_COL[NEWC.s]}"><img src="${esc(prevImg)}" alt=""></div>
+        <div class="newc-stage${prevImg ? '' : ' empty'}" style="--c:${SERIES_COL[NEWC.s]}">${prevImg ? `<img src="${esc(prevImg)}" alt="">` : `<span class="newc-ph">Chọn giới tính phù hợp</span>`}</div>
         <div class="newc-prevmeta">
           <b style="color:${SERIES_COL[NEWC.s]}">Hệ ${esc(SERIES[NEWC.s] || '')}</b>
           <small>${esc(tip.tip)}</small>
-          <small class="dim">${esc(facShort(NEWC.s, NEWC.sex))}${prevFac ? ' · xem trước ' + esc(prevFac.n) : ''}</small>
+          <small class="dim">${prevFac ? 'Xem trước: ' + esc(prevFac.n) + (facShort(NEWC.s, NEWC.sex) ? ' · ' + esc(facShort(NEWC.s, NEWC.sex)) : '') : (ok ? esc(facShort(NEWC.s, NEWC.sex)) : 'Chưa có môn nhận ' + (NEWC.sex ? 'nữ' : 'nam'))}</small>
         </div>
         <div class="newc-statrow">
           <span>Sức <b>${st.str ?? '—'}</b></span>
