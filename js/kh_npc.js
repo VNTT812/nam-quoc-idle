@@ -26,6 +26,29 @@ const KH_ZONE_NPC = [
     kh: 20, n: 'Liễu Như Yên', x: KH_NPC_X, y: KH_NPC_Y, face: 1,
     guide: 1,
   },
+  /* kh600 = NPC nam đứng trước góc nhà cửa song (tường đá / cột gỗ) */
+  {
+    kh: 600, n: 'Huyền Kiếm Khách', x: 0.715, y: 0.100, face: -1,
+    talk: {
+      title: 'Huyền Kiếm Khách · Hoành Sơn Môn',
+      open: 'Ta đang canh cửa luyện võ. Có việc gì không?',
+      choices: [
+        {
+          t: 'Ngươi canh chỗ nào?',
+          a: 'Đây là góc nhà chính — tường đá bên trái, cột gỗ bên phải. Đệ tử ra vào đều qua lối này.',
+        },
+        {
+          t: 'Hỏi về luyện kiếm',
+          a: 'Kiếm không chỉ sắc ở mũi. Hơi thở đều, bước chân vững — mới giữ được chiêu lâu.',
+        },
+        {
+          t: 'Có lời khuyên cho tân thủ?',
+          a: 'Đừng vội ra ngoài môn khi chưa quen sân. Luyện đủ một trăm nhát chém chậm còn hơn mười nhát loạn.',
+        },
+        { t: 'Tạm biệt', a: 'Đi đi. Giữ kiếm sát người, đừng lộ khí.' },
+      ],
+    },
+  },
 ];
 
 function khNpcImg(kh) {
@@ -110,7 +133,7 @@ function khZonePlace() {
       sz,
       sc: KH_NPC_SCALE,
       guide: d.guide,
-      talk: khBuildTalk(d),
+      talk: d.talk || (d.guide ? khBuildTalk(d) : null),
     };
   });
 }
@@ -218,7 +241,7 @@ function khNpcNear(n, r) {
 }
 
 function startTalkNpc(n) {
-  if (!n) { toast('Không có gì để nói.'); return; }
+  if (!n || !(n.talk || n.guide)) { toast('Không có gì để nói.'); return; }
   R.pickTarget = null;
   if (khNpcNear(n)) { openKhTalk(n); return; }
   R.talkTarget = n;
@@ -230,8 +253,8 @@ function startTalkNpc(n) {
 function openKhTalk(n, reply) {
   R.talkTarget = null;
   INPUT.target = null;
-  const t = khBuildTalk(n);
-  n.talk = t;
+  const t = n.guide ? khBuildTalk(n) : (n.talk || null);
+  if (n.guide) n.talk = t;
   if (!t) return;
   const body = reply
     ? `<p class="desc">${esc(reply)}</p>
@@ -287,10 +310,13 @@ function drawOneTownNpc(c, n) {
     const sz = n.sz || [im.naturalWidth, im.naturalHeight, im.naturalWidth / 2, im.naturalHeight - 2];
     drawSprite(im, sz, n.x, n.y, sc, n.face < 0);
   }
-  const near = khNpcNear(n, KH_TALK_R + 24);
+  const near = (n.talk || n.guide) && khNpcNear(n, KH_TALK_R + 24);
   const nameY = n.y - (n.sz ? n.sz[1] * sc * 0.9 : 62);
-  const hint = !near ? null : (khGiftClaimed() ? 'Nói chuyện' : 'Nhận quà tân thủ');
-  const hintCol = !near ? null : (khGiftClaimed() ? '#9fe8a0' : '#ffd24a');
+  let hint = null, hintCol = null;
+  if (near) {
+    if (n.guide && !khGiftClaimed()) { hint = 'Nhận quà tân thủ'; hintCol = '#ffd24a'; }
+    else { hint = 'Nói chuyện'; hintCol = '#9fe8a0'; }
+  }
   label(n.x, nameY, n.n, '#e8d5a3', 11, null, null, hint, hintCol);
 }
 
