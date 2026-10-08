@@ -15,9 +15,12 @@ const KH_NPC_SCALE = 0.75;
 /** Vi tri NPC (ti le map) — spawn tan thu dung phia truoc mat NPC */
 const KH_NPC_X = 0.512, KH_NPC_Y = 0.152;
 const KH_GIFT_FLAG = 'khYenGift';
+const KH_QUEST_FLAG = 'khGuardDone';   // da tra nhiem vu canh cua
+const KH_QUEST_NEED = 8;               // ha 8 quai o Yen Tu
 /* Qua tan thu (1 lan): luong + thuoc + KNB + Phuc Duyen + Huyển Tinh nhe */
 const KH_NEWBIE_GIFT_A = { gold: 800, pot: { kind: 'life', tier: 1, n: 30 }, knb: 2, fd: 10 };
 const KH_NEWBIE_GIFT_B = { pot: { kind: 'mana', tier: 1, n: 20 }, ht: 1 };
+const KH_QUEST_REWARD = { gold: 600, pot: { kind: 'life', tier: 1, n: 20 }, knb: 1, fd: 5 };
 
 /* Mot NPC dung truoc nha / canh gia vu khi trong san luyen */
 const KH_ZONE_NPC = [
@@ -26,28 +29,10 @@ const KH_ZONE_NPC = [
     kh: 20, n: 'Liễu Như Yên', x: KH_NPC_X, y: KH_NPC_Y, face: 1,
     guide: 1,
   },
-  /* kh600 = NPC nam đứng trước góc nhà cửa song (tường đá / cột gỗ) */
+  /* kh600 = NPC nam sát cửa song — giao nhiệm vụ canh môn */
   {
-    kh: 600, n: 'Huyền Kiếm Khách', x: 0.715, y: 0.100, face: -1,
-    talk: {
-      title: 'Huyền Kiếm Khách · Hoành Sơn Môn',
-      open: 'Ta đang canh cửa luyện võ. Có việc gì không?',
-      choices: [
-        {
-          t: 'Ngươi canh chỗ nào?',
-          a: 'Đây là góc nhà chính — tường đá bên trái, cột gỗ bên phải. Đệ tử ra vào đều qua lối này.',
-        },
-        {
-          t: 'Hỏi về luyện kiếm',
-          a: 'Kiếm không chỉ sắc ở mũi. Hơi thở đều, bước chân vững — mới giữ được chiêu lâu.',
-        },
-        {
-          t: 'Có lời khuyên cho tân thủ?',
-          a: 'Đừng vội ra ngoài môn khi chưa quen sân. Luyện đủ một trăm nhát chém chậm còn hơn mười nhát loạn.',
-        },
-        { t: 'Tạm biệt', a: 'Đi đi. Giữ kiếm sát người, đừng lộ khí.' },
-      ],
-    },
+    kh: 600, n: 'Huyền Kiếm Khách', x: 0.702, y: 0.081, face: -1,
+    quest: 1,
   },
 ];
 
@@ -79,6 +64,125 @@ function khNpcZoneActive() {
 
 function khGiftClaimed() {
   return !!(S && S.rw && S.rw[KH_GIFT_FLAG]);
+}
+
+function khQuestDone() {
+  return !!(S && S.rw && S.rw[KH_QUEST_FLAG]);
+}
+
+function khQuest() {
+  return (S && S.khQ) || null;
+}
+
+function khQuestReady() {
+  const q = khQuest();
+  return !!(q && q.have >= q.need);
+}
+
+/** Hoi thoai giao nhiem vu — Huyền Kiếm Khách. */
+function khBuildQuestTalk(n) {
+  const done = khQuestDone(), q = khQuest(), choices = [];
+  if (done) {
+    choices.push({
+      t: 'Hỏi về canh cửa',
+      a: 'Cửa này đã yên. Hiệp khách có công — giữ kiếm sát thân khi ra ngoài môn.',
+    });
+    choices.push({ t: 'Tạm biệt', a: 'Đi đi. Đừng lộ khí trên đường.' });
+    return {
+      title: 'Huyền Kiếm Khách · Hoành Sơn Môn',
+      open: 'Việc canh cửa tạm ổn nhờ hiệp khách. Còn muốn hỏi gì?',
+      choices,
+    };
+  }
+  if (q && khQuestReady()) {
+    choices.push({
+      t: `Trả nhiệm vụ (${q.have}/${q.need})`,
+      turnInQ: 1,
+      a: 'Tốt. Đây là thù lao canh cửa — lượng, thuốc, Kim Nguyên Bảo và Phúc Duyên. Nhớ luyện chân vững trước khi ra xa.',
+    });
+    choices.push({ t: 'Để sau', a: 'Nhanh lên. Ta còn đứng đây.' });
+    return {
+      title: 'Huyền Kiếm Khách · Nhiệm vụ',
+      open: `Đủ ${q.need} mạng rồi. Trả nhiệm vụ đi.`,
+      choices,
+    };
+  }
+  if (q) {
+    choices.push({
+      t: 'Đưa tôi đi Yên Tử Sơn',
+      goYenTu: 1,
+      a: 'Yên Tử Sơn có quái hợp cấp. Hạ đủ rồi quay lại đây trả việc.',
+    });
+    choices.push({
+      t: `Tiến độ: ${q.have}/${q.need} quái`,
+      a: `Còn thiếu ${Math.max(0, q.need - q.have)} mạng. Ra Yên Tử Sơn hạ quái rồi về báo.`,
+    });
+    choices.push({ t: 'Tạm biệt', a: 'Đi luyện đi. Đừng về tay không.' });
+    return {
+      title: 'Huyền Kiếm Khách · Nhiệm vụ',
+      open: `Đang làm: hạ ${q.need} quái ở Yên Tử Sơn (${q.have}/${q.need}).`,
+      choices,
+    };
+  }
+  choices.push({
+    t: 'Nhận nhiệm vụ canh cửa',
+    acceptQ: 1,
+    a: `Ra Yên Tử Sơn hạ ${KH_QUEST_NEED} quái bất kỳ, rồi quay lại đây báo. Xong có thù lao.`,
+  });
+  choices.push({
+    t: 'Hỏi về luyện kiếm',
+    a: 'Kiếm không chỉ sắc ở mũi. Hơi thở đều, bước chân vững — mới giữ được chiêu lâu.',
+  });
+  choices.push({ t: 'Để sau', a: 'Có việc thì tìm ta. Đứng sát cửa này.' });
+  return {
+    title: 'Huyền Kiếm Khách · Hoành Sơn Môn',
+    open: 'Ta canh cửa luyện võ. Hiệp khách muốn nhận việc không?',
+    choices,
+  };
+}
+
+function khAcceptQuest() {
+  if (!S || khQuestDone() || khQuest()) return false;
+  S.khQ = { id: 'guard', need: KH_QUEST_NEED, have: 0 };
+  if (typeof save === 'function') save();
+  log(`📜 Nhận nhiệm vụ: <b>Canh cửa Hoành Sơn</b> — hạ ${KH_QUEST_NEED} quái ở Yên Tử Sơn.`);
+  toast(`Nhận nhiệm vụ: hạ ${KH_QUEST_NEED} quái`);
+  return true;
+}
+
+function khTurnInQuest() {
+  if (!S || !khQuestReady()) return false;
+  if (typeof RW === 'function') RW();
+  else S.rw = S.rw || {};
+  S.rw[KH_QUEST_FLAG] = 1;
+  S.khQ = null;
+  const why = 'Huyền Kiếm Khách · canh cửa';
+  if (typeof grant === 'function') {
+    const prev = R.batch;
+    R.batch = true;
+    grant(KH_QUEST_REWARD, why);
+    R.batch = prev;
+    log(`🎁 ${why}: lượng, thuốc, Kim Nguyên Bảo, Phúc Duyên`);
+    if (!R.quiet && typeof uiSfx === 'function') uiSfx('learn');
+  }
+  if (typeof save === 'function') save();
+  if (typeof refresh === 'function') refresh();
+  toast('Hoàn thành nhiệm vụ canh cửa');
+  return true;
+}
+
+/** Dem so quai ha khi dang lam nhiem vu canh cua. Goi tu ghOnKill. */
+function khOnKill(e) {
+  const q = khQuest();
+  if (!q || khQuestDone()) return;
+  q.have = Math.min(q.need, (q.have || 0) + 1);
+  if (q.have >= q.need) {
+    toast('Đủ số quái — về gặp Huyền Kiếm Khách');
+    log('📜 Nhiệm vụ canh cửa: <b>đã đủ</b> — về Hoành Sơn Môn trả việc.');
+  } else if (q.have === 1 || q.have % 2 === 0) {
+    toast(`Nhiệm vụ: ${q.have}/${q.need} quái`);
+  }
+  if (typeof save === 'function') save();
 }
 
 /** Noi dung hoi thoai huong dan — dong theo trang thai qua. */
@@ -133,7 +237,8 @@ function khZonePlace() {
       sz,
       sc: KH_NPC_SCALE,
       guide: d.guide,
-      talk: d.talk || (d.guide ? khBuildTalk(d) : null),
+      quest: d.quest,
+      talk: d.talk || (d.guide ? khBuildTalk(d) : null) || (d.quest ? khBuildQuestTalk(d) : null),
     };
   });
 }
@@ -222,6 +327,32 @@ function khSendToYenTu() {
   if (typeof refresh === 'function') refresh();
 }
 
+/** Ve Hoành Sơn Môn (tra nhiem vu). */
+function khSendToHoanh() {
+  if (!S) return;
+  (S.zalt || (S.zalt = {}))[KH_ZALT_IDX] = KH_ZALT_HOANH;
+  S.stage = typeof farmStage === 'function' ? farmStage(KH_ZALT_IDX) : 1;
+  S.wave = 1;
+  S.autoMap = false;
+  R.enemies = []; R.corpses = []; R.field = null; R.talkTarget = null; R.khNpcs = null;
+  const z = typeof zoneOf === 'function' ? zoneOf(Math.min(S.stage, STAGES)) : null;
+  if (z) {
+    R.zoneShown = z.id;
+    if (typeof onZoneChange === 'function') onZoneChange(z);
+    else if (typeof obsLoad === 'function') obsLoad(z.id);
+    R.banner = { t: 2.2, text: z.n, sub: 'Trả nhiệm vụ canh cửa' };
+  }
+  const w = (typeof WORLD !== 'undefined' && WORLD.w) || 3584;
+  const h = (typeof WORLD !== 'undefined' && WORLD.h) || 3584;
+  const nx = 0.702 * w, ny = 0.081 * h;
+  [H.x, H.y] = typeof inWorld === 'function' ? inWorld(nx, ny + 48) : [nx, ny + 48];
+  if (typeof snapCamera === 'function') snapCamera();
+  if (typeof ensureKhNpcs === 'function') ensureKhNpcs();
+  toast('Về Hoành Sơn Môn — gặp Huyền Kiếm Khách');
+  if (typeof save === 'function') save();
+  if (typeof refresh === 'function') refresh();
+}
+
 /* ---------- tuong tac: click / lai gan noi chuyen ---------- */
 function khNpcAt(sx, sy) {
   if (!khNpcZoneActive() || !R.khNpcs) return null;
@@ -241,7 +372,7 @@ function khNpcNear(n, r) {
 }
 
 function startTalkNpc(n) {
-  if (!n || !(n.talk || n.guide)) { toast('Không có gì để nói.'); return; }
+  if (!n || !(n.talk || n.guide || n.quest)) { toast('Không có gì để nói.'); return; }
   R.pickTarget = null;
   if (khNpcNear(n)) { openKhTalk(n); return; }
   R.talkTarget = n;
@@ -253,8 +384,9 @@ function startTalkNpc(n) {
 function openKhTalk(n, reply) {
   R.talkTarget = null;
   INPUT.target = null;
-  const t = n.guide ? khBuildTalk(n) : (n.talk || null);
-  if (n.guide) n.talk = t;
+  let t = n.talk || null;
+  if (n.guide) t = n.talk = khBuildTalk(n);
+  else if (n.quest) t = n.talk = khBuildQuestTalk(n);
   if (!t) return;
   const body = reply
     ? `<p class="desc">${esc(reply)}</p>
@@ -272,6 +404,16 @@ function openKhTalk(n, reply) {
         const c = (t.choices || [])[+b.dataset.i];
         if (!c) return;
         if (c.gift) khClaimNewbieGift();
+        if (c.acceptQ) {
+          khAcceptQuest();
+          openKhTalk(n, c.a);
+          return;
+        }
+        if (c.turnInQ) {
+          khTurnInQuest();
+          openKhTalk(n, c.a);
+          return;
+        }
         if (c.goYenTu) {
           closeModal();
           khSendToYenTu();
@@ -310,11 +452,13 @@ function drawOneTownNpc(c, n) {
     const sz = n.sz || [im.naturalWidth, im.naturalHeight, im.naturalWidth / 2, im.naturalHeight - 2];
     drawSprite(im, sz, n.x, n.y, sc, n.face < 0);
   }
-  const near = (n.talk || n.guide) && khNpcNear(n, KH_TALK_R + 24);
+  const near = (n.talk || n.guide || n.quest) && khNpcNear(n, KH_TALK_R + 24);
   const nameY = n.y - (n.sz ? n.sz[1] * sc * 0.9 : 62);
   let hint = null, hintCol = null;
   if (near) {
     if (n.guide && !khGiftClaimed()) { hint = 'Nhận quà tân thủ'; hintCol = '#ffd24a'; }
+    else if (n.quest && !khQuestDone() && !khQuest()) { hint = 'Nhận nhiệm vụ'; hintCol = '#ffd24a'; }
+    else if (n.quest && khQuestReady()) { hint = 'Trả nhiệm vụ'; hintCol = '#ffd24a'; }
     else { hint = 'Nói chuyện'; hintCol = '#9fe8a0'; }
   }
   label(n.x, nameY, n.n, '#e8d5a3', 11, null, null, hint, hintCol);

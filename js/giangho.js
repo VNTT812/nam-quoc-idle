@@ -257,6 +257,7 @@ function stBody() {
 function ghOnKill(e) {
   if (!S.fac) return;
   dtOnKill(e); stOnKill(e);
+  if (typeof khOnKill === 'function') khOnKill(e);
   // Kim Nguyen Bao: trum 10%, trum Hoang Kim / boss tuan 50% (1-2 thoi) - dung o Ky Tran Cac
   if (e.cls === 'boss') { const hi = e.goldBoss || e.wb; if (Math.random() < (hi ? 0.5 : 0.1)) { const n = hi ? irnd(1, 2) : 1; S.knb = (S.knb || 0) + n; addText(e.x, e.y - 76, `+${n} Kim Nguyên Bảo`, '#ffd700', 13); log(`💰 Nhặt được <b style="color:#ffd700">${n} Kim Nguyên Bảo</b>`); } }
   if (e.cls === 'boss') {
@@ -268,6 +269,19 @@ function ghOnKill(e) {
 }
 function ghTick(dt) { stTick(dt); if (typeof questPilot === 'function') questPilot(dt); if (typeof dgPilot === 'function') dgPilot(dt); }
 function ghTodo(out) {
+  if (typeof khQuestReady === 'function' && khQuestReady()) {
+    out.push({
+      k: 'khq',
+      t: '📜 Trả nhiệm vụ Huyền Kiếm Khách',
+      go: () => {
+        if (typeof khSendToHoanh === 'function') khSendToHoanh();
+        else toast('Về Hoành Sơn Môn gặp Huyền Kiếm Khách');
+      },
+    });
+  } else if (typeof khQuest === 'function' && khQuest() && !khQuestDone()) {
+    const q = khQuest();
+    out.push({ k: 'khqp', t: `📜 Canh cửa ${q.have}/${q.need} quái`, go: () => toast('Ra Yên Tử Sơn hạ quái rồi về Hoành Sơn Môn') });
+  }
   if (!S.fac || S.lvl < DT_LV) return;
   ST(); const d = DT(), T = d.task;
   if (T && dtReady(T) && !d.auto) out.push({ k: 'dt', t: '📜 Trả nhiệm vụ Dã Tẩu', go: () => openQuest('dt') });
