@@ -10,7 +10,7 @@ const KH_ZALT_IDX = 0;   // vung Yen Tu (cap 1–10)
 const KH_ZALT_HOANH = 2; // alt Hoành Sơn Môn trong ZALT[0]
 const KH_TALK_R = 48;   // ban kinh bat dau noi chuyen
 const KH_HIT_R = 42;    // ban kinh click trung sprite
-/* PNG kiem_hiep ~158px cao — scale 0.75 theo feedback nhìn ngang tầm người chơi */
+/* PNG kiem_hiep — scale 0.75 (ngang tầm người chơi) */
 const KH_NPC_SCALE = 0.75;
 /** Vi tri NPC (ti le map) — spawn tan thu dung phia truoc mat NPC */
 const KH_NPC_X = 0.512, KH_NPC_Y = 0.152;
@@ -26,12 +26,12 @@ const KH_QUEST_REWARD = { gold: 600, pot: { kind: 'life', tier: 1, n: 20 }, knb:
 const KH_ZONE_NPC = [
   /* kh20 = pose mặt sân (xoay ngược khỏi nhà); đứng sát cột (ô walk gần chân cột) */
   {
-    kh: 20, n: 'Liễu Như Yên', x: KH_NPC_X, y: KH_NPC_Y, face: 1,
+    kh: 20, n: 'Liễu Như Yên', x: KH_NPC_X, y: KH_NPC_Y, face: 1, sc: 0.75,
     guide: 1,
   },
   /* kh600 = NPC nam sát cửa song — giao nhiệm vụ canh môn */
   {
-    kh: 600, n: 'Huyền Kiếm Khách', x: 0.702, y: 0.081, face: -1,
+    kh: 600, n: 'Huyền Kiếm Khách', x: 0.702, y: 0.081, face: -1, sc: 0.75,
     quest: 1,
   },
 ];
@@ -235,7 +235,7 @@ function khZonePlace() {
       face: d.face || 1,
       imgPath: khNpcImg(d.kh),
       sz,
-      sc: KH_NPC_SCALE,
+      sc: d.sc != null ? d.sc : KH_NPC_SCALE,
       guide: d.guide,
       quest: d.quest,
       talk: d.talk || (d.guide ? khBuildTalk(d) : null) || (d.quest ? khBuildQuestTalk(d) : null),
